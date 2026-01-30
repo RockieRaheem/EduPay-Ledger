@@ -1,29 +1,29 @@
 /**
  * Scheduled Reminder Service
- * 
+ *
  * This module handles automatic deadline reminders and overdue alerts.
  * In production, these would be Firebase Cloud Functions running on a schedule.
- * 
+ *
  * Schedule:
  * - Daily at 8:00 AM: Check for upcoming deadlines (7 days, 3 days)
  * - Daily at 8:00 AM: Check for newly overdue installments
  * - Weekly: Send summary to school admins
  */
 
-import { 
-  collection, 
-  getDocs, 
-  query, 
-  where, 
-  Timestamp 
-} from 'firebase/firestore';
-import { db, initializeFirebase, COLLECTIONS } from '@/lib/firebase';
-import { Student } from '@/types/student';
-import { 
-  sendDeadlineReminderSMS, 
-  sendOverdueAlertSMS 
-} from './notification.service';
-import { updateInstallmentDeadlineStatus } from './student.service';
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  Timestamp,
+} from "firebase/firestore";
+import { db, initializeFirebase, COLLECTIONS } from "@/lib/firebase";
+import { Student } from "@/types/student";
+import {
+  sendDeadlineReminderSMS,
+  sendOverdueAlertSMS,
+} from "./notification.service";
+import { updateInstallmentDeadlineStatus } from "./student.service";
 
 interface ReminderResult {
   studentsProcessed: number;
@@ -43,9 +43,11 @@ function daysBetween(date1: Date, date2: Date): number {
  * Processes deadline reminders for a school
  * Should be called daily via Cloud Functions scheduler
  */
-export async function processDeadlineReminders(schoolId: string): Promise<ReminderResult> {
+export async function processDeadlineReminders(
+  schoolId: string,
+): Promise<ReminderResult> {
   initializeFirebase();
-  
+
   const result: ReminderResult = {
     studentsProcessed: 0,
     remindersSent: 0,
@@ -56,9 +58,9 @@ export async function processDeadlineReminders(schoolId: string): Promise<Remind
     // Get all active students with outstanding balances
     const studentsQuery = query(
       collection(db, COLLECTIONS.STUDENTS),
-      where('schoolId', '==', schoolId),
-      where('status', '==', 'active'),
-      where('balance', '>', 0)
+      where("schoolId", "==", schoolId),
+      where("status", "==", "active"),
+      where("balance", ">", 0),
     );
 
     const snapshot = await getDocs(studentsQuery);
@@ -70,15 +72,16 @@ export async function processDeadlineReminders(schoolId: string): Promise<Remind
       result.studentsProcessed++;
 
       // Check each incomplete installment
-      for (const installment of student.installmentProgress) {
-        if (installment.status === 'completed') continue;
-        
+      for (const installment of student.installmentProgress || []) {
+        if (installment.status === "completed") continue;
+
         const deadline = installment.deadline.toDate();
         const daysUntil = daysBetween(today, deadline);
         const amountDue = installment.amountDue - installment.amountPaid;
 
         // Only send reminders at specific intervals
-        const shouldRemind = daysUntil === 7 || daysUntil === 3 || daysUntil === 0;
+        const shouldRemind =
+          daysUntil === 7 || daysUntil === 3 || daysUntil === 0;
 
         if (shouldRemind && student.guardian?.phone) {
           try {
@@ -92,7 +95,10 @@ export async function processDeadlineReminders(schoolId: string): Promise<Remind
             });
             result.remindersSent++;
           } catch (error) {
-            console.error(`Failed to send reminder for student ${student.id}:`, error);
+            console.error(
+              `Failed to send reminder for student ${student.id}:`,
+              error,
+            );
             result.errors++;
           }
         }
@@ -101,7 +107,7 @@ export async function processDeadlineReminders(schoolId: string): Promise<Remind
 
     return result;
   } catch (error) {
-    console.error('Failed to process deadline reminders:', error);
+    console.error("Failed to process deadline reminders:", error);
     throw error;
   }
 }
@@ -110,9 +116,11 @@ export async function processDeadlineReminders(schoolId: string): Promise<Remind
  * Processes overdue alerts and updates student status
  * Should be called daily via Cloud Functions scheduler
  */
-export async function processOverdueAlerts(schoolId: string): Promise<ReminderResult> {
+export async function processOverdueAlerts(
+  schoolId: string,
+): Promise<ReminderResult> {
   initializeFirebase();
-  
+
   const result: ReminderResult = {
     studentsProcessed: 0,
     remindersSent: 0,
@@ -123,9 +131,9 @@ export async function processOverdueAlerts(schoolId: string): Promise<ReminderRe
     // Get all active students
     const studentsQuery = query(
       collection(db, COLLECTIONS.STUDENTS),
-      where('schoolId', '==', schoolId),
-      where('status', '==', 'active'),
-      where('balance', '>', 0)
+      where("schoolId", "==", schoolId),
+      where("status", "==", "active"),
+      where("balance", ">", 0),
     );
 
     const snapshot = await getDocs(studentsQuery);
@@ -140,9 +148,9 @@ export async function processOverdueAlerts(schoolId: string): Promise<ReminderRe
       await updateInstallmentDeadlineStatus(student.id);
 
       // Check for newly overdue installments
-      for (const installment of student.installmentProgress) {
-        if (installment.status !== 'overdue') continue;
-        
+      for (const installment of student.installmentProgress || []) {
+        if (installment.status !== "overdue") continue;
+
         const deadline = installment.deadline.toDate();
         const daysOverdue = daysBetween(deadline, today);
         const amountDue = installment.amountDue - installment.amountPaid;
@@ -161,7 +169,10 @@ export async function processOverdueAlerts(schoolId: string): Promise<ReminderRe
             });
             result.remindersSent++;
           } catch (error) {
-            console.error(`Failed to send overdue alert for student ${student.id}:`, error);
+            console.error(
+              `Failed to send overdue alert for student ${student.id}:`,
+              error,
+            );
             result.errors++;
           }
         }
@@ -170,7 +181,7 @@ export async function processOverdueAlerts(schoolId: string): Promise<ReminderRe
 
     return result;
   } catch (error) {
-    console.error('Failed to process overdue alerts:', error);
+    console.error("Failed to process overdue alerts:", error);
     throw error;
   }
 }
@@ -180,15 +191,15 @@ export async function processOverdueAlerts(schoolId: string): Promise<ReminderRe
  */
 export async function getStudentsWithUpcomingDeadlines(
   schoolId: string,
-  daysAhead: number
+  daysAhead: number,
 ): Promise<Student[]> {
   initializeFirebase();
 
   const studentsQuery = query(
     collection(db, COLLECTIONS.STUDENTS),
-    where('schoolId', '==', schoolId),
-    where('status', '==', 'active'),
-    where('balance', '>', 0)
+    where("schoolId", "==", schoolId),
+    where("status", "==", "active"),
+    where("balance", ">", 0),
   );
 
   const snapshot = await getDocs(studentsQuery);
@@ -199,14 +210,14 @@ export async function getStudentsWithUpcomingDeadlines(
   targetDate.setDate(targetDate.getDate() + daysAhead);
 
   return snapshot.docs
-    .map(doc => ({ id: doc.id, ...doc.data() } as Student))
-    .filter(student => 
-      student.installmentProgress.some(i => {
-        if (i.status === 'completed') return false;
+    .map((doc) => ({ id: doc.id, ...doc.data() }) as Student)
+    .filter((student) =>
+      (student.installmentProgress || []).some((i) => {
+        if (i.status === "completed") return false;
         const deadline = i.deadline.toDate();
         const days = daysBetween(today, deadline);
         return days >= 0 && days <= daysAhead;
-      })
+      }),
     );
 }
 
@@ -214,17 +225,17 @@ export async function getStudentsWithUpcomingDeadlines(
  * Gets summary of deadline status for admin dashboard
  */
 export async function getDeadlineSummary(schoolId: string): Promise<{
-  dueSoon: number;      // Within 7 days
-  dueToday: number;     // Due today
-  overdue: number;      // Past deadline
-  cleared: number;      // No outstanding
+  dueSoon: number; // Within 7 days
+  dueToday: number; // Due today
+  overdue: number; // Past deadline
+  cleared: number; // No outstanding
 }> {
   initializeFirebase();
 
   const studentsQuery = query(
     collection(db, COLLECTIONS.STUDENTS),
-    where('schoolId', '==', schoolId),
-    where('status', '==', 'active')
+    where("schoolId", "==", schoolId),
+    where("status", "==", "active"),
   );
 
   const snapshot = await getDocs(studentsQuery);
@@ -245,8 +256,8 @@ export async function getDeadlineSummary(schoolId: string): Promise<{
     }
 
     // Find the current active installment
-    const activeInstallment = student.installmentProgress.find(
-      i => i.status !== 'completed'
+    const activeInstallment = (student.installmentProgress || []).find(
+      (i) => i.status !== "completed",
     );
 
     if (!activeInstallment) {

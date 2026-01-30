@@ -628,7 +628,7 @@ export function exportReportAsCSV(report: GeneratedReport): string {
   const payments = report.data.payments || [];
   for (const payment of payments) {
     const row = [
-      format(payment.date, "yyyy-MM-dd"),
+      payment.date ? format(payment.date, "yyyy-MM-dd") : "",
       `"${payment.studentName || ""}"`,
       payment.className || "",
       payment.amount || 0,

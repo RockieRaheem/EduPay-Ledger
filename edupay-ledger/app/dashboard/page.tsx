@@ -385,9 +385,31 @@ export default function DashboardPage() {
         schoolName: user?.schoolName || "EduPay School",
         term: data?.currentTerm || "Term 1",
         year: data?.academicYear || "2026",
-        stats: data?.stats,
-        heatmap: data?.heatmap || [],
-        activities: data?.activities || [],
+        stats: data?.stats
+          ? {
+              totalCollection: data.stats.totalCollected || 0,
+              todayCollection: 0, // Not tracked in current stats
+              totalStudents: data.stats.totalStudents || 0,
+              studentsWithArrears: data.stats.overdueStudents || 0,
+              collectionRate: data.stats.collectionProgress || 0,
+            }
+          : undefined,
+        heatmap:
+          data?.heatmap?.map((row) => ({
+            className: row.class || "",
+            stream: row.streams?.[0]?.name || "",
+            collected: row.totalArrears ? 0 : 100, // Approximation
+            outstanding: row.totalArrears || 0,
+          })) || [],
+        activities:
+          data?.recentActivity?.map((activity) => ({
+            type: activity.type,
+            description: activity.description,
+            timestamp:
+              activity.time instanceof Date
+                ? activity.time.toISOString()
+                : String(activity.time),
+          })) || [],
         timestamp: new Date().toISOString(),
       };
 

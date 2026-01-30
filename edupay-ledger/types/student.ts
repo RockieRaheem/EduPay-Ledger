@@ -112,7 +112,7 @@ export function calculatePaymentStatus(student: Student): PaymentStatus {
   if (student.balance === 0) return "fully_paid";
   if (student.amountPaid === 0) return "no_payment";
 
-  const hasOverdue = student.installmentProgress.some(
+  const hasOverdue = (student.installmentProgress || []).some(
     (ip) => ip.status === "overdue",
   );
 

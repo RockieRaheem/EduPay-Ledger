@@ -45,11 +45,13 @@ interface FirestoreStudentData {
   amountPaid?: number;
   balance?: number;
   className: string;
+  streamName?: string;
   firstName?: string;
   lastName?: string;
   studentId?: string;
   guardian?: { phone?: string };
-  [key: string]: unknown;
+  isCleared?: boolean;
+  previousBalance?: number;
 }
 
 interface FirestorePaymentData {
@@ -58,8 +60,8 @@ interface FirestorePaymentData {
   categoryId?: string;
   studentId: string;
   channel?: string;
+  paymentMethod?: string;
   date?: Date;
-  [key: string]: unknown;
 }
 
 // ============================================
@@ -76,10 +78,10 @@ export async function generateTermFinancialSummary(
   // Get all students
   const studentsRef = collection(db, "schools", schoolId, "students");
   const studentsSnap = await getDocs(studentsRef);
-  const students = studentsSnap.docs.map((doc) => ({
+  const students: FirestoreStudentData[] = studentsSnap.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
-  }));
+  })) as FirestoreStudentData[];
 
   // Get all payments in the term
   const paymentsRef = collection(db, "schools", schoolId, "payments");
@@ -413,13 +415,10 @@ async function calculateArrearsSummary(
   students: FirestoreStudentData[],
 ): Promise<ArrearsSummary> {
   const studentsWithArrears = students.filter(
-    (s: FirestoreStudentData) =>
-      ((s as unknown as { previousBalance?: number }).previousBalance || 0) > 0,
+    (s: FirestoreStudentData) => (s.previousBalance || 0) > 0,
   );
   const totalArrearsAmount = studentsWithArrears.reduce(
-    (sum, s: FirestoreStudentData) =>
-      sum +
-      ((s as unknown as { previousBalance?: number }).previousBalance || 0),
+    (sum, s: FirestoreStudentData) => sum + (s.previousBalance || 0),
     0,
   );
   const arrearsRecovered = 0; // Would need tracking
@@ -429,35 +428,37 @@ async function calculateArrearsSummary(
     {
       bracket: "0-30 days",
       studentCount: Math.floor(studentsWithArrears.length * 0.3),
-      totalAmount: totalArrears * 0.2,
+      totalAmount: totalArrearsAmount * 0.2,
     },
     {
       bracket: "31-60 days",
       studentCount: Math.floor(studentsWithArrears.length * 0.25),
-      totalAmount: totalArrears * 0.25,
+      totalAmount: totalArrearsAmount * 0.25,
     },
     {
       bracket: "61-90 days",
       studentCount: Math.floor(studentsWithArrears.length * 0.25),
-      totalAmount: totalArrears * 0.25,
+      totalAmount: totalArrearsAmount * 0.25,
     },
     {
       bracket: "90+ days",
       studentCount: Math.floor(studentsWithArrears.length * 0.2),
-      totalAmount: totalArrears * 0.3,
+      totalAmount: totalArrearsAmount * 0.3,
     },
   ];
 
   return {
-    totalArrearsFromPreviousTerm: totalArrears,
-    arrearsCarriedForward: totalArrears - arrearsRecovered,
+    totalArrearsFromPreviousTerm: totalArrearsAmount,
+    arrearsCarriedForward: totalArrearsAmount - arrearsRecovered,
     arrearsRecovered,
     arrearsRecoveryRate:
-      totalArrears > 0 ? (arrearsRecovered / totalArrears) * 100 : 0,
+      totalArrearsAmount > 0
+        ? (arrearsRecovered / totalArrearsAmount) * 100
+        : 0,
     studentsWithArrears: studentsWithArrears.length,
     averageArrearsPerStudent:
       studentsWithArrears.length > 0
-        ? totalArrears / studentsWithArrears.length
+        ? totalArrearsAmount / studentsWithArrears.length
         : 0,
     arrearsAgeBrackets: brackets,
   };
@@ -468,8 +469,7 @@ async function calculateClearanceSummary(
   students: FirestoreStudentData[],
 ): Promise<ClearanceSummary> {
   const cleared = students.filter(
-    (s: FirestoreStudentData) =>
-      (s as unknown as { isCleared?: boolean }).isCleared === true,
+    (s: FirestoreStudentData) => s.isCleared === true,
   ).length;
   const notCleared = students.length - cleared;
 
@@ -512,6 +512,7 @@ function calculateWeeklyCollection(
     const weekEnd = new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const weekPayments = payments.filter((p: FirestorePaymentData) => {
+      if (!p.date) return false;
       const paymentDate = new Date(p.date);
       return paymentDate >= weekStart && paymentDate < weekEnd;
     });
@@ -541,6 +542,7 @@ function findPeakCollectionDay(payments: FirestorePaymentData[]): {
   const dailyTotals: { [key: string]: number } = {};
 
   for (const payment of payments) {
+    if (!payment.date) continue;
     const dateKey = new Date(payment.date).toISOString().split("T")[0];
     dailyTotals[dateKey] = (dailyTotals[dateKey] || 0) + (payment.amount || 0);
   }

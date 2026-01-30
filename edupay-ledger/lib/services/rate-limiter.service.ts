@@ -81,19 +81,23 @@ class RateLimiter {
    */
   private cleanup(): void {
     const now = Date.now();
-    for (const [key, entry] of this.entries) {
+    const keysToDelete: string[] = [];
+
+    this.entries.forEach((entry, key) => {
       // Remove entries outside the window with no active lockout
       if (
         !entry.lockedUntil &&
         now - entry.firstAttempt > this.config.windowMs
       ) {
-        this.entries.delete(key);
+        keysToDelete.push(key);
       }
       // Remove expired lockouts
       if (entry.lockedUntil && now > entry.lockedUntil) {
-        this.entries.delete(key);
+        keysToDelete.push(key);
       }
-    }
+    });
+
+    keysToDelete.forEach((key) => this.entries.delete(key));
     this.saveToStorage();
   }
 

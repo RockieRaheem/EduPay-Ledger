@@ -138,8 +138,12 @@ export async function createExcelWorkbook<T extends Record<string, unknown>>(
         }
       } else if (typeof value === "boolean") {
         sheetDataXml += `<c r="${cellAddress}" t="b"><v>${value ? 1 : 0}</v></c>`;
+      } else if (typeof value === "object") {
+        // Handle objects by converting to string
+        sheetDataXml += `<c r="${cellAddress}" t="inlineStr"><is><t>${escapeXml(JSON.stringify(value))}</t></is></c>`;
       } else {
-        sheetDataXml += `<c r="${cellAddress}" t="inlineStr"><is><t>${escapeXml(value)}</t></is></c>`;
+        // Handle string or other primitive types
+        sheetDataXml += `<c r="${cellAddress}" t="inlineStr"><is><t>${escapeXml(String(value))}</t></is></c>`;
       }
     });
     sheetDataXml += "</row>";

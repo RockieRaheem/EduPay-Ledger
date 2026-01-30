@@ -1,28 +1,35 @@
 /**
  * Payment Service
- * 
+ *
  * Handles all payment recording, validation, and ledger operations.
  * CRITICAL: This system does NOT process payments - it only RECORDS them.
  * Payments happen externally via Mobile Money, banks, or cash.
  */
 
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
   runTransaction,
   serverTimestamp,
   Timestamp,
-  increment
-} from 'firebase/firestore';
-import { db, initializeFirebase, COLLECTIONS } from '@/lib/firebase';
-import { Payment, PaymentRecordInput, PaymentChannel } from '@/types/payment';
-import { Student, InstallmentProgress } from '@/types/student';
-import { anchorPaymentToStellar, queueForRetry, PaymentProof } from '@/lib/stellar';
-import { generateReceiptNumber, generatePaymentId } from '@/lib/utils';
-import { sendPaymentReceiptSMS, sendPaymentReceiptEmail } from '@/lib/services/notification.service';
-import { generateReceipt } from '@/lib/services/receipt.service';
+  increment,
+} from "firebase/firestore";
+import { db, initializeFirebase, COLLECTIONS } from "@/lib/firebase";
+import { Payment, PaymentRecordInput, PaymentChannel } from "@/types/payment";
+import { Student, InstallmentProgress } from "@/types/student";
+import {
+  anchorPaymentToStellar,
+  queueForRetry,
+  PaymentProof,
+} from "@/lib/stellar";
+import { generateReceiptNumber, generatePaymentId } from "@/lib/utils";
+import {
+  sendPaymentReceiptSMS,
+  sendPaymentReceiptEmail,
+} from "@/lib/services/notification.service";
+import { generateReceipt } from "@/lib/services/receipt.service";
 
 export interface PaymentRecordResult {
   success: boolean;
@@ -47,7 +54,7 @@ export interface InstallmentApplicationResult {
 /**
  * Records a payment for a student
  * This is the main entry point for recording fee payments
- * 
+ *
  * Flow:
  * 1. Validate payment against installment rules
  * 2. Create payment record
@@ -60,7 +67,7 @@ export async function recordPayment(
   input: PaymentRecordInput,
   recordedByUserId: string,
   schoolId: string,
-  sendSmsNotification: boolean = true
+  sendSmsNotification: boolean = true,
 ): Promise<PaymentRecordResult> {
   initializeFirebase();
 
@@ -70,9 +77,9 @@ export async function recordPayment(
       // 1. Get student data
       const studentRef = doc(db, COLLECTIONS.STUDENTS, input.studentId);
       const studentDoc = await transaction.get(studentRef);
-      
+
       if (!studentDoc.exists()) {
-        throw new Error('Student not found');
+        throw new Error("Student not found");
       }
 
       const student = { id: studentDoc.id, ...studentDoc.data() } as Student;
@@ -85,8 +92,8 @@ export async function recordPayment(
 
       // 3. Calculate installment application
       const installmentApplication = calculateInstallmentApplication(
-        student.installmentProgress,
-        input.amount
+        student.installmentProgress || [],
+        input.amount,
       );
 
       // 4. Generate payment record
@@ -104,12 +111,14 @@ export async function recordPayment(
         studentStream: student.streamName,
         schoolId,
         amount: input.amount,
-        currency: 'UGX',
+        currency: "UGX",
         channel: input.channel,
         channelDetails: getChannelDetails(input.channel),
-        installmentId: installmentApplication[0]?.installmentId || '',
-        installmentName: installmentApplication.map(ia => ia.installmentName).join(', '),
-        status: 'cleared',
+        installmentId: installmentApplication[0]?.installmentId || "",
+        installmentName: installmentApplication
+          .map((ia) => ia.installmentName)
+          .join(", "),
+        status: "cleared",
         stellarAnchored: false,
         recordedBy: recordedByUserId,
         recordedAt: now,
@@ -120,19 +129,23 @@ export async function recordPayment(
 
       // 5. Update student installment progress
       const updatedInstallments = applyPaymentToInstallments(
-        student.installmentProgress,
-        installmentApplication
+        student.installmentProgress || [],
+        installmentApplication,
       );
 
       const newAmountPaid = student.amountPaid + input.amount;
       const newBalance = student.totalFees - newAmountPaid;
-      const newPaymentStatus = newBalance === 0 ? 'fully_paid' : 
-                               newBalance < student.totalFees ? 'partial' : 'no_payment';
+      const newPaymentStatus =
+        newBalance === 0
+          ? "fully_paid"
+          : newBalance < student.totalFees
+            ? "partial"
+            : "no_payment";
 
       // Find current installment (first non-completed)
-      const currentInstallmentOrder = updatedInstallments.find(
-        i => i.status !== 'completed'
-      )?.installmentOrder || updatedInstallments.length;
+      const currentInstallmentOrder =
+        updatedInstallments.find((i) => i.status !== "completed")
+          ?.installmentOrder || updatedInstallments.length;
 
       // 6. Write payment record
       const paymentRef = doc(db, COLLECTIONS.PAYMENTS, paymentId);
@@ -158,21 +171,21 @@ export async function recordPayment(
     });
 
     // 8. Post-transaction operations (non-critical)
-    
+
     // 8a. Anchor to Stellar blockchain
     const proof: PaymentProof = {
       paymentId: result.payment.id,
       studentId: result.student.id,
       schoolId,
       amount: result.payment.amount,
-      currency: 'UGX',
+      currency: "UGX",
       timestamp: new Date().toISOString(),
       transactionRef: result.payment.transactionRef,
       receiptNumber: result.payment.receiptNumber,
     };
 
     const stellarResult = await anchorPaymentToStellar(proof);
-    
+
     if (stellarResult.success && stellarResult.txHash) {
       // Update payment with Stellar hash
       await updateDoc(doc(db, COLLECTIONS.PAYMENTS, result.payment.id), {
@@ -225,12 +238,11 @@ export async function recordPayment(
       },
       stellarTxHash: result.payment.stellarTxHash,
     };
-
   } catch (error: any) {
-    console.error('Payment recording failed:', error);
+    console.error("Payment recording failed:", error);
     return {
       success: false,
-      error: error.message || 'Failed to record payment',
+      error: error.message || "Failed to record payment",
     };
   }
 }
@@ -240,13 +252,13 @@ export async function recordPayment(
  */
 function validatePaymentAmount(
   student: Student,
-  amount: number
+  amount: number,
 ): { isValid: boolean; message: string } {
   // Check if student has any balance
   if (student.balance <= 0) {
     return {
       isValid: false,
-      message: 'Student has no outstanding balance',
+      message: "Student has no outstanding balance",
     };
   }
 
@@ -262,21 +274,21 @@ function validatePaymentAmount(
   if (amount <= 0) {
     return {
       isValid: false,
-      message: 'Payment amount must be greater than zero',
+      message: "Payment amount must be greater than zero",
     };
   }
 
   // Check if current installment is unlocked
-  const currentInstallment = student.installmentProgress.find(
-    i => i.status !== 'completed' && i.isUnlocked
+  const currentInstallment = (student.installmentProgress || []).find(
+    (i) => i.status !== "completed" && i.isUnlocked,
   );
 
   if (!currentInstallment) {
     // Check if there's an installment that should be unlocked
-    const nextInstallment = student.installmentProgress.find(
-      i => i.status !== 'completed'
+    const nextInstallment = (student.installmentProgress || []).find(
+      (i) => i.status !== "completed",
     );
-    
+
     if (nextInstallment && !nextInstallment.isUnlocked) {
       return {
         isValid: false,
@@ -285,7 +297,7 @@ function validatePaymentAmount(
     }
   }
 
-  return { isValid: true, message: 'Payment is valid' };
+  return { isValid: true, message: "Payment is valid" };
 }
 
 /**
@@ -294,19 +306,19 @@ function validatePaymentAmount(
  */
 function calculateInstallmentApplication(
   installments: InstallmentProgress[],
-  amount: number
+  amount: number,
 ): InstallmentApplicationResult[] {
   const results: InstallmentApplicationResult[] = [];
   let remainingAmount = amount;
 
   // Sort by order
   const sortedInstallments = [...installments].sort(
-    (a, b) => a.installmentOrder - b.installmentOrder
+    (a, b) => a.installmentOrder - b.installmentOrder,
   );
 
   for (const installment of sortedInstallments) {
     if (remainingAmount <= 0) break;
-    if (installment.status === 'completed') continue;
+    if (installment.status === "completed") continue;
 
     const outstanding = installment.amountDue - installment.amountPaid;
     const toApply = Math.min(remainingAmount, outstanding);
@@ -332,33 +344,37 @@ function calculateInstallmentApplication(
  */
 function applyPaymentToInstallments(
   installments: InstallmentProgress[],
-  applications: InstallmentApplicationResult[]
+  applications: InstallmentApplicationResult[],
 ): InstallmentProgress[] {
   const now = Timestamp.now();
-  
-  const updatedInstallments: InstallmentProgress[] = installments.map(installment => {
-    const application = applications.find(
-      a => a.installmentId === installment.installmentId
-    );
 
-    if (!application) return installment;
+  const updatedInstallments: InstallmentProgress[] = installments.map(
+    (installment) => {
+      const application = applications.find(
+        (a) => a.installmentId === installment.installmentId,
+      );
 
-    const newAmountPaid = installment.amountPaid + application.amountApplied;
-    const isCompleted = newAmountPaid >= installment.amountDue;
+      if (!application) return installment;
 
-    return {
-      ...installment,
-      amountPaid: newAmountPaid,
-      status: (isCompleted ? 'completed' : 'in_progress') as InstallmentProgress['status'],
-      completedAt: isCompleted ? now : undefined,
-    };
-  });
+      const newAmountPaid = installment.amountPaid + application.amountApplied;
+      const isCompleted = newAmountPaid >= installment.amountDue;
+
+      return {
+        ...installment,
+        amountPaid: newAmountPaid,
+        status: (isCompleted
+          ? "completed"
+          : "in_progress") as InstallmentProgress["status"],
+        completedAt: isCompleted ? now : undefined,
+      };
+    },
+  );
 
   // Unlock next installment if current is completed
   return updatedInstallments.map((installment, index, arr) => {
     if (index > 0) {
       const prevInstallment = arr[index - 1];
-      if (prevInstallment.status === 'completed') {
+      if (prevInstallment.status === "completed") {
         return { ...installment, isUnlocked: true };
       }
     }
@@ -371,24 +387,26 @@ function applyPaymentToInstallments(
  */
 function getChannelDetails(channel: PaymentChannel): string {
   const details: Record<PaymentChannel, string> = {
-    momo_mtn: 'MTN Mobile Money',
-    momo_airtel: 'Airtel Money',
-    bank_transfer: 'Bank Transfer',
-    cash: 'Cash Payment',
-    cheque: 'Cheque Payment',
-    other: 'Other Payment Method',
+    momo_mtn: "MTN Mobile Money",
+    momo_airtel: "Airtel Money",
+    bank_transfer: "Bank Transfer",
+    cash: "Cash Payment",
+    cheque: "Cheque Payment",
+    other: "Other Payment Method",
   };
-  return details[channel] || 'Unknown';
+  return details[channel] || "Unknown";
 }
 
 /**
  * Gets payment by ID
  */
-export async function getPaymentById(paymentId: string): Promise<Payment | null> {
+export async function getPaymentById(
+  paymentId: string,
+): Promise<Payment | null> {
   initializeFirebase();
-  
+
   const paymentDoc = await getDoc(doc(db, COLLECTIONS.PAYMENTS, paymentId));
   if (!paymentDoc.exists()) return null;
-  
+
   return { id: paymentDoc.id, ...paymentDoc.data() } as Payment;
 }

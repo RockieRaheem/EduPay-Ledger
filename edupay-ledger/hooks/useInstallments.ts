@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
+import { useState, useCallback } from "react";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
   orderBy,
-  Timestamp 
-} from 'firebase/firestore';
-import { db, initializeFirebase, COLLECTIONS } from '@/lib/firebase';
-import { InstallmentRule, FeeStructure } from '@/types';
-import { Student, InstallmentProgress } from '@/types/student';
+  Timestamp,
+} from "firebase/firestore";
+import { db, initializeFirebase, COLLECTIONS } from "@/lib/firebase";
+import { InstallmentRule, FeeStructure } from "@/types";
+import { Student, InstallmentProgress } from "@/types/student";
 
 interface InstallmentValidation {
   isValid: boolean;
@@ -36,21 +36,26 @@ export function useInstallments() {
    * - Partial payments allowed within an installment
    */
   const validateInstallmentPayment = useCallback(
-    async (studentId: string, amount: number): Promise<InstallmentValidation> => {
+    async (
+      studentId: string,
+      amount: number,
+    ): Promise<InstallmentValidation> => {
       setLoading(true);
       setError(null);
 
       try {
         initializeFirebase();
-        
+
         // Get student data
-        const studentDoc = await getDoc(doc(db, COLLECTIONS.STUDENTS, studentId));
-        
+        const studentDoc = await getDoc(
+          doc(db, COLLECTIONS.STUDENTS, studentId),
+        );
+
         if (!studentDoc.exists()) {
           return {
             isValid: false,
             canPay: false,
-            message: 'Student not found',
+            message: "Student not found",
             currentInstallment: null,
             nextInstallment: null,
           };
@@ -63,7 +68,7 @@ export function useInstallments() {
           return {
             isValid: false,
             canPay: false,
-            message: 'Student has no outstanding balance',
+            message: "Student has no outstanding balance",
             currentInstallment: null,
             nextInstallment: null,
           };
@@ -81,15 +86,15 @@ export function useInstallments() {
         }
 
         // Find current and next installments
-        const installments = student.installmentProgress.sort(
-          (a, b) => a.installmentOrder - b.installmentOrder
+        const installments = (student.installmentProgress || []).sort(
+          (a, b) => a.installmentOrder - b.installmentOrder,
         );
 
         let currentInstallment: InstallmentProgress | null = null;
         let nextInstallment: InstallmentProgress | null = null;
 
         for (const inst of installments) {
-          if (inst.status !== 'completed') {
+          if (inst.status !== "completed") {
             if (!currentInstallment) {
               currentInstallment = inst;
             } else if (!nextInstallment) {
@@ -104,7 +109,7 @@ export function useInstallments() {
           return {
             isValid: true,
             canPay: true,
-            message: 'Full payment - all installments will be cleared',
+            message: "Full payment - all installments will be cleared",
             currentInstallment,
             nextInstallment,
           };
@@ -115,7 +120,7 @@ export function useInstallments() {
           return {
             isValid: false,
             canPay: false,
-            message: 'Current installment is not yet unlocked',
+            message: "Current installment is not yet unlocked",
             currentInstallment,
             nextInstallment,
           };
@@ -123,8 +128,9 @@ export function useInstallments() {
 
         // Payment within current installment is valid
         if (currentInstallment) {
-          const remainingInInstallment = currentInstallment.amountDue - currentInstallment.amountPaid;
-          
+          const remainingInInstallment =
+            currentInstallment.amountDue - currentInstallment.amountPaid;
+
           if (amount <= remainingInInstallment) {
             return {
               isValid: true,
@@ -137,7 +143,7 @@ export function useInstallments() {
             // Amount exceeds current installment - check if it's early payment
             const wouldCompleteCurrentAmount = remainingInInstallment;
             const overage = amount - wouldCompleteCurrentAmount;
-            
+
             if (nextInstallment) {
               return {
                 isValid: true,
@@ -161,7 +167,7 @@ export function useInstallments() {
         return {
           isValid: true,
           canPay: true,
-          message: 'Payment is valid',
+          message: "Payment is valid",
           currentInstallment,
           nextInstallment,
         };
@@ -178,7 +184,7 @@ export function useInstallments() {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   /**
@@ -191,11 +197,13 @@ export function useInstallments() {
 
       try {
         initializeFirebase();
-        
-        const feeStructureDoc = await getDoc(doc(db, COLLECTIONS.FEE_STRUCTURES, feeStructureId));
-        
+
+        const feeStructureDoc = await getDoc(
+          doc(db, COLLECTIONS.FEE_STRUCTURES, feeStructureId),
+        );
+
         if (!feeStructureDoc.exists()) {
-          throw new Error('Fee structure not found');
+          throw new Error("Fee structure not found");
         }
 
         const feeStructure = feeStructureDoc.data() as FeeStructure;
@@ -207,7 +215,7 @@ export function useInstallments() {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   /**
@@ -223,16 +231,20 @@ export function useInstallments() {
       }> = [];
 
       let remainingAmount = amount;
-      const sortedInstallments = [...student.installmentProgress].sort(
-        (a, b) => a.installmentOrder - b.installmentOrder
+      const sortedInstallments = [...(student.installmentProgress || [])].sort(
+        (a, b) => a.installmentOrder - b.installmentOrder,
       );
 
       for (const installment of sortedInstallments) {
         if (remainingAmount <= 0) break;
-        if (installment.status === 'completed') continue;
+        if (installment.status === "completed") continue;
 
-        const outstandingInInstallment = installment.amountDue - installment.amountPaid;
-        const amountToApply = Math.min(remainingAmount, outstandingInInstallment);
+        const outstandingInInstallment =
+          installment.amountDue - installment.amountPaid;
+        const amountToApply = Math.min(
+          remainingAmount,
+          outstandingInInstallment,
+        );
 
         if (amountToApply > 0) {
           breakdown.push({
@@ -247,7 +259,7 @@ export function useInstallments() {
 
       return breakdown;
     },
-    []
+    [],
   );
 
   return {

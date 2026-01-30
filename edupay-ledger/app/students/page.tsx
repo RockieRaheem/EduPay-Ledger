@@ -168,12 +168,13 @@ function AddStudentModal({
         streamId: formData.streamName || undefined,
         streamName: formData.streamName || undefined,
         academicYear: new Date().getFullYear().toString(),
-        term: "Term 1",
+        term: 1,
         guardian: {
           name: formData.guardianName,
           phone: formData.guardianPhone,
           relationship: formData.guardianRelationship as
-            | "parent"
+            | "mother"
+            | "father"
             | "guardian"
             | "other",
         },
