@@ -156,6 +156,15 @@ let analytics: Analytics | null = null;
  * Handles SSR (server-side rendering) and CSR (client-side rendering) appropriately
  */
 export function initializeFirebase() {
+  // Skip initialization if API key is not configured
+  if (!firebaseConfig.apiKey) {
+    console.warn(
+      "Firebase API key not configured. Running in offline/mock mode.\n" +
+        "To enable Firebase, add NEXT_PUBLIC_FIREBASE_API_KEY to your .env.local file.",
+    );
+    return;
+  }
+
   if (getApps().length === 0) {
     // Initialize Firebase App
     app = initializeApp(firebaseConfig);
@@ -186,12 +195,27 @@ export function initializeFirebase() {
     storage = getStorage(app);
 
     // Initialize Analytics (client-side only, check if supported)
-    if (typeof window !== "undefined") {
-      isSupported().then((supported) => {
-        if (supported) {
-          analytics = getAnalytics(app);
-        }
-      });
+    // Only initialize if measurement ID is configured (analytics requires it)
+    if (
+      typeof window !== "undefined" &&
+      firebaseConfig.apiKey &&
+      firebaseConfig.measurementId
+    ) {
+      isSupported()
+        .then((supported) => {
+          if (supported) {
+            try {
+              analytics = getAnalytics(app);
+            } catch (e) {
+              // Analytics initialization failed - this is non-critical
+              console.warn("Firebase Analytics initialization skipped:", e);
+            }
+          }
+        })
+        .catch((e) => {
+          // isSupported check failed - this is non-critical
+          console.warn("Firebase Analytics not supported:", e);
+        });
     }
 
     // Connect to emulators in development (optional)
