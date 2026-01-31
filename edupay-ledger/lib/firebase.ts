@@ -114,10 +114,10 @@ validateFirebaseConfig();
 /**
  * Firebase project configuration for EduPay Ledger
  *
- * IMPORTANT: In production, all values MUST come from environment variables.
- * The fallback values below are for development/demo purposes only.
+ * SECURITY: All values MUST come from environment variables.
+ * No hardcoded credentials are allowed.
  *
- * To configure for production:
+ * To configure:
  * 1. Create a .env.local file with your Firebase project credentials
  * 2. Or set environment variables in your deployment platform
  *
@@ -131,36 +131,13 @@ validateFirebaseConfig();
  * - NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID (optional, for analytics)
  */
 const firebaseConfig = {
-  // Development fallbacks - DO NOT use in production
-  apiKey:
-    process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
-    (process.env.NODE_ENV !== "production"
-      ? "AIzaSyD_rkeL7gDD-4uWXR6CGnwEyW42t20qyHg"
-      : ""),
-  authDomain:
-    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ||
-    (process.env.NODE_ENV !== "production"
-      ? "edu-pay-ledger.firebaseapp.com"
-      : ""),
-  projectId:
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-    (process.env.NODE_ENV !== "production" ? "edu-pay-ledger" : ""),
-  storageBucket:
-    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-    (process.env.NODE_ENV !== "production"
-      ? "edu-pay-ledger.firebasestorage.app"
-      : ""),
-  messagingSenderId:
-    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ||
-    (process.env.NODE_ENV !== "production" ? "725803373518" : ""),
-  appId:
-    process.env.NEXT_PUBLIC_FIREBASE_APP_ID ||
-    (process.env.NODE_ENV !== "production"
-      ? "1:725803373518:web:88eceae685240408e6519f"
-      : ""),
-  measurementId:
-    process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID ||
-    (process.env.NODE_ENV !== "production" ? "G-KN0JN93B48" : ""),
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "",
 };
 
 // ============================================================================

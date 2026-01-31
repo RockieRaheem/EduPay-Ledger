@@ -250,7 +250,7 @@ export async function recordPayment(
 /**
  * Validates payment amount against student's balance and installment rules
  */
-function validatePaymentAmount(
+export function validatePaymentAmount(
   student: Student,
   amount: number,
 ): { isValid: boolean; message: string } {
@@ -304,7 +304,7 @@ function validatePaymentAmount(
  * Calculates how a payment amount will be applied across installments
  * Follows the rule: current installment must be completed before next
  */
-function calculateInstallmentApplication(
+export function calculateInstallmentApplication(
   installments: InstallmentProgress[],
   amount: number,
 ): InstallmentApplicationResult[] {
@@ -342,7 +342,7 @@ function calculateInstallmentApplication(
 /**
  * Applies payment to installments and returns updated installment array
  */
-function applyPaymentToInstallments(
+export function applyPaymentToInstallments(
   installments: InstallmentProgress[],
   applications: InstallmentApplicationResult[],
 ): InstallmentProgress[] {
@@ -385,7 +385,7 @@ function applyPaymentToInstallments(
 /**
  * Gets display details for payment channel
  */
-function getChannelDetails(channel: PaymentChannel): string {
+export function getChannelDetails(channel: PaymentChannel): string {
   const details: Record<PaymentChannel, string> = {
     momo_mtn: "MTN Mobile Money",
     momo_airtel: "Airtel Money",

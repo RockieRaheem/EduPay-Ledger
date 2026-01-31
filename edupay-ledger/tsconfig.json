@@ -12,15 +12,16 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
     "plugins": [
       {
         "name": "next"
       }
     ],
-    "paths": {
-      "@/*": ["./*"]
-    },
-    "baseUrl": ".",
     "types": ["jest", "@testing-library/jest-dom", "node"]
   },
   "include": [
