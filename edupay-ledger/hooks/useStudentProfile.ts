@@ -312,8 +312,10 @@ export function useFirebaseStudentProfile(
 ): UseStudentProfileReturn {
   const { user, loading: authLoading } = useAuth();
 
+  // Use mock data only if explicitly enabled via env variable
+  // Don't use mock just because user is not loaded yet
   const result = useStudentProfile(studentId, {
-    useMockData: USE_MOCK_DATA || (!user && !authLoading),
+    useMockData: USE_MOCK_DATA,
   });
 
   // Override authLoading to use the one from useAuth directly

@@ -67,19 +67,27 @@ export default function StudentProfilePage({
   const { fees: residenceFees, isLoading: residenceFeesLoading } =
     useStudentResidenceFees(params.id);
 
-  // Redirect to login if not authenticated
-  // Only redirect after auth has fully loaded and user is definitely not authenticated
+  // Only redirect to login if:
+  // 1. Auth loading is complete (authLoading === false)
+  // 2. Data loading is complete (isLoading === false)
+  // 3. User is definitely not authenticated
+  // 4. We don't have student data (to prevent redirect after successful load)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated && !isLoading) {
-      // Add a small delay to ensure auth state is fully resolved
-      const timeout = setTimeout(() => {
-        if (!isAuthenticated) {
-          router.push("/login");
-        }
-      }, 100);
-      return () => clearTimeout(timeout);
+    // Don't redirect while still loading
+    if (authLoading || isLoading) {
+      return;
     }
-  }, [authLoading, isAuthenticated, isLoading, router]);
+
+    // Don't redirect if we have student data (user is viewing content)
+    if (student) {
+      return;
+    }
+
+    // Only redirect if not authenticated and no data
+    if (!isAuthenticated && !student) {
+      router.push("/login");
+    }
+  }, [authLoading, isAuthenticated, isLoading, student, router]);
 
   const getChannelIcon = (channel: string) => {
     switch (channel) {
