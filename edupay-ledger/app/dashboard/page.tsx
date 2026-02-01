@@ -520,6 +520,7 @@ export default function DashboardPage() {
           iconBg="bg-emerald-500"
           trend={stats.percentageChange + " vs last term"}
           trendDirection="up"
+          onClick={() => router.push("/payments")}
         />
         <DashboardStatsCard
           title="Outstanding Balance"
@@ -527,6 +528,7 @@ export default function DashboardPage() {
           subtitle={`${stats.partialStudents + stats.noPaymentStudents} students`}
           icon="pending"
           iconBg="bg-amber-500"
+          onClick={() => router.push("/students?status=partial")}
         />
         <DashboardStatsCard
           title="Overdue (30 Days)"
@@ -534,7 +536,7 @@ export default function DashboardPage() {
           subtitle={`${stats.overdueStudents} students overdue`}
           icon="warning"
           iconBg="bg-red-500"
-          onClick={() => (window.location.href = "/arrears")}
+          onClick={() => router.push("/arrears?filter=overdue")}
         />
         <DashboardStatsCard
           title="Collection Progress"
@@ -542,6 +544,7 @@ export default function DashboardPage() {
           subtitle={`${stats.fullyPaidStudents} fully paid`}
           icon="trending_up"
           iconBg="bg-blue-500"
+          onClick={() => router.push("/reports")}
         />
       </div>
 

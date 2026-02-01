@@ -409,12 +409,29 @@ export default function StudentsPage() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [searchInput, setSearchInput] = useState("");
 
-  // Redirect to login if not authenticated
+  // Apply URL status filter on mount
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    const statusParam = searchParams.get("status");
+    if (
+      statusParam &&
+      ["fully_paid", "partial", "overdue", "no_payment"].includes(statusParam)
+    ) {
+      setFilters({ paymentStatus: statusParam });
+    }
+  }, [searchParams, setFilters]);
+
+  // Redirect to login if not authenticated
+  // Don't redirect while loading or if we already have data (user is authenticated)
+  useEffect(() => {
+    if (
+      !authLoading &&
+      !isAuthenticated &&
+      !isLoading &&
+      students.length === 0
+    ) {
       router.push("/login");
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, isLoading, students.length, router]);
 
   // Handle search with debounce
   const handleSearch = (value: string) => {
