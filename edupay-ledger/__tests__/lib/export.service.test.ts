@@ -679,8 +679,8 @@ describe("Export Types", () => {
       expect(errors).toHaveLength(0);
     });
 
-    test("should support arrears export type", () => {
-      const config = createMockScheduledExport({ type: "arrears" });
+    test("should support overdue export type", () => {
+      const config = createMockScheduledExport({ type: "overdue" });
       const errors = validateScheduledExport(config);
       expect(errors).toHaveLength(0);
     });
@@ -877,10 +877,10 @@ describe("Ugandan School Context", () => {
       expect(errors).toHaveLength(0);
     });
 
-    test("should export weekly arrears report", () => {
+    test("should export weekly overdue report", () => {
       const config = createMockScheduledExport({
-        name: "Weekly Arrears Report",
-        type: "arrears",
+        name: "Weekly Overdue Report",
+        type: "overdue",
         frequency: "weekly",
         dayOfWeek: 5, // Friday
         hour: 15,

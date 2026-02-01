@@ -2,7 +2,7 @@
 
 **Desktop-First School Fee Management System for Ugandan Schools**
 
-*Built for School Bursars • Works Offline • Syncs When Online*
+_Built for School Bursars • Works Offline • Syncs When Online_
 
 [![Windows](https://img.shields.io/badge/Download-Windows-0078D6?style=for-the-badge&logo=windows)](https://github.com/your-org/edupay-ledger/releases)
 [![macOS](https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple)](https://github.com/your-org/edupay-ledger/releases)
@@ -30,29 +30,31 @@
 
 ## Overview
 
-**EduPay Ledger** is a comprehensive school fee management desktop application designed specifically for **School Bursars** in Ugandan primary and secondary schools. 
+**EduPay Ledger** is a comprehensive school fee management desktop application designed specifically for **School Bursars** in Ugandan primary and secondary schools.
 
 ### The Problem We Solve
 
-| Challenge | Our Solution |
-|-----------|--------------|
-| **Paper-based tracking** leads to errors and lost records | Digital records with automatic backups |
-| **No internet in rural areas** makes cloud apps useless | **Works completely offline** - no internet required |
-| **Revenue leakage** from poor reconciliation | Real-time balance tracking and audit trails |
-| **Mobile Money tracking** is manual and error-prone | Integrated MTN & Airtel Money tracking |
-| **No receipts** means disputes with parents | Automatic receipt generation with unique numbers |
+| Challenge                                                 | Our Solution                                        |
+| --------------------------------------------------------- | --------------------------------------------------- |
+| **Paper-based tracking** leads to errors and lost records | Digital records with automatic backups              |
+| **No internet in rural areas** makes cloud apps useless   | **Works completely offline** - no internet required |
+| **Revenue leakage** from poor reconciliation              | Real-time balance tracking and audit trails         |
+| **Mobile Money tracking** is manual and error-prone       | Integrated MTN & Airtel Money tracking              |
+| **No receipts** means disputes with parents               | Automatic receipt generation with unique numbers    |
 
 ### Who Is This For?
 
 🎯 **Primary Users: School Bursars**
+
 - Record fee payments (cash, mobile money, bank transfer)
-- Track student balances and arrears
+- Track student balances and overdue payments
 - Generate receipts and reports
 - Manage installment plans
 
 📊 **Secondary Users: School Administrators**
+
 - View collection dashboards
-- Monitor arrears and outstanding fees
+- Monitor overdue payments and outstanding fees
 - Access audit trails and reports
 
 ---
@@ -60,6 +62,7 @@
 ## Key Features
 
 ### Offline-First Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  EduPay Ledger Desktop App                                  │
@@ -81,16 +84,16 @@
 
 ### Core Functionality
 
-| Feature | Description |
-|---------|-------------|
-| **Student Directory** | Complete student database with search, filter by class/stream |
-| **Payment Recording** | Record Cash, MTN MoMo, Airtel Money, Bank Transfer payments |
-| **Auto Receipts** | Generate printable receipts with unique receipt numbers |
-| **Balance Tracking** | Real-time view of each student's fee balance |
-| **Arrears Management** | Track overdue payments with severity levels |
-| **Installment Plans** | Configure payment plans per term with deadlines |
-| **Reports** | Daily, weekly, monthly, and term-based collection reports |
-| **Audit Trail** | Complete history of all transactions for accountability |
+| Feature                | Description                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| **Student Directory**  | Complete student database with search, filter by class/stream |
+| **Payment Recording**  | Record Cash, MTN MoMo, Airtel Money, Bank Transfer payments   |
+| **Auto Receipts**      | Generate printable receipts with unique receipt numbers       |
+| **Balance Tracking**   | Real-time view of each student's fee balance                  |
+| **Overdue Management** | Track overdue payments with severity levels                   |
+| **Installment Plans**  | Configure payment plans per term with deadlines               |
+| **Reports**            | Daily, weekly, monthly, and term-based collection reports     |
+| **Audit Trail**        | Complete history of all transactions for accountability       |
 
 ### Security and Data Safety
 
@@ -183,7 +186,7 @@ EduPay Ledger stores **all data locally** on your computer using IndexedDB. This
 ✅ Works without internet connection  
 ✅ Fast performance (no waiting for server)  
 ✅ Your data is always accessible  
-✅ No monthly server costs  
+✅ No monthly server costs
 
 ### Online Sync
 
@@ -196,12 +199,12 @@ When internet is available, EduPay automatically:
 
 ### Sync Status Indicators
 
-| Icon | Status |
-|------|--------|
-| 🟢 | Online - All data synced |
-| 🟡 | Syncing - Upload/download in progress |
-| 🔴 | Offline - Working locally |
-| ⚠️ | Sync error - Will retry automatically |
+| Icon | Status                                |
+| ---- | ------------------------------------- |
+| 🟢   | Online - All data synced              |
+| 🟡   | Syncing - Upload/download in progress |
+| 🔴   | Offline - Working locally             |
+| ⚠️   | Sync error - Will retry automatically |
 
 ---
 
@@ -209,16 +212,16 @@ When internet is available, EduPay automatically:
 
 ### Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Desktop Framework** | Electron 28 |
-| **Frontend** | Next.js 14, React 18, TypeScript |
-| **UI Components** | Tailwind CSS, Custom Design System |
-| **Local Database** | IndexedDB via Dexie.js |
-| **Cloud Sync** | Firebase Firestore |
-| **State Management** | Zustand |
-| **Forms & Validation** | React Hook Form + Zod |
-| **Testing** | Jest + React Testing Library |
+| Layer                  | Technology                         |
+| ---------------------- | ---------------------------------- |
+| **Desktop Framework**  | Electron 28                        |
+| **Frontend**           | Next.js 14, React 18, TypeScript   |
+| **UI Components**      | Tailwind CSS, Custom Design System |
+| **Local Database**     | IndexedDB via Dexie.js             |
+| **Cloud Sync**         | Firebase Firestore                 |
+| **State Management**   | Zustand                            |
+| **Forms & Validation** | React Hook Form + Zod              |
+| **Testing**            | Jest + React Testing Library       |
 
 ### Project Structure
 
@@ -232,7 +235,7 @@ edupay-ledger/
 │   ├── dashboard/          # Main dashboard
 │   ├── students/           # Student management
 │   ├── payments/           # Payment recording
-│   ├── arrears/            # Arrears tracking
+│   ├── overdue/            # Overdue tracking
 │   ├── reports/            # Financial reports
 │   └── settings/           # App settings
 ├── components/
@@ -309,21 +312,21 @@ npm run electron:build:all
 
 ### Minimum Requirements
 
-| Component | Requirement |
-|-----------|-------------|
-| **OS** | Windows 10, macOS 10.14, Ubuntu 18.04 |
-| **RAM** | 4 GB |
-| **Storage** | 500 MB free space |
-| **Display** | 1280 x 720 resolution |
+| Component   | Requirement                           |
+| ----------- | ------------------------------------- |
+| **OS**      | Windows 10, macOS 10.14, Ubuntu 18.04 |
+| **RAM**     | 4 GB                                  |
+| **Storage** | 500 MB free space                     |
+| **Display** | 1280 x 720 resolution                 |
 
 ### Recommended
 
-| Component | Recommendation |
-|-----------|----------------|
-| **OS** | Windows 11, macOS 12+, Ubuntu 22.04 |
-| **RAM** | 8 GB |
-| **Storage** | 1 GB free space (for large databases) |
-| **Display** | 1920 x 1080 resolution |
+| Component    | Recommendation                              |
+| ------------ | ------------------------------------------- |
+| **OS**       | Windows 11, macOS 12+, Ubuntu 22.04         |
+| **RAM**      | 8 GB                                        |
+| **Storage**  | 1 GB free space (for large databases)       |
+| **Display**  | 1920 x 1080 resolution                      |
 | **Internet** | For cloud sync (not required for basic use) |
 
 ---
@@ -343,6 +346,7 @@ npm run electron:build:all
 <summary><strong>Can I use EduPay Ledger without internet?</strong></summary>
 
 Yes! EduPay Ledger is designed to work completely offline. All your data is stored locally on your computer. Internet is only needed for:
+
 - Initial setup (optional - you can use demo mode)
 - Syncing data to cloud backup
 - Accessing from multiple devices
@@ -354,12 +358,14 @@ Yes! EduPay Ledger is designed to work completely offline. All your data is stor
 If you have cloud sync enabled, all your data is safely backed up. Simply install EduPay Ledger on a new computer, log in with your account, and all data will sync automatically.
 
 If you're using offline-only mode, we recommend enabling automatic local backups (Settings → Backup → Enable Auto Backup).
+
 </details>
 
 <details>
 <summary><strong>Can multiple bursars use the same system?</strong></summary>
 
 Yes! With cloud sync enabled:
+
 - Each bursar installs the app on their computer
 - They log in with their account
 - Data syncs automatically between all devices
@@ -370,6 +376,7 @@ Yes! With cloud sync enabled:
 <summary><strong>How do I import existing student data?</strong></summary>
 
 Go to Students → Import → Upload Excel/CSV file. The app will guide you through mapping columns to the correct fields. Download our template for the correct format.
+
 </details>
 
 ---
@@ -389,4 +396,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **EduPay Ledger** - Simplifying School Fee Management
 
-*No Internet? No Problem.*
+_No Internet? No Problem._

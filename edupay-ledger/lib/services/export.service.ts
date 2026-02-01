@@ -1150,7 +1150,7 @@ export async function exportArrearsToExcel(
 export interface ScheduledExportConfig {
   id: string;
   name: string;
-  type: "students" | "payments" | "arrears" | "dashboard";
+  type: "students" | "payments" | "overdue" | "dashboard";
   format: "csv" | "excel" | "pdf";
   frequency: "daily" | "weekly" | "monthly";
   dayOfWeek?: number; // 0-6 for weekly

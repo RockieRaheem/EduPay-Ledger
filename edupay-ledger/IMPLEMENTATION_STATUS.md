@@ -11,7 +11,7 @@
 EduPay Ledger is a comprehensive desktop application designed for school bursars in Uganda to:
 
 - Record fee payments (cash, mobile money, bank transfers)
-- Track student balances and arrears
+- Track student balances and overdue payments
 - Manage scholarships and fee categories
 - Generate receipts, reports, and clearance certificates
 - Parent portal for fee tracking
@@ -137,7 +137,7 @@ All pages are connected to Firebase via hooks:
 | Payments            | `/payments`                   | ✅ Complete | `useFirebasePayments()`   |
 | Record Payment      | `/payments/record`            | ✅ Complete | `usePayments()`           |
 | Installment Rules   | `/payments/rules`             | ✅ Complete | `useInstallments()`       |
-| Arrears             | `/arrears`                    | ✅ Complete | `useArrears()`            |
+| Overdue             | `/overdue`                    | ✅ Complete | `useOverdue()`            |
 | Clearance           | `/clearance`                  | ✅ Complete | `useExamClearance()`      |
 | Reports             | `/reports`                    | ✅ Complete | `useFirebaseReports()`    |
 | Term Summary        | `/reports/term-summary`       | ✅ Complete | `useTermSummary()`        |
@@ -169,7 +169,7 @@ All pages are connected to Firebase via hooks:
 | useStudentProfile | `useStudentProfile.ts` | Individual student data and history  |
 | usePayments       | `usePayments.ts`       | Payment recording and history        |
 | useInstallments   | `useInstallments.ts`   | Installment calculations and rules   |
-| useArrears        | `useArrears.ts`        | Arrears tracking and reporting       |
+| useOverdue        | `useOverdue.ts`        | Overdue tracking and reporting       |
 | useReports        | `useReports.ts`        | Report generation and export         |
 | useSettings       | `useSettings.ts`       | Application and school settings      |
 
@@ -439,9 +439,9 @@ edupay-ledger/
 │   │   └── rules/
 │   │       └── page.tsx              # Installment rules
 │   │
-│   ├── arrears/
+│   ├── overdue/
 │   │   ├── layout.tsx
-│   │   └── page.tsx                  # Arrears tracking
+│   │   └── page.tsx                  # Overdue tracking
 │   │
 │   ├── clearance/
 │   │   ├── layout.tsx
@@ -554,7 +554,7 @@ edupay-ledger/
 ├── hooks/                            # 27 custom hooks
 │   ├── index.ts                      # Barrel exports (146 lines)
 │   ├── useAuth.ts
-│   ├── useArrears.ts
+│   ├── useOverdue.ts
 │   ├── useBankReconciliation.ts
 │   ├── useBulkImport.ts
 │   ├── useDashboard.ts
