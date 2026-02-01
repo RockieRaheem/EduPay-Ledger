@@ -382,7 +382,7 @@ export default function DashboardPage() {
   const handleExport = async (format: "pdf" | "csv" | "excel") => {
     try {
       const exportData = {
-        schoolName: user?.schoolName || "EduPay School",
+        schoolName: user?.schoolName || "eBursar School",
         term: data?.currentTerm || "Term 1",
         year: data?.academicYear || "2026",
         stats: data?.stats

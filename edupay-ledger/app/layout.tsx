@@ -5,7 +5,7 @@ import { SkipLink } from "@/lib/accessibility";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "EduPay Ledger - School Fee Management",
+  title: "eBursar - School Fee Management",
   description:
     "Mobile-first school fee reconciliation and audit system for Ugandan schools",
   manifest: "/manifest.json",

@@ -1,6 +1,6 @@
 /**
  * Zod Validation Schemas
- * Comprehensive validation schemas for EduPay Ledger forms
+ * Comprehensive validation schemas for eBursar forms
  */
 
 import { z } from "zod";

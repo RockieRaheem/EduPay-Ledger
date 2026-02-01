@@ -7,17 +7,17 @@ import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  
+
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: 1.0,
-  
+
   // Setting this option to true will print useful information to the console while setting up Sentry.
   debug: process.env.NODE_ENV === "development",
-  
+
   // Replay configuration
   replaysOnErrorSampleRate: 1.0,
   replaysSessionSampleRate: 0.1,
-  
+
   // Performance monitoring
   integrations: [
     Sentry.replayIntegration({
@@ -26,27 +26,29 @@ Sentry.init({
     }),
     Sentry.browserTracingIntegration(),
   ],
-  
+
   // Filter out errors in development
-  enabled: process.env.NODE_ENV === "production" || !!process.env.NEXT_PUBLIC_SENTRY_DSN,
-  
+  enabled:
+    process.env.NODE_ENV === "production" ||
+    !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+
   // Environment tag
   environment: process.env.NODE_ENV,
-  
+
   // App version
-  release: `edupay-ledger@${process.env.npm_package_version || "1.0.0"}`,
-  
+  release: `ebursar@${process.env.npm_package_version || "1.0.0"}`,
+
   // Don't send default PII
   sendDefaultPii: false,
-  
+
   // Custom tags
   initialScope: {
     tags: {
-      app: "edupay-ledger",
+      app: "ebursar",
       platform: "web",
     },
   },
-  
+
   // Ignore certain errors
   ignoreErrors: [
     // Browser extensions
@@ -61,19 +63,22 @@ Sentry.init({
     // IndexedDB expected errors
     "AbortError",
   ],
-  
+
   // Before send hook to sanitize data
   beforeSend(event) {
     // Don't send errors in demo mode
-    if (typeof window !== "undefined" && localStorage.getItem("edupay_demo_mode") === "true") {
+    if (
+      typeof window !== "undefined" &&
+      localStorage.getItem("ebursar_demo_mode") === "true"
+    ) {
       return null;
     }
-    
+
     // Remove sensitive data
     if (event.user) {
       delete event.user.ip_address;
     }
-    
+
     return event;
   },
 });

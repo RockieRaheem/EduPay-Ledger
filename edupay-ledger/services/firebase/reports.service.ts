@@ -1,6 +1,6 @@
 /**
  * Reports Firebase Service
- * Handles all reporting and audit trail operations for EduPay Ledger
+ * Handles all reporting and audit trail operations for eBursar
  */
 
 import {
@@ -12,7 +12,7 @@ import {
   logAuditAction,
   COLLECTIONS,
   Timestamp,
-} from '@/lib/firebase';
+} from "@/lib/firebase";
 import {
   collection,
   query,
@@ -25,9 +25,9 @@ import {
   getAggregateFromServer,
   DocumentData,
   QueryConstraint,
-} from 'firebase/firestore';
-import type { Payment, PaymentChannel } from '@/types/payment';
-import type { Student } from '@/types/student';
+} from "firebase/firestore";
+import type { Payment, PaymentChannel } from "@/types/payment";
+import type { Student } from "@/types/student";
 
 // ============================================================================
 // TYPES
@@ -97,30 +97,33 @@ export interface AuditFilters {
  * Generate collection summary report
  */
 export async function generateCollectionReport(
-  filters: ReportFilters
+  filters: ReportFilters,
 ): Promise<CollectionReport> {
   const { schoolId, termId, dateFrom, dateTo } = filters;
-  
+
   const constraints: QueryConstraint[] = [
-    where('schoolId', '==', schoolId),
-    where('status', '==', 'cleared'),
+    where("schoolId", "==", schoolId),
+    where("status", "==", "cleared"),
   ];
 
   if (dateFrom) {
-    constraints.push(where('recordedAt', '>=', Timestamp.fromDate(dateFrom)));
+    constraints.push(where("recordedAt", ">=", Timestamp.fromDate(dateFrom)));
   }
 
   if (dateTo) {
-    constraints.push(where('recordedAt', '<=', Timestamp.fromDate(dateTo)));
+    constraints.push(where("recordedAt", "<=", Timestamp.fromDate(dateTo)));
   }
 
-  constraints.push(orderBy('recordedAt', 'asc'));
+  constraints.push(orderBy("recordedAt", "asc"));
 
-  const payments = await fetchCollection<Payment>(COLLECTIONS.PAYMENTS, constraints);
+  const payments = await fetchCollection<Payment>(
+    COLLECTIONS.PAYMENTS,
+    constraints,
+  );
 
   // Calculate totals
   const totalCollected = payments.reduce((sum, p) => sum + p.amount, 0);
-  
+
   // Group by channel
   const byChannel: Record<string, number> = {};
   payments.forEach((p) => {
@@ -133,7 +136,7 @@ export async function generateCollectionReport(
   // Daily breakdown
   const dailyTotals: Record<string, number> = {};
   payments.forEach((payment) => {
-    const date = payment.recordedAt.toDate().toISOString().split('T')[0];
+    const date = payment.recordedAt.toDate().toISOString().split("T")[0];
     dailyTotals[date] = (dailyTotals[date] || 0) + payment.amount;
   });
 
@@ -146,10 +149,11 @@ export async function generateCollectionReport(
   const totalExpected = 0; // Placeholder
 
   return {
-    period: termId || 'All Time',
+    period: termId || "All Time",
     totalCollected,
     totalExpected,
-    collectionRate: totalExpected > 0 ? (totalCollected / totalExpected) * 100 : 0,
+    collectionRate:
+      totalExpected > 0 ? (totalCollected / totalExpected) * 100 : 0,
     byChannel,
     byClass,
     dailyBreakdown,
@@ -161,26 +165,26 @@ export async function generateCollectionReport(
  */
 export async function getCollectionsByClass(
   schoolId: string,
-  termId?: string
+  termId?: string,
 ): Promise<{ className: string; collected: number; expected: number }[]> {
   // Get all classes
   const classes = await fetchCollection<{ id: string; name: string }>(
     COLLECTIONS.CLASSES,
-    [where('schoolId', '==', schoolId)]
+    [where("schoolId", "==", schoolId)],
   );
 
   const results = [];
 
   for (const classItem of classes) {
     const constraints = [
-      where('schoolId', '==', schoolId),
-      where('studentClass', '==', classItem.name),
-      where('status', '==', 'cleared'),
+      where("schoolId", "==", schoolId),
+      where("studentClass", "==", classItem.name),
+      where("status", "==", "cleared"),
     ];
 
     const q = query(collection(db, COLLECTIONS.PAYMENTS), ...constraints);
     const snapshot = await getAggregateFromServer(q, {
-      total: sum('amount'),
+      total: sum("amount"),
     });
 
     results.push({
@@ -201,22 +205,25 @@ export async function getCollectionsByClass(
  * Generate arrears report
  */
 export async function generateArrearsReport(
-  filters: ReportFilters
+  filters: ReportFilters,
 ): Promise<ArrearsReport> {
   const { schoolId, classId } = filters;
 
   const constraints: QueryConstraint[] = [
-    where('schoolId', '==', schoolId),
-    where('balance', '>', 0),
+    where("schoolId", "==", schoolId),
+    where("balance", ">", 0),
   ];
 
   if (classId) {
-    constraints.push(where('classId', '==', classId));
+    constraints.push(where("classId", "==", classId));
   }
 
-  constraints.push(orderBy('balance', 'desc'));
+  constraints.push(orderBy("balance", "desc"));
 
-  const students = await fetchCollection<Student>(COLLECTIONS.STUDENTS, constraints);
+  const students = await fetchCollection<Student>(
+    COLLECTIONS.STUDENTS,
+    constraints,
+  );
 
   // Calculate total arrears
   const totalArrears = students.reduce((sum, s) => sum + (s.balance || 0), 0);
@@ -224,7 +231,7 @@ export async function generateArrearsReport(
   // Group by class
   const classTotals: Record<string, { count: number; amount: number }> = {};
   students.forEach((student) => {
-    const className = student.className || 'Unknown';
+    const className = student.className || "Unknown";
     if (!classTotals[className]) {
       classTotals[className] = { count: 0, amount: 0 };
     }
@@ -242,16 +249,16 @@ export async function generateArrearsReport(
   const topDefaulters = students.slice(0, 10).map((s) => ({
     studentId: s.id,
     studentName: `${s.firstName} ${s.lastName}`,
-    className: s.className || 'Unknown',
+    className: s.className || "Unknown",
     amount: s.balance || 0,
   }));
 
   // Aging analysis (simplified - would need lastPaymentDate)
   const agingAnalysis = [
-    { range: '0-30 days', count: 0, amount: 0 },
-    { range: '31-60 days', count: 0, amount: 0 },
-    { range: '61-90 days', count: 0, amount: 0 },
-    { range: '90+ days', count: 0, amount: 0 },
+    { range: "0-30 days", count: 0, amount: 0 },
+    { range: "31-60 days", count: 0, amount: 0 },
+    { range: "61-90 days", count: 0, amount: 0 },
+    { range: "90+ days", count: 0, amount: 0 },
   ];
 
   return {
@@ -268,17 +275,14 @@ export async function generateArrearsReport(
  */
 export async function getCriticalArrears(
   schoolId: string,
-  threshold: number = 500000 // UGX
+  threshold: number = 500000, // UGX
 ): Promise<Student[]> {
-  return fetchCollection<Student>(
-    COLLECTIONS.STUDENTS,
-    [
-      where('schoolId', '==', schoolId),
-      where('balance', '>=', threshold),
-      orderBy('balance', 'desc'),
-      limit(50),
-    ]
-  );
+  return fetchCollection<Student>(COLLECTIONS.STUDENTS, [
+    where("schoolId", "==", schoolId),
+    where("balance", ">=", threshold),
+    orderBy("balance", "desc"),
+    limit(50),
+  ]);
 }
 
 // ============================================================================
@@ -290,33 +294,37 @@ export async function getCriticalArrears(
  */
 export async function getAuditLogs(
   filters: AuditFilters,
-  pagination?: { pageSize?: number; lastDoc?: DocumentData }
+  pagination?: { pageSize?: number; lastDoc?: DocumentData },
 ): Promise<{ logs: AuditLogEntry[]; lastDoc: DocumentData | null }> {
   const constraints: QueryConstraint[] = [
-    where('schoolId', '==', filters.schoolId),
+    where("schoolId", "==", filters.schoolId),
   ];
 
   if (filters.userId) {
-    constraints.push(where('userId', '==', filters.userId));
+    constraints.push(where("userId", "==", filters.userId));
   }
 
   if (filters.action) {
-    constraints.push(where('action', '==', filters.action));
+    constraints.push(where("action", "==", filters.action));
   }
 
   if (filters.collection) {
-    constraints.push(where('collection', '==', filters.collection));
+    constraints.push(where("collection", "==", filters.collection));
   }
 
   if (filters.dateFrom) {
-    constraints.push(where('timestamp', '>=', Timestamp.fromDate(filters.dateFrom)));
+    constraints.push(
+      where("timestamp", ">=", Timestamp.fromDate(filters.dateFrom)),
+    );
   }
 
   if (filters.dateTo) {
-    constraints.push(where('timestamp', '<=', Timestamp.fromDate(filters.dateTo)));
+    constraints.push(
+      where("timestamp", "<=", Timestamp.fromDate(filters.dateTo)),
+    );
   }
 
-  constraints.push(orderBy('timestamp', 'desc'));
+  constraints.push(orderBy("timestamp", "desc"));
 
   if (pagination?.pageSize) {
     constraints.push(limit(pagination.pageSize));
@@ -326,7 +334,10 @@ export async function getAuditLogs(
     constraints.push(startAfter(pagination.lastDoc));
   }
 
-  const logs = await fetchCollection<AuditLogEntry>(COLLECTIONS.AUDIT_LOGS, constraints);
+  const logs = await fetchCollection<AuditLogEntry>(
+    COLLECTIONS.AUDIT_LOGS,
+    constraints,
+  );
 
   return {
     logs,
@@ -340,17 +351,17 @@ export async function getAuditLogs(
 export function subscribeToAuditLogs(
   schoolId: string,
   onData: (logs: AuditLogEntry[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): () => void {
   return subscribeToCollection<AuditLogEntry>(
     COLLECTIONS.AUDIT_LOGS,
     [
-      where('schoolId', '==', schoolId),
-      orderBy('timestamp', 'desc'),
+      where("schoolId", "==", schoolId),
+      orderBy("timestamp", "desc"),
       limit(100),
     ],
     onData,
-    onError
+    onError,
   );
 }
 
@@ -360,21 +371,18 @@ export function subscribeToAuditLogs(
 export async function getAuditStats(
   schoolId: string,
   dateFrom: Date,
-  dateTo: Date
+  dateTo: Date,
 ): Promise<{
   totalActions: number;
   byAction: Record<string, number>;
   byUser: Record<string, number>;
   byCollection: Record<string, number>;
 }> {
-  const logs = await fetchCollection<AuditLogEntry>(
-    COLLECTIONS.AUDIT_LOGS,
-    [
-      where('schoolId', '==', schoolId),
-      where('timestamp', '>=', Timestamp.fromDate(dateFrom)),
-      where('timestamp', '<=', Timestamp.fromDate(dateTo)),
-    ]
-  );
+  const logs = await fetchCollection<AuditLogEntry>(COLLECTIONS.AUDIT_LOGS, [
+    where("schoolId", "==", schoolId),
+    where("timestamp", ">=", Timestamp.fromDate(dateFrom)),
+    where("timestamp", "<=", Timestamp.fromDate(dateTo)),
+  ]);
 
   const byAction: Record<string, number> = {};
   const byUser: Record<string, number> = {};
@@ -403,40 +411,47 @@ export async function getAuditStats(
  */
 export async function exportCollectionData(
   filters: ReportFilters,
-  format: 'json' | 'csv'
+  format: "json" | "csv",
 ): Promise<string | object[]> {
   const constraints: QueryConstraint[] = [
-    where('schoolId', '==', filters.schoolId),
-    where('status', '==', 'cleared'),
+    where("schoolId", "==", filters.schoolId),
+    where("status", "==", "cleared"),
   ];
-  
-  if (filters.dateFrom) {
-    constraints.push(where('recordedAt', '>=', Timestamp.fromDate(filters.dateFrom)));
-  }
-  
-  if (filters.dateTo) {
-    constraints.push(where('recordedAt', '<=', Timestamp.fromDate(filters.dateTo)));
-  }
-  
-  constraints.push(orderBy('recordedAt', 'desc'));
-  
-  const payments = await fetchCollection<Payment>(COLLECTIONS.PAYMENTS, constraints);
 
-  if (format === 'json') {
+  if (filters.dateFrom) {
+    constraints.push(
+      where("recordedAt", ">=", Timestamp.fromDate(filters.dateFrom)),
+    );
+  }
+
+  if (filters.dateTo) {
+    constraints.push(
+      where("recordedAt", "<=", Timestamp.fromDate(filters.dateTo)),
+    );
+  }
+
+  constraints.push(orderBy("recordedAt", "desc"));
+
+  const payments = await fetchCollection<Payment>(
+    COLLECTIONS.PAYMENTS,
+    constraints,
+  );
+
+  if (format === "json") {
     return payments;
   }
 
   // CSV format
   const headers = [
-    'Receipt Number',
-    'Student ID',
-    'Student Name',
-    'Amount',
-    'Channel',
-    'Installment',
-    'Date',
-    'Status',
-  ].join(',');
+    "Receipt Number",
+    "Student ID",
+    "Student Name",
+    "Amount",
+    "Channel",
+    "Installment",
+    "Date",
+    "Status",
+  ].join(",");
 
   const rows = payments.map((p) =>
     [
@@ -448,10 +463,10 @@ export async function exportCollectionData(
       p.installmentName,
       p.recordedAt.toDate().toISOString(),
       p.status,
-    ].join(',')
+    ].join(","),
   );
 
-  return [headers, ...rows].join('\n');
+  return [headers, ...rows].join("\n");
 }
 
 /**
@@ -459,43 +474,40 @@ export async function exportCollectionData(
  */
 export async function exportArrearsData(
   schoolId: string,
-  format: 'json' | 'csv'
+  format: "json" | "csv",
 ): Promise<string | object[]> {
-  const students = await fetchCollection<Student>(
-    COLLECTIONS.STUDENTS,
-    [
-      where('schoolId', '==', schoolId),
-      where('balance', '>', 0),
-      orderBy('balance', 'desc'),
-    ]
-  );
+  const students = await fetchCollection<Student>(COLLECTIONS.STUDENTS, [
+    where("schoolId", "==", schoolId),
+    where("balance", ">", 0),
+    orderBy("balance", "desc"),
+  ]);
 
-  if (format === 'json') {
+  if (format === "json") {
     return students;
   }
 
   // CSV format
   const headers = [
-    'Student ID',
-    'Student Code',
-    'Name',
-    'Class',
-    'Balance (UGX)',
-    'Status',
-  ].join(',');
+    "Student ID",
+    "Student Code",
+    "Name",
+    "Class",
+    "Balance (UGX)",
+    "Status",
+  ].join(",");
 
   const rows = students.map((s) =>
     [
       s.id,
-      s.studentId || '',
+      s.studentId || "",
       `${s.firstName} ${s.lastName}`,
-      s.className || '',
+      s.className || "",
       s.balance || 0,
       s.status,
-    ].join(',')
+    ].join(","),
   );
 
-  return [headers, ...rows].join('\n');
+  return [headers, ...rows].join("\n");
 }
 
 // ============================================================================
@@ -509,15 +521,15 @@ export async function saveScheduledReport(
   schoolId: string,
   config: {
     name: string;
-    type: 'collections' | 'arrears' | 'audit';
-    frequency: 'daily' | 'weekly' | 'monthly';
+    type: "collections" | "arrears" | "audit";
+    frequency: "daily" | "weekly" | "monthly";
     recipients: string[];
     filters?: ReportFilters;
   },
-  userId: string
+  userId: string,
 ): Promise<string> {
   const reportId = `RPT-${Date.now()}`;
-  
+
   await saveDocument(`${COLLECTIONS.SETTINGS}/reports/scheduled`, reportId, {
     ...config,
     schoolId,
@@ -526,13 +538,10 @@ export async function saveScheduledReport(
     isActive: true,
   });
 
-  await logAuditAction(
-    'CREATE',
-    'scheduled_reports',
-    reportId,
-    userId,
-    { reportType: config.type, frequency: config.frequency }
-  );
+  await logAuditAction("CREATE", "scheduled_reports", reportId, userId, {
+    reportType: config.type,
+    frequency: config.frequency,
+  });
 
   return reportId;
 }
@@ -540,7 +549,10 @@ export async function saveScheduledReport(
 /**
  * Get dashboard summary for reports page
  */
-export async function getReportsSummary(schoolId: string, termId?: string): Promise<{
+export async function getReportsSummary(
+  schoolId: string,
+  termId?: string,
+): Promise<{
   totalCollections: number;
   totalArrears: number;
   collectionRate: number;
@@ -550,36 +562,36 @@ export async function getReportsSummary(schoolId: string, termId?: string): Prom
 }> {
   // Get collections
   const collectionConstraints = [
-    where('schoolId', '==', schoolId),
-    where('status', '==', 'cleared'),
+    where("schoolId", "==", schoolId),
+    where("status", "==", "cleared"),
   ];
-  
-  const collectionsQuery = query(collection(db, COLLECTIONS.PAYMENTS), ...collectionConstraints);
+
+  const collectionsQuery = query(
+    collection(db, COLLECTIONS.PAYMENTS),
+    ...collectionConstraints,
+  );
   const collectionsSnapshot = await getAggregateFromServer(collectionsQuery, {
-    total: sum('amount'),
+    total: sum("amount"),
   });
 
   // Get arrears
   const arrearsQuery = query(
     collection(db, COLLECTIONS.STUDENTS),
-    where('schoolId', '==', schoolId),
-    where('balance', '>', 0)
+    where("schoolId", "==", schoolId),
+    where("balance", ">", 0),
   );
   const arrearsTotalSnapshot = await getAggregateFromServer(arrearsQuery, {
-    total: sum('balance'),
+    total: sum("balance"),
   });
   const arrearsCountSnapshot = await getCountFromServer(arrearsQuery);
 
   // Recent payments
-  const recentPayments = await fetchCollection<Payment>(
-    COLLECTIONS.PAYMENTS,
-    [
-      where('schoolId', '==', schoolId),
-      where('status', '==', 'cleared'),
-      orderBy('recordedAt', 'desc'),
-      limit(10),
-    ]
-  );
+  const recentPayments = await fetchCollection<Payment>(COLLECTIONS.PAYMENTS, [
+    where("schoolId", "==", schoolId),
+    where("status", "==", "cleared"),
+    orderBy("recordedAt", "desc"),
+    limit(10),
+  ]);
 
   return {
     totalCollections: collectionsSnapshot.data().total || 0,

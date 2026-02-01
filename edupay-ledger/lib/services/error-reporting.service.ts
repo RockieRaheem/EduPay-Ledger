@@ -1,7 +1,7 @@
 /**
  * Error Reporting Service
  *
- * Centralized error handling and reporting for EduPay Ledger.
+ * Centralized error handling and reporting for eBursar.
  * Integrates with Sentry for production error tracking.
  * In development, it provides detailed console logging.
  */
@@ -153,14 +153,14 @@ async function sendToService(report: ErrorReport): Promise<boolean> {
   if (typeof window !== "undefined") {
     try {
       const stored = JSON.parse(
-        localStorage.getItem("edupay_error_logs") || "[]",
+        localStorage.getItem("ebursar_error_logs") || "[]",
       );
       stored.push(report);
       // Keep only last 100 errors
       if (stored.length > 100) {
         stored.splice(0, stored.length - 100);
       }
-      localStorage.setItem("edupay_error_logs", JSON.stringify(stored));
+      localStorage.setItem("ebursar_error_logs", JSON.stringify(stored));
     } catch (e) {
       // localStorage might be full or unavailable
     }
@@ -346,7 +346,7 @@ export function getStoredErrorLogs(): ErrorReport[] {
   }
 
   try {
-    return JSON.parse(localStorage.getItem("edupay_error_logs") || "[]");
+    return JSON.parse(localStorage.getItem("ebursar_error_logs") || "[]");
   } catch {
     return [];
   }
@@ -357,7 +357,7 @@ export function getStoredErrorLogs(): ErrorReport[] {
  */
 export function clearStoredErrorLogs(): void {
   if (typeof window !== "undefined") {
-    localStorage.removeItem("edupay_error_logs");
+    localStorage.removeItem("ebursar_error_logs");
   }
 }
 

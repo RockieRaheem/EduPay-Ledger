@@ -1,14 +1,14 @@
-// Service Worker for EduPay Ledger PWA
+// Service Worker for eBursar PWA
 // Provides offline support, caching, and background sync
 
 const CACHE_VERSION = "v2";
-const STATIC_CACHE = `edupay-static-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `edupay-dynamic-${CACHE_VERSION}`;
-const API_CACHE = `edupay-api-${CACHE_VERSION}`;
+const STATIC_CACHE = `ebursar-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `ebursar-dynamic-${CACHE_VERSION}`;
+const API_CACHE = `ebursar-api-${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline.html";
 
 // IndexedDB database name for offline queue
-const DB_NAME = "edupay-offline-db";
+const DB_NAME = "ebursar-offline-db";
 const DB_VERSION = 1;
 const STORE_PENDING_PAYMENTS = "pending-payments";
 const STORE_PENDING_ACTIONS = "pending-actions";
@@ -168,7 +168,7 @@ self.addEventListener("activate", (event) => {
         cacheNames
           .filter((name) => {
             return (
-              name.startsWith("edupay-") &&
+              name.startsWith("ebursar-") &&
               name !== STATIC_CACHE &&
               name !== DYNAMIC_CACHE &&
               name !== API_CACHE
@@ -484,7 +484,7 @@ self.addEventListener("push", (event) => {
   const data = event.data?.json() || {};
 
   const options = {
-    body: data.body || "New notification from EduPay Ledger",
+    body: data.body || "New notification from eBursar",
     icon: "/icons/icon-192x192.png",
     badge: "/icons/badge-72x72.png",
     vibrate: [100, 50, 100],
@@ -506,7 +506,7 @@ self.addEventListener("push", (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || "EduPay Ledger", options),
+    self.registration.showNotification(data.title || "eBursar", options),
   );
 });
 

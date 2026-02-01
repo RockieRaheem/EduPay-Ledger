@@ -238,7 +238,7 @@ export function MinimalTopNav({
             </svg>
           </div>
           <h2 className="text-lg font-bold leading-tight tracking-tight">
-            EduPay Ledger
+            eBursar
           </h2>
         </Link>
 

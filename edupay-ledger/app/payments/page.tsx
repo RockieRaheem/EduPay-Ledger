@@ -1,16 +1,20 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Card, CardTitle } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { Table, Pagination } from '@/components/ui/Table';
-import { Modal } from '@/components/ui/Modal';
-import { formatUGX, formatDate } from '@/lib/utils';
-import { useFirebasePayments } from '@/hooks/useFirebaseData';
-import type { PaymentListItem, PaymentActivity, ChannelBreakdown } from '@/hooks/usePayments';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Card, CardTitle } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Table, Pagination } from "@/components/ui/Table";
+import { Modal } from "@/components/ui/Modal";
+import { formatUGX, formatDate } from "@/lib/utils";
+import { useFirebasePayments } from "@/hooks/useFirebaseData";
+import type {
+  PaymentListItem,
+  PaymentActivity,
+  ChannelBreakdown,
+} from "@/hooks/usePayments";
 
 // ============================================================================
 // SUB-COMPONENTS
@@ -26,27 +30,43 @@ interface StatsCardProps {
   trend?: { value: number; isPositive: boolean };
 }
 
-function StatsCard({ title, value, subValue, icon, iconBg, iconColor, trend }: StatsCardProps) {
+function StatsCard({
+  title,
+  value,
+  subValue,
+  icon,
+  iconBg,
+  iconColor,
+  trend,
+}: StatsCardProps) {
   return (
     <Card className="relative overflow-hidden">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">{title}</p>
-          <p className="text-2xl font-bold text-primary dark:text-white mt-1">{value}</p>
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
+            {title}
+          </p>
+          <p className="text-2xl font-bold text-primary dark:text-white mt-1">
+            {value}
+          </p>
           {subValue && (
             <p className="text-xs text-slate-500 mt-1">{subValue}</p>
           )}
           {trend && (
-            <p className={`text-xs mt-2 flex items-center gap-1 ${trend.isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
+            <p
+              className={`text-xs mt-2 flex items-center gap-1 ${trend.isPositive ? "text-emerald-600" : "text-red-600"}`}
+            >
               <span className="material-symbols-outlined text-xs">
-                {trend.isPositive ? 'trending_up' : 'trending_down'}
+                {trend.isPositive ? "trending_up" : "trending_down"}
               </span>
               {trend.value}% from last week
             </p>
           )}
         </div>
         <div className={`p-3 rounded-xl ${iconBg}`}>
-          <span className={`material-symbols-outlined text-xl ${iconColor}`}>{icon}</span>
+          <span className={`material-symbols-outlined text-xl ${iconColor}`}>
+            {icon}
+          </span>
         </div>
       </div>
     </Card>
@@ -62,13 +82,24 @@ interface QuickActionCardProps {
   description: string;
 }
 
-function QuickActionCard({ href, icon, iconBg, iconColor, title, description }: QuickActionCardProps) {
+function QuickActionCard({
+  href,
+  icon,
+  iconBg,
+  iconColor,
+  title,
+  description,
+}: QuickActionCardProps) {
   return (
     <Link href={href}>
       <Card className="hover:shadow-lg transition-all cursor-pointer group h-full">
         <div className="flex items-center gap-4">
-          <div className={`p-4 rounded-xl ${iconBg} group-hover:scale-105 transition-transform`}>
-            <span className={`material-symbols-outlined text-2xl ${iconColor}`}>{icon}</span>
+          <div
+            className={`p-4 rounded-xl ${iconBg} group-hover:scale-105 transition-transform`}
+          >
+            <span className={`material-symbols-outlined text-2xl ${iconColor}`}>
+              {icon}
+            </span>
           </div>
           <div>
             <h4 className="font-bold text-primary dark:text-white">{title}</h4>
@@ -86,26 +117,50 @@ interface ChannelBadgeProps {
 
 function ChannelBadge({ channel }: ChannelBadgeProps) {
   const config: Record<string, { icon: string; color: string }> = {
-    momo_mtn: { icon: 'smartphone', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
-    momo_airtel: { icon: 'smartphone', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
-    bank_transfer: { icon: 'account_balance', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
-    cash: { icon: 'payments', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' },
-    cheque: { icon: 'description', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
-    other: { icon: 'receipt', color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400' },
+    momo_mtn: {
+      icon: "smartphone",
+      color:
+        "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    },
+    momo_airtel: {
+      icon: "smartphone",
+      color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    },
+    bank_transfer: {
+      icon: "account_balance",
+      color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    },
+    cash: {
+      icon: "payments",
+      color:
+        "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    },
+    cheque: {
+      icon: "description",
+      color:
+        "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+    },
+    other: {
+      icon: "receipt",
+      color:
+        "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400",
+    },
   };
 
   const { icon, color } = config[channel] || config.other;
   const labels: Record<string, string> = {
-    momo_mtn: 'MTN MoMo',
-    momo_airtel: 'Airtel Money',
-    bank_transfer: 'Bank',
-    cash: 'Cash',
-    cheque: 'Cheque',
-    other: 'Other',
+    momo_mtn: "MTN MoMo",
+    momo_airtel: "Airtel Money",
+    bank_transfer: "Bank",
+    cash: "Cash",
+    cheque: "Cheque",
+    other: "Other",
   };
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${color}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${color}`}
+    >
       <span className="material-symbols-outlined text-xs">{icon}</span>
       {labels[channel] || channel}
     </span>
@@ -117,14 +172,20 @@ interface PaymentStatusBadgeCustomProps {
 }
 
 function PaymentStatusBadgeCustom({ status }: PaymentStatusBadgeCustomProps) {
-  const config: Record<string, { label: string; variant: 'success' | 'warning' | 'danger' | 'info' }> = {
-    cleared: { label: 'Cleared', variant: 'success' },
-    pending: { label: 'Pending', variant: 'warning' },
-    reversed: { label: 'Reversed', variant: 'danger' },
-    failed: { label: 'Failed', variant: 'danger' },
+  const config: Record<
+    string,
+    { label: string; variant: "success" | "warning" | "danger" | "info" }
+  > = {
+    cleared: { label: "Cleared", variant: "success" },
+    pending: { label: "Pending", variant: "warning" },
+    reversed: { label: "Reversed", variant: "danger" },
+    failed: { label: "Failed", variant: "danger" },
   };
 
-  const { label, variant } = config[status] || { label: status, variant: 'info' };
+  const { label, variant } = config[status] || {
+    label: status,
+    variant: "info",
+  };
 
   return (
     <Badge variant={variant} dot className="uppercase text-[10px]">
@@ -138,17 +199,22 @@ interface CollectionChartProps {
 }
 
 function CollectionChart({ data }: CollectionChartProps) {
-  const maxAmount = Math.max(...data.map(d => d.amount), 1);
-  
+  const maxAmount = Math.max(...data.map((d) => d.amount), 1);
+
   return (
     <div className="h-40 flex items-end gap-2">
       {data.map((day, index) => {
         const height = maxAmount > 0 ? (day.amount / maxAmount) * 100 : 0;
-        const dayName = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
+        const dayName = new Date(day.date).toLocaleDateString("en-US", {
+          weekday: "short",
+        });
         const isToday = index === data.length - 1;
-        
+
         return (
-          <div key={day.date} className="flex-1 flex flex-col items-center gap-2">
+          <div
+            key={day.date}
+            className="flex-1 flex flex-col items-center gap-2"
+          >
             <div className="w-full relative group">
               {/* Tooltip */}
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-10">
@@ -162,13 +228,15 @@ function CollectionChart({ data }: CollectionChartProps) {
               <div
                 className={`w-full rounded-t-md transition-all ${
                   isToday
-                    ? 'bg-gradient-to-t from-primary to-primary/70'
-                    : 'bg-slate-200 dark:bg-slate-700 hover:bg-primary/50'
+                    ? "bg-gradient-to-t from-primary to-primary/70"
+                    : "bg-slate-200 dark:bg-slate-700 hover:bg-primary/50"
                 }`}
-                style={{ height: `${Math.max(height, 4)}%`, minHeight: '4px' }}
+                style={{ height: `${Math.max(height, 4)}%`, minHeight: "4px" }}
               />
             </div>
-            <span className={`text-[10px] ${isToday ? 'font-bold text-primary' : 'text-slate-500'}`}>
+            <span
+              className={`text-[10px] ${isToday ? "font-bold text-primary" : "text-slate-500"}`}
+            >
               {dayName}
             </span>
           </div>
@@ -184,20 +252,22 @@ interface ChannelBreakdownChartProps {
 
 function ChannelBreakdownChart({ data }: ChannelBreakdownChartProps) {
   const colors: Record<string, string> = {
-    momo_mtn: 'bg-yellow-500',
-    momo_airtel: 'bg-red-500',
-    bank_transfer: 'bg-blue-500',
-    cash: 'bg-emerald-500',
-    cheque: 'bg-purple-500',
-    other: 'bg-slate-500',
+    momo_mtn: "bg-yellow-500",
+    momo_airtel: "bg-red-500",
+    bank_transfer: "bg-blue-500",
+    cash: "bg-emerald-500",
+    cheque: "bg-purple-500",
+    other: "bg-slate-500",
   };
 
   return (
     <div className="space-y-3">
-      {data.map(item => (
+      {data.map((item) => (
         <div key={item.channel} className="space-y-1">
           <div className="flex justify-between text-sm">
-            <span className="font-medium text-slate-700 dark:text-slate-300">{item.label}</span>
+            <span className="font-medium text-slate-700 dark:text-slate-300">
+              {item.label}
+            </span>
             <span className="text-slate-500">{item.percentage}%</span>
           </div>
           <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -223,20 +293,40 @@ interface ActivityFeedProps {
 function ActivityFeed({ activities }: ActivityFeedProps) {
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'payment_recorded': return { icon: 'add_card', color: 'text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30' };
-      case 'payment_verified': return { icon: 'verified', color: 'text-blue-500 bg-blue-100 dark:bg-blue-900/30' };
-      case 'payment_reversed': return { icon: 'undo', color: 'text-red-500 bg-red-100 dark:bg-red-900/30' };
-      case 'receipt_uploaded': return { icon: 'upload_file', color: 'text-purple-500 bg-purple-100 dark:bg-purple-900/30' };
-      default: return { icon: 'receipt', color: 'text-slate-500 bg-slate-100 dark:bg-slate-800' };
+      case "payment_recorded":
+        return {
+          icon: "add_card",
+          color: "text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30",
+        };
+      case "payment_verified":
+        return {
+          icon: "verified",
+          color: "text-blue-500 bg-blue-100 dark:bg-blue-900/30",
+        };
+      case "payment_reversed":
+        return {
+          icon: "undo",
+          color: "text-red-500 bg-red-100 dark:bg-red-900/30",
+        };
+      case "receipt_uploaded":
+        return {
+          icon: "upload_file",
+          color: "text-purple-500 bg-purple-100 dark:bg-purple-900/30",
+        };
+      default:
+        return {
+          icon: "receipt",
+          color: "text-slate-500 bg-slate-100 dark:bg-slate-800",
+        };
     }
   };
 
   return (
     <div className="space-y-4">
-      {activities.slice(0, 5).map(activity => {
+      {activities.slice(0, 5).map((activity) => {
         const { icon, color } = getActivityIcon(activity.type);
         const timeAgo = getTimeAgo(activity.timestamp);
-        
+
         return (
           <div key={activity.id} className="flex items-start gap-3">
             <div className={`p-2 rounded-lg ${color}`}>
@@ -262,8 +352,8 @@ function ActivityFeed({ activities }: ActivityFeedProps) {
 function getTimeAgo(date: Date): string {
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (seconds < 60) return 'Just now';
+
+  if (seconds < 60) return "Just now";
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
@@ -280,13 +370,21 @@ interface FilterSectionProps {
     channel: string;
     status: string;
   };
-  onFilterChange: (filters: Partial<{ search: string; channel: string; status: string }>) => void;
+  onFilterChange: (
+    filters: Partial<{ search: string; channel: string; status: string }>,
+  ) => void;
   onReset: () => void;
   availableChannels: string[];
   availableStatuses: string[];
 }
 
-function FilterSection({ filters, onFilterChange, onReset, availableChannels, availableStatuses }: FilterSectionProps) {
+function FilterSection({
+  filters,
+  onFilterChange,
+  onReset,
+  availableChannels,
+  availableStatuses,
+}: FilterSectionProps) {
   const [searchInput, setSearchInput] = useState(filters.search);
 
   const handleSearch = (value: string) => {
@@ -299,21 +397,21 @@ function FilterSection({ filters, onFilterChange, onReset, availableChannels, av
   };
 
   const channelLabels: Record<string, string> = {
-    All: 'All Channels',
-    momo_mtn: 'MTN MoMo',
-    momo_airtel: 'Airtel Money',
-    bank_transfer: 'Bank Transfer',
-    cash: 'Cash',
-    cheque: 'Cheque',
-    other: 'Other',
+    All: "All Channels",
+    momo_mtn: "MTN MoMo",
+    momo_airtel: "Airtel Money",
+    bank_transfer: "Bank Transfer",
+    cash: "Cash",
+    cheque: "Cheque",
+    other: "Other",
   };
 
   const statusLabels: Record<string, string> = {
-    All: 'All Status',
-    pending: 'Pending',
-    cleared: 'Cleared',
-    reversed: 'Reversed',
-    failed: 'Failed',
+    All: "All Status",
+    pending: "Pending",
+    cleared: "Cleared",
+    reversed: "Reversed",
+    failed: "Failed",
   };
 
   return (
@@ -347,8 +445,10 @@ function FilterSection({ filters, onFilterChange, onReset, availableChannels, av
           onChange={(e) => onFilterChange({ channel: e.target.value })}
           className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
         >
-          {availableChannels.map(ch => (
-            <option key={ch} value={ch}>{channelLabels[ch] || ch}</option>
+          {availableChannels.map((ch) => (
+            <option key={ch} value={ch}>
+              {channelLabels[ch] || ch}
+            </option>
           ))}
         </select>
       </div>
@@ -363,8 +463,10 @@ function FilterSection({ filters, onFilterChange, onReset, availableChannels, av
           onChange={(e) => onFilterChange({ status: e.target.value })}
           className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
         >
-          {availableStatuses.map(st => (
-            <option key={st} value={st}>{statusLabels[st] || st}</option>
+          {availableStatuses.map((st) => (
+            <option key={st} value={st}>
+              {statusLabels[st] || st}
+            </option>
           ))}
         </select>
       </div>
@@ -388,7 +490,11 @@ interface PaymentDetailModalProps {
   onClose: () => void;
 }
 
-function PaymentDetailModal({ payment, isOpen, onClose }: PaymentDetailModalProps) {
+function PaymentDetailModal({
+  payment,
+  isOpen,
+  onClose,
+}: PaymentDetailModalProps) {
   if (!payment) return null;
 
   return (
@@ -397,55 +503,90 @@ function PaymentDetailModal({ payment, isOpen, onClose }: PaymentDetailModalProp
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
           <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider">Receipt Number</p>
-            <p className="text-xl font-bold text-primary dark:text-white">{payment.receiptNumber}</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wider">
+              Receipt Number
+            </p>
+            <p className="text-xl font-bold text-primary dark:text-white">
+              {payment.receiptNumber}
+            </p>
           </div>
           <PaymentStatusBadgeCustom status={payment.status} />
         </div>
 
         {/* Amount */}
         <div className="text-center py-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Amount Paid</p>
-          <p className="text-3xl font-black text-emerald-600">{formatUGX(payment.amount)}</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+            Amount Paid
+          </p>
+          <p className="text-3xl font-black text-emerald-600">
+            {formatUGX(payment.amount)}
+          </p>
         </div>
 
         {/* Details Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Student</p>
-            <p className="font-bold text-slate-900 dark:text-white">{payment.studentName}</p>
-            <p className="text-sm text-slate-500">{payment.studentClass} {payment.studentStream}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Payment Channel</p>
-            <ChannelBadge channel={payment.channel} />
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Transaction Ref</p>
-            <p className="font-mono text-sm text-slate-700 dark:text-slate-300">{payment.transactionRef}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Recorded By</p>
-            <p className="text-sm text-slate-700 dark:text-slate-300">{payment.recordedBy}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Date & Time</p>
-            <p className="text-sm text-slate-700 dark:text-slate-300">
-              {formatDate(payment.recordedAt)}
-              <br />
-              {payment.recordedAt.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' })}
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+              Student
+            </p>
+            <p className="font-bold text-slate-900 dark:text-white">
+              {payment.studentName}
+            </p>
+            <p className="text-sm text-slate-500">
+              {payment.studentClass} {payment.studentStream}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Stellar Audit</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+              Payment Channel
+            </p>
+            <ChannelBadge channel={payment.channel} />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+              Transaction Ref
+            </p>
+            <p className="font-mono text-sm text-slate-700 dark:text-slate-300">
+              {payment.transactionRef}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+              Recorded By
+            </p>
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              {payment.recordedBy}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+              Date & Time
+            </p>
+            <p className="text-sm text-slate-700 dark:text-slate-300">
+              {formatDate(payment.recordedAt)}
+              <br />
+              {payment.recordedAt.toLocaleTimeString("en-UG", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+              Stellar Audit
+            </p>
             {payment.stellarAnchored ? (
               <div className="flex items-center gap-1 text-emerald-600">
-                <span className="material-symbols-outlined text-sm">verified</span>
+                <span className="material-symbols-outlined text-sm">
+                  verified
+                </span>
                 <span className="text-sm font-medium">Anchored</span>
               </div>
             ) : (
               <div className="flex items-center gap-1 text-amber-600">
-                <span className="material-symbols-outlined text-sm">pending</span>
+                <span className="material-symbols-outlined text-sm">
+                  pending
+                </span>
                 <span className="text-sm font-medium">Pending</span>
               </div>
             )}
@@ -455,7 +596,9 @@ function PaymentDetailModal({ payment, isOpen, onClose }: PaymentDetailModalProp
         {/* Stellar Hash */}
         {payment.stellarTxHash && (
           <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Stellar Transaction Hash</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+              Stellar Transaction Hash
+            </p>
             <p className="font-mono text-xs text-slate-600 dark:text-slate-400 break-all">
               {payment.stellarTxHash}
             </p>
@@ -465,7 +608,9 @@ function PaymentDetailModal({ payment, isOpen, onClose }: PaymentDetailModalProp
         {/* Notes */}
         {payment.notes && (
           <div>
-            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Notes</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+              Notes
+            </p>
             <p className="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
               {payment.notes}
             </p>
@@ -477,9 +622,11 @@ function PaymentDetailModal({ payment, isOpen, onClose }: PaymentDetailModalProp
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          {payment.status === 'pending' && (
+          {payment.status === "pending" && (
             <Button variant="primary">
-              <span className="material-symbols-outlined text-sm mr-2">verified</span>
+              <span className="material-symbols-outlined text-sm mr-2">
+                verified
+              </span>
               Verify Payment
             </Button>
           )}
@@ -517,73 +664,92 @@ export default function PaymentsPage() {
     authLoading,
   } = useFirebasePayments({ pageSize: 10 });
 
-  const [selectedPayment, setSelectedPayment] = useState<PaymentListItem | null>(null);
+  const [selectedPayment, setSelectedPayment] =
+    useState<PaymentListItem | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [authLoading, isAuthenticated, router]);
 
   // Table columns
   const columns = [
     {
-      key: 'receipt',
-      header: 'Receipt / Ref',
+      key: "receipt",
+      header: "Receipt / Ref",
       render: (payment: PaymentListItem) => (
         <div>
-          <p className="font-bold text-primary dark:text-white">{payment.receiptNumber}</p>
-          <p className="text-[10px] text-slate-400 font-mono">{payment.transactionRef}</p>
-        </div>
-      ),
-    },
-    {
-      key: 'date',
-      header: 'Date & Time',
-      render: (payment: PaymentListItem) => (
-        <div>
-          <p className="font-medium text-slate-700 dark:text-slate-300">{formatDate(payment.recordedAt)}</p>
-          <p className="text-[10px] text-slate-400">
-            {payment.recordedAt.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' })}
+          <p className="font-bold text-primary dark:text-white">
+            {payment.receiptNumber}
+          </p>
+          <p className="text-[10px] text-slate-400 font-mono">
+            {payment.transactionRef}
           </p>
         </div>
       ),
     },
     {
-      key: 'student',
-      header: 'Student',
+      key: "date",
+      header: "Date & Time",
       render: (payment: PaymentListItem) => (
         <div>
-          <p className="font-semibold text-slate-900 dark:text-white">{payment.studentName}</p>
-          <p className="text-xs text-slate-500">{payment.studentClass} {payment.studentStream}</p>
+          <p className="font-medium text-slate-700 dark:text-slate-300">
+            {formatDate(payment.recordedAt)}
+          </p>
+          <p className="text-[10px] text-slate-400">
+            {payment.recordedAt.toLocaleTimeString("en-UG", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
         </div>
       ),
     },
     {
-      key: 'amount',
-      header: 'Amount',
-      align: 'right' as const,
+      key: "student",
+      header: "Student",
       render: (payment: PaymentListItem) => (
-        <span className="font-bold text-emerald-600">{formatUGX(payment.amount)}</span>
+        <div>
+          <p className="font-semibold text-slate-900 dark:text-white">
+            {payment.studentName}
+          </p>
+          <p className="text-xs text-slate-500">
+            {payment.studentClass} {payment.studentStream}
+          </p>
+        </div>
       ),
     },
     {
-      key: 'channel',
-      header: 'Channel',
+      key: "amount",
+      header: "Amount",
+      align: "right" as const,
+      render: (payment: PaymentListItem) => (
+        <span className="font-bold text-emerald-600">
+          {formatUGX(payment.amount)}
+        </span>
+      ),
+    },
+    {
+      key: "channel",
+      header: "Channel",
       render: (payment: PaymentListItem) => (
         <ChannelBadge channel={payment.channel} />
       ),
     },
     {
-      key: 'status',
-      header: 'Status',
+      key: "status",
+      header: "Status",
       render: (payment: PaymentListItem) => (
         <div className="flex items-center gap-2">
           <PaymentStatusBadgeCustom status={payment.status} />
           {payment.stellarAnchored && (
-            <span className="material-symbols-outlined text-xs text-emerald-500" title="Stellar Anchored">
+            <span
+              className="material-symbols-outlined text-xs text-emerald-500"
+              title="Stellar Anchored"
+            >
               verified
             </span>
           )}
@@ -591,9 +757,9 @@ export default function PaymentsPage() {
       ),
     },
     {
-      key: 'actions',
-      header: '',
-      align: 'right' as const,
+      key: "actions",
+      header: "",
+      align: "right" as const,
       render: (payment: PaymentListItem) => (
         <Button
           variant="ghost"
@@ -621,8 +787,11 @@ export default function PaymentsPage() {
         <div className="animate-pulse space-y-6">
           <div className="h-10 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="h-24 bg-slate-200 dark:bg-slate-700 rounded-xl"
+              ></div>
             ))}
           </div>
           <div className="h-96 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
@@ -636,7 +805,9 @@ export default function PaymentsPage() {
     return (
       <div className="p-4 lg:p-8 bg-background-light dark:bg-background-dark min-h-full">
         <Card className="text-center py-12">
-          <span className="material-symbols-outlined text-5xl text-red-500 mb-4">error</span>
+          <span className="material-symbols-outlined text-5xl text-red-500 mb-4">
+            error
+          </span>
           <h2 className="text-xl font-bold text-primary dark:text-white mb-2">
             Failed to Load Payments
           </h2>
@@ -656,15 +827,22 @@ export default function PaymentsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <nav className="flex text-sm text-slate-500 mb-2">
-            <Link href="/dashboard" className="hover:text-primary dark:hover:text-white">
+            <Link
+              href="/dashboard"
+              className="hover:text-primary dark:hover:text-white"
+            >
               Dashboard
             </Link>
             <span className="mx-2">/</span>
-            <span className="text-primary dark:text-white font-medium">Payments</span>
+            <span className="text-primary dark:text-white font-medium">
+              Payments
+            </span>
           </nav>
           <h1 className="text-2xl lg:text-3xl font-black text-primary dark:text-white flex items-center gap-3">
             <span className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-              <span className="material-symbols-outlined text-emerald-600">payments</span>
+              <span className="material-symbols-outlined text-emerald-600">
+                payments
+              </span>
             </span>
             Payment Management
           </h1>
@@ -674,12 +852,16 @@ export default function PaymentsPage() {
             <span className="material-symbols-outlined">refresh</span>
           </Button>
           <Button variant="outline" onClick={() => setShowExportModal(true)}>
-            <span className="material-symbols-outlined text-sm mr-2">download</span>
+            <span className="material-symbols-outlined text-sm mr-2">
+              download
+            </span>
             Export
           </Button>
           <Link href="/payments/record">
             <Button variant="primary">
-              <span className="material-symbols-outlined text-sm mr-2">add_card</span>
+              <span className="material-symbols-outlined text-sm mr-2">
+                add_card
+              </span>
               Record Payment
             </Button>
           </Link>
@@ -808,17 +990,27 @@ export default function PaymentsPage() {
           <Card padding="none" className="overflow-hidden">
             <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
               <div>
-                <h3 className="font-bold text-primary dark:text-white">Payment Transactions</h3>
-                <p className="text-xs text-slate-500">Showing {payments.length} of {totalItems}</p>
+                <h3 className="font-bold text-primary dark:text-white">
+                  Payment Transactions
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Showing {payments.length} of {totalItems}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setFilters({ sortOrder: filters.sortOrder === 'asc' ? 'desc' : 'asc' })}
+                  onClick={() =>
+                    setFilters({
+                      sortOrder: filters.sortOrder === "asc" ? "desc" : "asc",
+                    })
+                  }
                   className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                  title={`Sort ${filters.sortOrder === 'asc' ? 'descending' : 'ascending'}`}
+                  title={`Sort ${filters.sortOrder === "asc" ? "descending" : "ascending"}`}
                 >
                   <span className="material-symbols-outlined text-slate-500 text-sm">
-                    {filters.sortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                    {filters.sortOrder === "asc"
+                      ? "arrow_upward"
+                      : "arrow_downward"}
                   </span>
                 </button>
               </div>
@@ -826,7 +1018,9 @@ export default function PaymentsPage() {
 
             {payments.length === 0 ? (
               <div className="text-center py-12">
-                <span className="material-symbols-outlined text-5xl text-slate-300 mb-4">search_off</span>
+                <span className="material-symbols-outlined text-5xl text-slate-300 mb-4">
+                  search_off
+                </span>
                 <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300 mb-2">
                   No Payments Found
                 </h3>
@@ -878,7 +1072,7 @@ export default function PaymentsPage() {
             Stellar Anchoring Active
           </span>
         </div>
-        <p>© 2026 EduPay Ledger Uganda. Built for Security & Trust.</p>
+        <p>© 2026 eBursar Uganda. Built for Security & Trust.</p>
       </footer>
 
       {/* Payment Detail Modal */}
@@ -900,16 +1094,37 @@ export default function PaymentsPage() {
             Export {totalItems} payment records:
           </p>
           <div className="grid grid-cols-1 gap-3">
-            <Button variant="outline" fullWidth onClick={() => handleExport('csv')} className="justify-start">
-              <span className="material-symbols-outlined mr-3 text-green-500">table_chart</span>
+            <Button
+              variant="outline"
+              fullWidth
+              onClick={() => handleExport("csv")}
+              className="justify-start"
+            >
+              <span className="material-symbols-outlined mr-3 text-green-500">
+                table_chart
+              </span>
               Export as CSV
             </Button>
-            <Button variant="outline" fullWidth onClick={() => handleExport('pdf')} className="justify-start">
-              <span className="material-symbols-outlined mr-3 text-red-500">picture_as_pdf</span>
+            <Button
+              variant="outline"
+              fullWidth
+              onClick={() => handleExport("pdf")}
+              className="justify-start"
+            >
+              <span className="material-symbols-outlined mr-3 text-red-500">
+                picture_as_pdf
+              </span>
               Export as PDF
             </Button>
-            <Button variant="outline" fullWidth onClick={() => handleExport('excel')} className="justify-start">
-              <span className="material-symbols-outlined mr-3 text-emerald-600">grid_on</span>
+            <Button
+              variant="outline"
+              fullWidth
+              onClick={() => handleExport("excel")}
+              className="justify-start"
+            >
+              <span className="material-symbols-outlined mr-3 text-emerald-600">
+                grid_on
+              </span>
               Export as Excel
             </Button>
           </div>

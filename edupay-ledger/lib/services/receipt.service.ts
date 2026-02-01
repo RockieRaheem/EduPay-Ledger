@@ -4,11 +4,11 @@
  * Generates digital and printable PDF receipts for payments
  */
 
-import { Payment } from '@/types/payment';
-import { Student } from '@/types/student';
-import { formatUGX } from '@/lib/utils';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
-import { storage, initializeFirebase } from '@/lib/firebase';
+import { Payment } from "@/types/payment";
+import { Student } from "@/types/student";
+import { formatUGX } from "@/lib/utils";
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
+import { storage, initializeFirebase } from "@/lib/firebase";
 
 export interface ReceiptData {
   payment: Payment;
@@ -41,35 +41,71 @@ export interface Receipt {
  * Converts a number to words (for receipt amounts)
  */
 function numberToWords(num: number): string {
-  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
-    'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-  
-  if (num === 0) return 'Zero';
-  
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+
+  if (num === 0) return "Zero";
+
   const convertGroup = (n: number): string => {
     if (n < 20) return ones[n];
-    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
-    return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convertGroup(n % 100) : '');
+    if (n < 100)
+      return tens[Math.floor(n / 10)] + (n % 10 ? " " + ones[n % 10] : "");
+    return (
+      ones[Math.floor(n / 100)] +
+      " Hundred" +
+      (n % 100 ? " " + convertGroup(n % 100) : "")
+    );
   };
-  
-  let result = '';
-  
+
+  let result = "";
+
   if (num >= 1000000) {
-    result += convertGroup(Math.floor(num / 1000000)) + ' Million ';
+    result += convertGroup(Math.floor(num / 1000000)) + " Million ";
     num %= 1000000;
   }
-  
+
   if (num >= 1000) {
-    result += convertGroup(Math.floor(num / 1000)) + ' Thousand ';
+    result += convertGroup(Math.floor(num / 1000)) + " Thousand ";
     num %= 1000;
   }
-  
+
   if (num > 0) {
     result += convertGroup(num);
   }
-  
-  return result.trim() + ' Shillings Only';
+
+  return result.trim() + " Shillings Only";
 }
 
 /**
@@ -77,15 +113,16 @@ function numberToWords(num: number): string {
  */
 export function createReceiptData(data: ReceiptData): Receipt {
   const { payment, student, newBalance } = data;
-  
+
   return {
     receiptNumber: payment.receiptNumber,
-    date: payment.recordedAt.toDate().toLocaleDateString('en-UG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    date: payment.recordedAt.toDate().toLocaleDateString("en-UG", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     }),
-    studentName: `${student.firstName} ${student.middleName || ''} ${student.lastName}`.trim(),
+    studentName:
+      `${student.firstName} ${student.middleName || ""} ${student.lastName}`.trim(),
     studentId: student.studentId,
     className: student.className,
     streamName: student.streamName,
@@ -98,8 +135,8 @@ export function createReceiptData(data: ReceiptData): Receipt {
     installmentName: payment.installmentName,
     previousBalance: newBalance + payment.amount,
     newBalance: newBalance,
-    schoolName: 'School Name', // Would come from school settings
-    schoolAddress: 'School Address', // Would come from school settings
+    schoolName: "School Name", // Would come from school settings
+    schoolAddress: "School Address", // Would come from school settings
     stellarHash: payment.stellarTxHash,
   };
 }
@@ -232,18 +269,18 @@ export function generateReceiptHTML(receipt: Receipt): string {
         .balance-section {
           margin-top: 20px;
           padding: 16px;
-          background: ${receipt.newBalance === 0 ? '#dcfce7' : '#fef3c7'};
+          background: ${receipt.newBalance === 0 ? "#dcfce7" : "#fef3c7"};
           border-radius: 8px;
           text-align: center;
         }
         .balance-label {
           font-size: 12px;
-          color: ${receipt.newBalance === 0 ? '#166534' : '#92400e'};
+          color: ${receipt.newBalance === 0 ? "#166534" : "#92400e"};
         }
         .balance-value {
           font-size: 20px;
           font-weight: 700;
-          color: ${receipt.newBalance === 0 ? '#166534' : '#92400e'};
+          color: ${receipt.newBalance === 0 ? "#166534" : "#92400e"};
         }
         .stellar-badge {
           margin-top: 20px;
@@ -302,7 +339,7 @@ export function generateReceiptHTML(receipt: Receipt): string {
           <div class="student-info">
             <p class="student-name">${receipt.studentName}</p>
             <p class="student-details">
-              ID: ${receipt.studentId} • ${receipt.className}${receipt.streamName ? ' • ' + receipt.streamName : ''}
+              ID: ${receipt.studentId} • ${receipt.className}${receipt.streamName ? " • " + receipt.streamName : ""}
             </p>
           </div>
           
@@ -332,22 +369,26 @@ export function generateReceiptHTML(receipt: Receipt): string {
           </div>
           
           <div class="balance-section">
-            <p class="balance-label">${receipt.newBalance === 0 ? 'Fully Paid ✓' : 'Outstanding Balance'}</p>
+            <p class="balance-label">${receipt.newBalance === 0 ? "Fully Paid ✓" : "Outstanding Balance"}</p>
             <p class="balance-value">UGX ${receipt.newBalance.toLocaleString()}</p>
           </div>
           
-          ${receipt.stellarHash ? `
+          ${
+            receipt.stellarHash
+              ? `
             <div class="stellar-badge">
               <div class="icon">🔒</div>
               <p class="label">Blockchain Verified</p>
               <p class="hash">${receipt.stellarHash}</p>
             </div>
-          ` : ''}
+          `
+              : ""
+          }
         </div>
         
         <div class="receipt-footer">
           <p>Thank you for your payment</p>
-          <p>Powered by EduPay Ledger</p>
+          <p>Powered by eBursar</p>
         </div>
       </div>
     </body>
@@ -359,21 +400,26 @@ export function generateReceiptHTML(receipt: Receipt): string {
  * Generates a receipt and stores it
  * Returns the URL to the receipt
  */
-export async function generateReceipt(data: ReceiptData): Promise<string | undefined> {
+export async function generateReceipt(
+  data: ReceiptData,
+): Promise<string | undefined> {
   initializeFirebase();
-  
+
   try {
     const receipt = createReceiptData(data);
     const html = generateReceiptHTML(receipt);
-    
+
     // Store receipt HTML in Firebase Storage
-    const receiptRef = ref(storage, `receipts/${data.payment.schoolId}/${data.payment.receiptNumber}.html`);
-    await uploadString(receiptRef, html, 'raw', { contentType: 'text/html' });
-    
+    const receiptRef = ref(
+      storage,
+      `receipts/${data.payment.schoolId}/${data.payment.receiptNumber}.html`,
+    );
+    await uploadString(receiptRef, html, "raw", { contentType: "text/html" });
+
     const url = await getDownloadURL(receiptRef);
     return url;
   } catch (error) {
-    console.error('Failed to generate receipt:', error);
+    console.error("Failed to generate receipt:", error);
     return undefined;
   }
 }

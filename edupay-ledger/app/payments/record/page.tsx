@@ -567,7 +567,7 @@ export default function RecordPaymentPage() {
             Stellar Network Connected
           </span>
         </div>
-        <p>© 2024 EduPay Ledger Uganda. Built for Security & Trust.</p>
+        <p>© 2024 eBursar Uganda. Built for Security & Trust.</p>
       </footer>
     </div>
   );

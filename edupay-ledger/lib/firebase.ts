@@ -1,5 +1,5 @@
 /**
- * Firebase Configuration for EduPay Ledger
+ * Firebase Configuration for eBursar
  * School Fee Management System for Ugandan Schools
  *
  * This module provides:
@@ -112,7 +112,7 @@ function validateFirebaseConfig(): void {
 validateFirebaseConfig();
 
 /**
- * Firebase project configuration for EduPay Ledger
+ * Firebase project configuration for eBursar
  *
  * SECURITY: All values MUST come from environment variables.
  * No hardcoded credentials are allowed.
@@ -232,7 +232,7 @@ export function initializeFirebase() {
       console.log("🔧 Connected to Firebase Emulators");
     }
 
-    console.log("✅ Firebase initialized successfully for EduPay Ledger");
+    console.log("✅ Firebase initialized successfully for eBursar");
   } else {
     // Get existing instances
     app = getApps()[0];
@@ -577,7 +577,7 @@ export function formatUgandaPhone(phone: string): string {
 // ============================================================================
 
 /**
- * Collection names for EduPay Ledger
+ * Collection names for eBursar
  */
 export const COLLECTIONS = {
   SCHOOLS: "schools",

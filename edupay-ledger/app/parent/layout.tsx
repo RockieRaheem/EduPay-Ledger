@@ -1,8 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Parent Portal - EduPay Ledger',
-  description: 'View your child\'s fee status and payment history',
+  title: "Parent Portal - eBursar",
+  description: "View your child's fee status and payment history",
 };
 
 export default function ParentLayout({

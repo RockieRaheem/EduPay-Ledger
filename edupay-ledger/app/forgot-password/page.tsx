@@ -86,7 +86,7 @@ export default function ForgotPasswordPage() {
           <div className="w-16 h-16 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span className="material-symbols-outlined text-3xl text-white">school</span>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">EduPay Ledger</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">eBursar</h1>
           <p className="text-white/60 text-sm">School Fee Management System</p>
         </div>
 
@@ -181,7 +181,7 @@ export default function ForgotPasswordPage() {
                       <span className="flex-shrink-0 w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-xs">
                         1
                       </span>
-                      <span>Open the email from EduPay Ledger</span>
+                      <span>Open the email from eBursar</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="flex-shrink-0 w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-xs">
@@ -221,7 +221,7 @@ export default function ForgotPasswordPage() {
 
         {/* Footer */}
         <p className="text-center text-white/40 text-xs mt-8">
-          © 2024 EduPay Ledger Uganda. All rights reserved.
+          © 2024 eBursar Uganda. All rights reserved.
           <br />
           <span className="inline-flex items-center gap-1 mt-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-soft" />

@@ -1,6 +1,6 @@
 {
-  "name": "EduPay Ledger Uganda",
-  "short_name": "EduPay",
+  "name": "eBursar - School Fee Manager",
+  "short_name": "eBursar",
   "description": "Mobile-first school fee reconciliation and audit system for Ugandan schools",
   "start_url": "/dashboard",
   "display": "standalone",

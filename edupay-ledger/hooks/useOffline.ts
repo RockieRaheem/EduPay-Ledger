@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { isOnline } from '@/lib/utils';
+import { useState, useEffect, useCallback } from "react";
+import { isOnline } from "@/lib/utils";
 
 interface OfflineState {
   isOnline: boolean;
@@ -18,14 +18,14 @@ export function useOffline() {
 
   useEffect(() => {
     // Set initial state
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isOnline: isOnline(),
       lastOnlineAt: isOnline() ? new Date() : null,
     }));
 
     const handleOnline = () => {
-      setState(prev => ({
+      setState((prev) => ({
         isOnline: true,
         wasOffline: !prev.isOnline,
         lastOnlineAt: new Date(),
@@ -33,18 +33,18 @@ export function useOffline() {
     };
 
     const handleOffline = () => {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isOnline: false,
       }));
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -52,7 +52,7 @@ export function useOffline() {
   useEffect(() => {
     if (state.wasOffline) {
       const timer = setTimeout(() => {
-        setState(prev => ({ ...prev, wasOffline: false }));
+        setState((prev) => ({ ...prev, wasOffline: false }));
       }, 5000); // Clear after 5 seconds
 
       return () => clearTimeout(timer);
@@ -78,23 +78,25 @@ export function useOfflineQueue() {
 
   // Load queue from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem('edupay_offline_queue');
+    const stored = localStorage.getItem("ebursar_offline_queue");
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        setQueue(parsed.map((op: any) => ({
-          ...op,
-          timestamp: new Date(op.timestamp),
-        })));
+        setQueue(
+          parsed.map((op: any) => ({
+            ...op,
+            timestamp: new Date(op.timestamp),
+          })),
+        );
       } catch (e) {
-        console.error('Failed to parse offline queue:', e);
+        console.error("Failed to parse offline queue:", e);
       }
     }
   }, []);
 
   // Save queue to localStorage on change
   useEffect(() => {
-    localStorage.setItem('edupay_offline_queue', JSON.stringify(queue));
+    localStorage.setItem("ebursar_offline_queue", JSON.stringify(queue));
   }, [queue]);
 
   const addToQueue = useCallback((type: string, data: any) => {
@@ -104,21 +106,24 @@ export function useOfflineQueue() {
       data,
       timestamp: new Date(),
     };
-    setQueue(prev => [...prev, operation]);
+    setQueue((prev) => [...prev, operation]);
     return operation.id;
   }, []);
 
   const removeFromQueue = useCallback((id: string) => {
-    setQueue(prev => prev.filter(op => op.id !== id));
+    setQueue((prev) => prev.filter((op) => op.id !== id));
   }, []);
 
   const clearQueue = useCallback(() => {
     setQueue([]);
   }, []);
 
-  const getQueueByType = useCallback((type: string) => {
-    return queue.filter(op => op.type === type);
-  }, [queue]);
+  const getQueueByType = useCallback(
+    (type: string) => {
+      return queue.filter((op) => op.type === type);
+    },
+    [queue],
+  );
 
   return {
     queue,

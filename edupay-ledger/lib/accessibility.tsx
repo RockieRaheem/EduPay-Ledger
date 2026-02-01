@@ -2,7 +2,7 @@
 
 /**
  * Accessibility Utilities
- * WCAG 2.1 compliant helpers for EduPay Ledger
+ * WCAG 2.1 compliant helpers for eBursar
  */
 
 import { useEffect, useRef, useCallback, useState } from "react";

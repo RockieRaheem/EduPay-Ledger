@@ -1,12 +1,12 @@
 {
-  "name": "edupay-ledger",
+  "name": "ebursar",
   "version": "1.0.0",
   "description": "Desktop-first school fee management system for Ugandan schools - Works offline, syncs when online",
   "private": true,
   "main": "electron/main.js",
   "author": {
-    "name": "EduPay Team",
-    "email": "support@edupay.ug"
+    "name": "eBursar Team",
+    "email": "support@ebursar.ug"
   },
   "scripts": {
     "dev": "next dev",
@@ -70,9 +70,9 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "ug.edupay.ledger",
-    "productName": "EduPay Ledger",
-    "copyright": "Copyright © 2026 EduPay Team",
+    "appId": "ug.ebursar.app",
+    "productName": "eBursar",
+    "copyright": "Copyright © 2026 eBursar Team",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -106,7 +106,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "EduPay Ledger"
+      "shortcutName": "eBursar"
     },
     "mac": {
       "target": [
@@ -130,7 +130,7 @@
     "publish": {
       "provider": "github",
       "owner": "your-org",
-      "repo": "edupay-ledger"
+      "repo": "ebursar"
     }
   }
 }

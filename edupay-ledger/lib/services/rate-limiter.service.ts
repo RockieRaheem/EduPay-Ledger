@@ -29,7 +29,7 @@ const DEFAULT_CONFIG: RateLimitConfig = {
   lockoutMs: 30 * 60 * 1000, // 30 minute lockout
 };
 
-const STORAGE_KEY = "edupay_rate_limit";
+const STORAGE_KEY = "ebursar_rate_limit";
 
 // ============================================================================
 // Rate Limiter Class

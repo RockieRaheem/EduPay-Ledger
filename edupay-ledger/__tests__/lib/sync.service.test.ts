@@ -529,27 +529,27 @@ describe("Sync Service - Offline Logic", () => {
   describe("last sync timestamp", () => {
     test("should store last sync timestamp", () => {
       const timestamp = "2024-01-15T10:30:00Z";
-      localStorageMock.setItem("edupay_last_sync", timestamp);
+      localStorageMock.setItem("ebursar_last_sync", timestamp);
 
-      expect(localStorageMock.getItem("edupay_last_sync")).toBe(timestamp);
+      expect(localStorageMock.getItem("ebursar_last_sync")).toBe(timestamp);
     });
 
     test("should return null for first sync", () => {
       localStorageMock.clear();
 
-      expect(localStorageMock.getItem("edupay_last_sync")).toBeNull();
+      expect(localStorageMock.getItem("ebursar_last_sync")).toBeNull();
     });
 
     test("should update timestamp after successful sync", () => {
       const oldTimestamp = "2024-01-14T10:00:00Z";
       const newTimestamp = "2024-01-15T10:30:00Z";
 
-      localStorageMock.setItem("edupay_last_sync", oldTimestamp);
+      localStorageMock.setItem("ebursar_last_sync", oldTimestamp);
 
       // Simulate successful sync
-      localStorageMock.setItem("edupay_last_sync", newTimestamp);
+      localStorageMock.setItem("ebursar_last_sync", newTimestamp);
 
-      expect(localStorageMock.getItem("edupay_last_sync")).toBe(newTimestamp);
+      expect(localStorageMock.getItem("ebursar_last_sync")).toBe(newTimestamp);
     });
   });
 });
@@ -958,12 +958,12 @@ describe("Sync Service - Full Sync", () => {
 
   describe("full sync preparation", () => {
     test("should clear last sync timestamp for full sync", () => {
-      localStorageMock.setItem("edupay_last_sync", "2024-01-14T10:00:00Z");
+      localStorageMock.setItem("ebursar_last_sync", "2024-01-14T10:00:00Z");
 
       // Full sync clears the timestamp
-      localStorageMock.removeItem("edupay_last_sync");
+      localStorageMock.removeItem("ebursar_last_sync");
 
-      expect(localStorageMock.getItem("edupay_last_sync")).toBeNull();
+      expect(localStorageMock.getItem("ebursar_last_sync")).toBeNull();
     });
 
     test("should require school ID for full sync", () => {

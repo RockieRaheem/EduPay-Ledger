@@ -3,25 +3,32 @@
  * Handles bidirectional sync between local IndexedDB and Firebase
  */
 
-import { db, dbHelpers, DBStudent, DBPayment, DBFeeStructure, DBAuditLog } from '../db';
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  setDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  db,
+  dbHelpers,
+  DBStudent,
+  DBPayment,
+  DBFeeStructure,
+  DBAuditLog,
+} from "../db";
+import {
+  collection,
+  doc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
   limit,
   writeBatch,
   serverTimestamp,
-  Timestamp 
-} from 'firebase/firestore';
-import { db as firebaseDb } from '../firebase';
+  Timestamp,
+} from "firebase/firestore";
+import { db as firebaseDb } from "../firebase";
 
-export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error' | 'offline';
+export type SyncStatus = "idle" | "syncing" | "success" | "error" | "offline";
 
 export interface SyncResult {
   status: SyncStatus;
@@ -40,15 +47,20 @@ export interface SyncState {
 }
 
 class SyncService {
-  private isOnline: boolean = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  private isOnline: boolean =
+    typeof navigator !== "undefined" ? navigator.onLine : true;
   private syncInterval: NodeJS.Timeout | null = null;
   private listeners: ((state: SyncState) => void)[] = [];
   private schoolId: string | null = null;
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => this.handleOnlineStatusChange(true));
-      window.addEventListener('offline', () => this.handleOnlineStatusChange(false));
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", () =>
+        this.handleOnlineStatusChange(true),
+      );
+      window.addEventListener("offline", () =>
+        this.handleOnlineStatusChange(false),
+      );
     }
   }
 
@@ -73,28 +85,28 @@ class SyncService {
   subscribe(listener: (state: SyncState) => void) {
     this.listeners.push(listener);
     return () => {
-      this.listeners = this.listeners.filter(l => l !== listener);
+      this.listeners = this.listeners.filter((l) => l !== listener);
     };
   }
 
   // Notify all listeners of state change
   private async notifyListeners() {
     const state = await this.getState();
-    this.listeners.forEach(listener => listener(state));
+    this.listeners.forEach((listener) => listener(state));
   }
 
   // Get current sync state
   async getState(): Promise<SyncState> {
     const pendingItems = await dbHelpers.getPendingSyncItems();
-    const pendingChanges = 
-      pendingItems.students.length + 
-      pendingItems.payments.length + 
+    const pendingChanges =
+      pendingItems.students.length +
+      pendingItems.payments.length +
       pendingItems.feeStructures.length;
 
-    const lastSyncAt = localStorage.getItem('edupay_last_sync');
+    const lastSyncAt = localStorage.getItem("ebursar_last_sync");
 
     return {
-      status: this.isOnline ? 'idle' : 'offline',
+      status: this.isOnline ? "idle" : "offline",
       lastSyncAt,
       pendingChanges,
       isOnline: this.isOnline,
@@ -126,28 +138,28 @@ class SyncService {
   async sync(): Promise<SyncResult> {
     if (!this.isOnline) {
       return {
-        status: 'offline',
+        status: "offline",
         uploaded: 0,
         downloaded: 0,
         conflicts: 0,
-        errors: ['Device is offline'],
+        errors: ["Device is offline"],
         timestamp: new Date().toISOString(),
       };
     }
 
     if (!this.schoolId) {
       return {
-        status: 'error',
+        status: "error",
         uploaded: 0,
         downloaded: 0,
         conflicts: 0,
-        errors: ['School ID not set. Call initialize() first.'],
+        errors: ["School ID not set. Call initialize() first."],
         timestamp: new Date().toISOString(),
       };
     }
 
     const result: SyncResult = {
-      status: 'syncing',
+      status: "syncing",
       uploaded: 0,
       downloaded: 0,
       conflicts: 0,
@@ -170,12 +182,12 @@ class SyncService {
       result.errors.push(...downloadResult.errors);
 
       // Update last sync time
-      localStorage.setItem('edupay_last_sync', result.timestamp);
+      localStorage.setItem("ebursar_last_sync", result.timestamp);
 
-      result.status = result.errors.length > 0 ? 'error' : 'success';
+      result.status = result.errors.length > 0 ? "error" : "success";
     } catch (error: any) {
-      result.status = 'error';
-      result.errors.push(error.message || 'Unknown sync error');
+      result.status = "error";
+      result.errors.push(error.message || "Unknown sync error");
     }
 
     this.notifyListeners();
@@ -193,10 +205,12 @@ class SyncService {
     for (const student of pendingItems.students) {
       try {
         await this.uploadStudent(student);
-        await dbHelpers.markAsSynced('students', [student.id]);
+        await dbHelpers.markAsSynced("students", [student.id]);
         count++;
       } catch (error: any) {
-        errors.push(`Failed to sync student ${student.studentId}: ${error.message}`);
+        errors.push(
+          `Failed to sync student ${student.studentId}: ${error.message}`,
+        );
       }
     }
 
@@ -204,10 +218,12 @@ class SyncService {
     for (const payment of pendingItems.payments) {
       try {
         await this.uploadPayment(payment);
-        await dbHelpers.markAsSynced('payments', [payment.id]);
+        await dbHelpers.markAsSynced("payments", [payment.id]);
         count++;
       } catch (error: any) {
-        errors.push(`Failed to sync payment ${payment.receiptNumber}: ${error.message}`);
+        errors.push(
+          `Failed to sync payment ${payment.receiptNumber}: ${error.message}`,
+        );
       }
     }
 
@@ -215,7 +231,7 @@ class SyncService {
     for (const feeStructure of pendingItems.feeStructures) {
       try {
         await this.uploadFeeStructure(feeStructure);
-        await dbHelpers.markAsSynced('feeStructures', [feeStructure.id]);
+        await dbHelpers.markAsSynced("feeStructures", [feeStructure.id]);
         count++;
       } catch (error: any) {
         errors.push(`Failed to sync fee structure: ${error.message}`);
@@ -226,11 +242,11 @@ class SyncService {
     for (const auditLog of pendingItems.auditLogs) {
       try {
         await this.uploadAuditLog(auditLog);
-        await dbHelpers.markAsSynced('auditLogs', [auditLog.id]);
+        await dbHelpers.markAsSynced("auditLogs", [auditLog.id]);
         count++;
       } catch (error: any) {
         // Audit logs are less critical, just log error
-        console.error('Failed to sync audit log:', error);
+        console.error("Failed to sync audit log:", error);
       }
     }
 
@@ -238,47 +254,63 @@ class SyncService {
   }
 
   // Download remote changes from Firebase
-  private async downloadChanges(): Promise<{ count: number; conflicts: number; errors: string[] }> {
+  private async downloadChanges(): Promise<{
+    count: number;
+    conflicts: number;
+    errors: string[];
+  }> {
     const errors: string[] = [];
     let count = 0;
     let conflicts = 0;
 
-    const lastSync = localStorage.getItem('edupay_last_sync');
+    const lastSync = localStorage.getItem("ebursar_last_sync");
     const lastSyncTime = lastSync ? new Date(lastSync) : new Date(0);
 
     try {
       // Download students updated since last sync
-      const studentsRef = collection(firebaseDb, `schools/${this.schoolId}/students`);
+      const studentsRef = collection(
+        firebaseDb,
+        `schools/${this.schoolId}/students`,
+      );
       const studentsQuery = query(
         studentsRef,
-        where('updatedAt', '>', Timestamp.fromDate(lastSyncTime)),
-        orderBy('updatedAt', 'desc'),
-        limit(500)
+        where("updatedAt", ">", Timestamp.fromDate(lastSyncTime)),
+        orderBy("updatedAt", "desc"),
+        limit(500),
       );
-      
+
       const studentsSnapshot = await getDocs(studentsQuery);
       for (const docSnapshot of studentsSnapshot.docs) {
         const remoteStudent = docSnapshot.data() as DBStudent;
         const localStudent = await db.students.get(remoteStudent.id);
 
-        if (!localStudent || localStudent.syncStatus === 'synced') {
+        if (!localStudent || localStudent.syncStatus === "synced") {
           // No local changes, safe to overwrite
-          await db.students.put({ ...remoteStudent, syncStatus: 'synced', syncedAt: new Date().toISOString() });
+          await db.students.put({
+            ...remoteStudent,
+            syncStatus: "synced",
+            syncedAt: new Date().toISOString(),
+          });
           count++;
         } else {
           // Local changes exist, mark as conflict
-          await db.students.update(remoteStudent.id, { syncStatus: 'conflict' });
+          await db.students.update(remoteStudent.id, {
+            syncStatus: "conflict",
+          });
           conflicts++;
         }
       }
 
       // Download payments updated since last sync
-      const paymentsRef = collection(firebaseDb, `schools/${this.schoolId}/payments`);
+      const paymentsRef = collection(
+        firebaseDb,
+        `schools/${this.schoolId}/payments`,
+      );
       const paymentsQuery = query(
         paymentsRef,
-        where('updatedAt', '>', Timestamp.fromDate(lastSyncTime)),
-        orderBy('updatedAt', 'desc'),
-        limit(500)
+        where("updatedAt", ">", Timestamp.fromDate(lastSyncTime)),
+        orderBy("updatedAt", "desc"),
+        limit(500),
       );
 
       const paymentsSnapshot = await getDocs(paymentsQuery);
@@ -286,15 +318,20 @@ class SyncService {
         const remotePayment = docSnapshot.data() as DBPayment;
         const localPayment = await db.payments.get(remotePayment.id);
 
-        if (!localPayment || localPayment.syncStatus === 'synced') {
-          await db.payments.put({ ...remotePayment, syncStatus: 'synced', syncedAt: new Date().toISOString() });
+        if (!localPayment || localPayment.syncStatus === "synced") {
+          await db.payments.put({
+            ...remotePayment,
+            syncStatus: "synced",
+            syncedAt: new Date().toISOString(),
+          });
           count++;
         } else {
-          await db.payments.update(remotePayment.id, { syncStatus: 'conflict' });
+          await db.payments.update(remotePayment.id, {
+            syncStatus: "conflict",
+          });
           conflicts++;
         }
       }
-
     } catch (error: any) {
       errors.push(`Download failed: ${error.message}`);
     }
@@ -304,36 +341,52 @@ class SyncService {
 
   // Upload individual records to Firebase
   private async uploadStudent(student: DBStudent) {
-    const docRef = doc(firebaseDb, `schools/${this.schoolId}/students`, student.id);
+    const docRef = doc(
+      firebaseDb,
+      `schools/${this.schoolId}/students`,
+      student.id,
+    );
     await setDoc(docRef, {
       ...student,
-      syncStatus: 'synced',
+      syncStatus: "synced",
       syncedAt: serverTimestamp(),
     });
   }
 
   private async uploadPayment(payment: DBPayment) {
-    const docRef = doc(firebaseDb, `schools/${this.schoolId}/payments`, payment.id);
+    const docRef = doc(
+      firebaseDb,
+      `schools/${this.schoolId}/payments`,
+      payment.id,
+    );
     await setDoc(docRef, {
       ...payment,
-      syncStatus: 'synced',
+      syncStatus: "synced",
       syncedAt: serverTimestamp(),
     });
   }
 
   private async uploadFeeStructure(feeStructure: DBFeeStructure) {
-    const docRef = doc(firebaseDb, `schools/${this.schoolId}/feeStructures`, feeStructure.id);
+    const docRef = doc(
+      firebaseDb,
+      `schools/${this.schoolId}/feeStructures`,
+      feeStructure.id,
+    );
     await setDoc(docRef, {
       ...feeStructure,
-      syncStatus: 'synced',
+      syncStatus: "synced",
     });
   }
 
   private async uploadAuditLog(auditLog: DBAuditLog) {
-    const docRef = doc(firebaseDb, `schools/${this.schoolId}/auditLogs`, auditLog.id);
+    const docRef = doc(
+      firebaseDb,
+      `schools/${this.schoolId}/auditLogs`,
+      auditLog.id,
+    );
     await setDoc(docRef, {
       ...auditLog,
-      syncStatus: 'synced',
+      syncStatus: "synced",
     });
   }
 
@@ -341,35 +394,41 @@ class SyncService {
   async fullSync(): Promise<SyncResult> {
     if (!this.isOnline || !this.schoolId) {
       return {
-        status: 'error',
+        status: "error",
         uploaded: 0,
         downloaded: 0,
         conflicts: 0,
-        errors: ['Cannot perform full sync: offline or no school ID'],
+        errors: ["Cannot perform full sync: offline or no school ID"],
         timestamp: new Date().toISOString(),
       };
     }
 
     // Clear last sync to force full download
-    localStorage.removeItem('edupay_last_sync');
+    localStorage.removeItem("ebursar_last_sync");
     return this.sync();
   }
 
   // Resolve conflict by keeping local version
   async resolveConflictKeepLocal(table: string, id: string) {
     switch (table) {
-      case 'students':
+      case "students":
         const student = await db.students.get(id);
         if (student) {
-          await this.uploadStudent({ ...student, syncStatus: 'pending' });
-          await db.students.update(id, { syncStatus: 'synced', syncedAt: new Date().toISOString() });
+          await this.uploadStudent({ ...student, syncStatus: "pending" });
+          await db.students.update(id, {
+            syncStatus: "synced",
+            syncedAt: new Date().toISOString(),
+          });
         }
         break;
-      case 'payments':
+      case "payments":
         const payment = await db.payments.get(id);
         if (payment) {
-          await this.uploadPayment({ ...payment, syncStatus: 'pending' });
-          await db.payments.update(id, { syncStatus: 'synced', syncedAt: new Date().toISOString() });
+          await this.uploadPayment({ ...payment, syncStatus: "pending" });
+          await db.payments.update(id, {
+            syncStatus: "synced",
+            syncedAt: new Date().toISOString(),
+          });
         }
         break;
     }
@@ -380,24 +439,36 @@ class SyncService {
     if (!this.schoolId) return;
 
     switch (table) {
-      case 'students':
-        const studentDoc = await getDocs(query(
-          collection(firebaseDb, `schools/${this.schoolId}/students`),
-          where('id', '==', id)
-        ));
+      case "students":
+        const studentDoc = await getDocs(
+          query(
+            collection(firebaseDb, `schools/${this.schoolId}/students`),
+            where("id", "==", id),
+          ),
+        );
         if (!studentDoc.empty) {
           const remoteStudent = studentDoc.docs[0].data() as DBStudent;
-          await db.students.put({ ...remoteStudent, syncStatus: 'synced', syncedAt: new Date().toISOString() });
+          await db.students.put({
+            ...remoteStudent,
+            syncStatus: "synced",
+            syncedAt: new Date().toISOString(),
+          });
         }
         break;
-      case 'payments':
-        const paymentDoc = await getDocs(query(
-          collection(firebaseDb, `schools/${this.schoolId}/payments`),
-          where('id', '==', id)
-        ));
+      case "payments":
+        const paymentDoc = await getDocs(
+          query(
+            collection(firebaseDb, `schools/${this.schoolId}/payments`),
+            where("id", "==", id),
+          ),
+        );
         if (!paymentDoc.empty) {
           const remotePayment = paymentDoc.docs[0].data() as DBPayment;
-          await db.payments.put({ ...remotePayment, syncStatus: 'synced', syncedAt: new Date().toISOString() });
+          await db.payments.put({
+            ...remotePayment,
+            syncStatus: "synced",
+            syncedAt: new Date().toISOString(),
+          });
         }
         break;
     }

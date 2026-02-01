@@ -1,7 +1,7 @@
 /**
  * Email Notification Service
  *
- * Professional email service for EduPay Ledger
+ * Professional email service for eBursar
  * Supports multiple providers: SendGrid, Mailgun, SMTP
  * Optimized for Ugandan schools with HTML/plain text templates
  */
@@ -169,7 +169,7 @@ const EMAIL_TEMPLATES: Record<EmailTemplateType, { subject: string; html: string
     </div>
     <div class="footer">
       <p>This is an automated message from {schoolName}</p>
-      <p>Powered by EduPay Ledger - Secure School Fee Management</p>
+      <p>Powered by eBursar - Secure School Fee Management</p>
     </div>
   </div>
 </body>
@@ -198,7 +198,7 @@ For any inquiries, please contact the school bursar's office.
 
 ---
 This is an automated message from {schoolName}
-Powered by EduPay Ledger
+Powered by eBursar
     `,
   },
 
@@ -260,7 +260,7 @@ Powered by EduPay Ledger
     </div>
     <div class="footer">
       <p>This is an automated reminder from {schoolName}</p>
-      <p>Powered by EduPay Ledger</p>
+      <p>Powered by eBursar</p>
     </div>
   </div>
 </body>
@@ -294,7 +294,7 @@ Thank you for your cooperation.
 
 ---
 This is an automated reminder from {schoolName}
-Powered by EduPay Ledger
+Powered by eBursar
     `,
   },
 
@@ -354,7 +354,7 @@ Powered by EduPay Ledger
     </div>
     <div class="footer">
       <p>This is an automated notice from {schoolName}</p>
-      <p>Powered by EduPay Ledger</p>
+      <p>Powered by eBursar</p>
     </div>
   </div>
 </body>
@@ -383,7 +383,7 @@ We appreciate your immediate attention to this matter.
 
 ---
 This is an automated notice from {schoolName}
-Powered by EduPay Ledger
+Powered by eBursar
     `,
   },
 
@@ -437,7 +437,7 @@ Powered by EduPay Ledger
     </div>
     <div class="footer">
       <p>This is an automated message from {schoolName}</p>
-      <p>Powered by EduPay Ledger</p>
+      <p>Powered by eBursar</p>
     </div>
   </div>
 </body>
@@ -463,7 +463,7 @@ Please ensure your child reports for exams on time with all necessary materials.
 
 ---
 This is an automated message from {schoolName}
-Powered by EduPay Ledger
+Powered by eBursar
     `,
   },
 
@@ -519,7 +519,7 @@ Powered by EduPay Ledger
     </div>
     <div class="footer">
       <p>This is an automated message from {schoolName}</p>
-      <p>Powered by EduPay Ledger</p>
+      <p>Powered by eBursar</p>
     </div>
   </div>
 </body>
@@ -542,7 +542,7 @@ Please ensure payments are made before the deadline to avoid any inconvenience.
 
 ---
 This is an automated message from {schoolName}
-Powered by EduPay Ledger
+Powered by eBursar
     `,
   },
 
@@ -609,7 +609,7 @@ Powered by EduPay Ledger
     </div>
     <div class="footer">
       <p>Generated: {generatedAt}</p>
-      <p>Powered by EduPay Ledger</p>
+      <p>Powered by eBursar</p>
     </div>
   </div>
 </body>
@@ -631,7 +631,7 @@ Student Status:
 This report was automatically generated.
 
 Generated: {generatedAt}
-Powered by EduPay Ledger
+Powered by eBursar
     `,
   },
 
@@ -685,7 +685,7 @@ Powered by EduPay Ledger
     </div>
     <div class="footer">
       <p>This is an automated message from {schoolName}</p>
-      <p>Powered by EduPay Ledger</p>
+      <p>Powered by eBursar</p>
     </div>
   </div>
 </body>
@@ -713,7 +713,7 @@ If you have any questions, please don't hesitate to contact us.
 
 ---
 This is an automated message from {schoolName}
-Powered by EduPay Ledger
+Powered by eBursar
     `,
   },
 
@@ -757,7 +757,7 @@ Powered by EduPay Ledger
     </div>
     <div class="footer">
       <p>This is an automated message from {schoolName}</p>
-      <p>Powered by EduPay Ledger</p>
+      <p>Powered by eBursar</p>
     </div>
   </div>
 </body>
@@ -778,7 +778,7 @@ If you didn't request this password reset, please ignore this email or contact s
 
 ---
 This is an automated message from {schoolName}
-Powered by EduPay Ledger
+Powered by eBursar
     `,
   },
 
@@ -823,7 +823,7 @@ Powered by EduPay Ledger
     </div>
     <div class="footer">
       <p>If you didn't create an account, please ignore this email.</p>
-      <p>Powered by EduPay Ledger</p>
+      <p>Powered by eBursar</p>
     </div>
   </div>
 </body>
@@ -845,7 +845,7 @@ This link/code expires in 24 hours.
 If you didn't create an account, please ignore this email.
 
 ---
-Powered by EduPay Ledger
+Powered by eBursar
     `,
   },
 
@@ -878,7 +878,7 @@ Powered by EduPay Ledger
     </div>
     <div class="footer">
       <p>This is an automated message from {schoolName}</p>
-      <p>Powered by EduPay Ledger</p>
+      <p>Powered by eBursar</p>
     </div>
   </div>
 </body>
@@ -895,7 +895,7 @@ Thank you for your continued support.
 
 ---
 This is an automated message from {schoolName}
-Powered by EduPay Ledger
+Powered by eBursar
     `,
   },
 
@@ -924,7 +924,7 @@ Powered by EduPay Ledger
       {htmlContent}
     </div>
     <div class="footer">
-      <p>Powered by EduPay Ledger</p>
+      <p>Powered by eBursar</p>
     </div>
   </div>
 </body>
@@ -971,7 +971,7 @@ export function renderEmailTemplate(
 const DEFAULT_CONFIG: EmailConfig = {
   provider: 'mock',
   fromEmail: 'noreply@school.edu.ug',
-  fromName: 'EduPay Ledger',
+  fromName: 'eBursar',
 };
 
 /**

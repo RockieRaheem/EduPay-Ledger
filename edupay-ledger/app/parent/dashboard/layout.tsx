@@ -2,12 +2,12 @@
  * Parent Dashboard Layout
  */
 
-import React from 'react';
-import type { Metadata } from 'next';
+import React from "react";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Parent Dashboard | EduPay Ledger',
-  description: 'View your children\'s fee status and make payments',
+  title: "Parent Dashboard | eBursar",
+  description: "View your children's fee status and make payments",
 };
 
 export default function ParentDashboardLayout({
@@ -26,28 +26,37 @@ export default function ParentDashboardLayout({
                 <span className="text-xl">📚</span>
               </div>
               <div>
-                <h1 className="font-bold text-lg">EduPay Parent Portal</h1>
-                <p className="text-blue-100 text-sm">Fee Management Made Easy</p>
+                <h1 className="font-bold text-lg">eBursar Parent Portal</h1>
+                <p className="text-blue-100 text-sm">
+                  Fee Management Made Easy
+                </p>
               </div>
             </div>
             <nav className="flex items-center gap-6">
-              <a href="/parent/dashboard" className="text-sm hover:text-blue-100 font-medium">Dashboard</a>
-              <a href="/parent" className="text-sm hover:text-blue-100">Logout</a>
+              <a
+                href="/parent/dashboard"
+                className="text-sm hover:text-blue-100 font-medium"
+              >
+                Dashboard
+              </a>
+              <a href="/parent" className="text-sm hover:text-blue-100">
+                Logout
+              </a>
             </nav>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-6">
-        {children}
-      </main>
+      <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
 
       {/* Footer */}
       <footer className="bg-white border-t mt-auto">
         <div className="max-w-6xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
-          <p>© 2024 EduPay Ledger. All rights reserved.</p>
-          <p className="mt-1">Need help? Contact your school's bursar office.</p>
+          <p>© 2024 eBursar. All rights reserved.</p>
+          <p className="mt-1">
+            Need help? Contact your school's bursar office.
+          </p>
         </div>
       </footer>
     </div>

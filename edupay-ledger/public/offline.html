@@ -1,166 +1,196 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline - EduPay Ledger</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #1b2b4b 0%, #2d4a7c 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      color: #ffffff;
-    }
-    .container {
-      text-align: center;
-      max-width: 400px;
-    }
-    .icon {
-      width: 80px;
-      height: 80px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 24px;
-    }
-    .icon svg {
-      width: 40px;
-      height: 40px;
-      fill: #2D9C6F;
-    }
-    h1 {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-    p {
-      font-size: 14px;
-      opacity: 0.8;
-      line-height: 1.6;
-      margin-bottom: 32px;
-    }
-    .features {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 24px;
-      text-align: left;
-    }
-    .features h3 {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      opacity: 0.6;
-      margin-bottom: 16px;
-    }
-    .feature {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 0;
-    }
-    .feature-icon {
-      width: 32px;
-      height: 32px;
-      background: rgba(45, 156, 111, 0.2);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .feature-icon svg {
-      width: 16px;
-      height: 16px;
-      fill: #2D9C6F;
-    }
-    .feature span {
-      font-size: 14px;
-    }
-    .retry-btn {
-      background: #2D9C6F;
-      color: white;
-      border: none;
-      padding: 14px 32px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .retry-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(45, 156, 111, 0.3);
-    }
-    .retry-btn:active {
-      transform: translateY(0);
-    }
-    .pulse {
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="icon">
-      <svg viewBox="0 0 24 24">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20c-4.41 0-8-3.59-8-8zm14.31 4.9L7.1 5.69C8.45 4.63 10.15 4 12 4c4.41 0 8 3.59 8 8 0 1.85-.63 3.55-1.69 4.9z"/>
-      </svg>
-    </div>
-    
-    <h1>You're Offline</h1>
-    <p>Don't worry! EduPay Ledger works offline. Your data is safely stored and will sync when you're back online.</p>
-    
-    <div class="features">
-      <h3>Available Offline</h3>
-      <div class="feature">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        </div>
-        <span>View student directory</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline - eBursar</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "Lexend",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        background: linear-gradient(135deg, #1b2b4b 0%, #2d4a7c 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: #ffffff;
+      }
+      .container {
+        text-align: center;
+        max-width: 400px;
+      }
+      .icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+      }
+      .icon svg {
+        width: 40px;
+        height: 40px;
+        fill: #2d9c6f;
+      }
+      h1 {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+      p {
+        font-size: 14px;
+        opacity: 0.8;
+        line-height: 1.6;
+        margin-bottom: 32px;
+      }
+      .features {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        text-align: left;
+      }
+      .features h3 {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.6;
+        margin-bottom: 16px;
+      }
+      .feature {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 0;
+      }
+      .feature-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(45, 156, 111, 0.2);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .feature-icon svg {
+        width: 16px;
+        height: 16px;
+        fill: #2d9c6f;
+      }
+      .feature span {
+        font-size: 14px;
+      }
+      .retry-btn {
+        background: #2d9c6f;
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .retry-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(45, 156, 111, 0.3);
+      }
+      .retry-btn:active {
+        transform: translateY(0);
+      }
+      .pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">
+        <svg viewBox="0 0 24 24">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-1.85.63-3.55 1.69-4.9L16.9 18.31C15.55 19.37 13.85 20 12 20c-4.41 0-8-3.59-8-8zm14.31 4.9L7.1 5.69C8.45 4.63 10.15 4 12 4c4.41 0 8 3.59 8 8 0 1.85-.63 3.55-1.69 4.9z"
+          />
+        </svg>
       </div>
-      <div class="feature">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
-        </div>
-        <span>Record payments (will sync later)</span>
-      </div>
-      <div class="feature">
-        <div class="feature-icon">
-          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-        </div>
-        <span>Access cached reports</span>
-      </div>
-    </div>
-    
-    <button class="retry-btn" onclick="window.location.reload()">
-      Try Again
-    </button>
-    
-    <p style="margin-top: 24px; font-size: 12px; opacity: 0.5;" class="pulse">
-      Waiting for connection...
-    </p>
-  </div>
 
-  <script>
-    // Auto-reload when back online
-    window.addEventListener('online', () => {
-      window.location.reload();
-    });
-  </script>
-</body>
+      <h1>You're Offline</h1>
+      <p>
+        Don't worry! eBursar works offline. Your data is safely stored and will
+        sync when you're back online.
+      </p>
+
+      <div class="features">
+        <h3>Available Offline</h3>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+              />
+            </svg>
+          </div>
+          <span>View student directory</span>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"
+              />
+            </svg>
+          </div>
+          <span>Record payments (will sync later)</span>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"
+              />
+            </svg>
+          </div>
+          <span>Access cached reports</span>
+        </div>
+      </div>
+
+      <button class="retry-btn" onclick="window.location.reload()">
+        Try Again
+      </button>
+
+      <p style="margin-top: 24px; font-size: 12px; opacity: 0.5" class="pulse">
+        Waiting for connection...
+      </p>
+    </div>
+
+    <script>
+      // Auto-reload when back online
+      window.addEventListener("online", () => {
+        window.location.reload();
+      });
+    </script>
+  </body>
 </html>

@@ -180,7 +180,7 @@ describe("localStorage persistence", () => {
 
     limiter.recordFailedAttempt("test@example.com");
 
-    const stored = localStorage.getItem("edupay_rate_limit");
+    const stored = localStorage.getItem("ebursar_rate_limit");
     expect(stored).not.toBeNull();
 
     const data = JSON.parse(stored!);
@@ -196,7 +196,7 @@ describe("localStorage persistence", () => {
         firstAttempt: Date.now(),
       },
     };
-    localStorage.setItem("edupay_rate_limit", JSON.stringify(data));
+    localStorage.setItem("ebursar_rate_limit", JSON.stringify(data));
 
     // Create new limiter that should load from storage
     const limiter = new (RateLimiter as any)({

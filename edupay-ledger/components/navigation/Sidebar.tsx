@@ -59,7 +59,7 @@ export function Sidebar({
             </span>
           </div>
           <div>
-            <h2 className="text-xl font-bold tracking-tight">EduPay Ledger</h2>
+            <h2 className="text-xl font-bold tracking-tight">eBursar</h2>
             {schoolName && (
               <p className="text-[10px] text-white/60 truncate max-w-[160px]">
                 {schoolName}

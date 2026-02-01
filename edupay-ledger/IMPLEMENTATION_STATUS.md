@@ -1,4 +1,4 @@
-# EduPay Ledger - Implementation Status
+# eBursar - Implementation Status
 
 **Last Updated:** January 28, 2026  
 **Project Type:** Desktop-first school fee management system for Ugandan school bursars  
@@ -8,7 +8,7 @@
 
 ## Project Overview
 
-EduPay Ledger is a comprehensive desktop application designed for school bursars in Uganda to:
+eBursar is a comprehensive desktop application designed for school bursars in Uganda to:
 
 - Record fee payments (cash, mobile money, bank transfers)
 - Track student balances and overdue payments
@@ -409,7 +409,7 @@ NEXT_PUBLIC_USE_EMULATORS=true    # Connect to Firebase Emulators
 ## 📁 Complete File Structure
 
 ```
-edupay-ledger/
+ebursar/
 ├── app/                              # Next.js App Router
 │   ├── globals.css                   # Global styles
 │   ├── layout.tsx                    # Root layout with providers

@@ -1,25 +1,30 @@
-'use client';
+"use client";
 
 /**
  * Offline Queue Hook & Components
  * Manages offline data sync with conflict resolution
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error';
-export type QueueItemStatus = 'pending' | 'syncing' | 'synced' | 'failed' | 'conflict';
+export type SyncStatus = "idle" | "syncing" | "success" | "error";
+export type QueueItemStatus =
+  | "pending"
+  | "syncing"
+  | "synced"
+  | "failed"
+  | "conflict";
 
 export interface QueueItem {
   id: string;
-  type: 'payment' | 'student' | 'settings';
-  action: 'create' | 'update' | 'delete';
+  type: "payment" | "student" | "settings";
+  action: "create" | "update" | "delete";
   data: any;
   timestamp: number;
   status: QueueItemStatus;
@@ -32,7 +37,7 @@ export interface ConflictResolution {
   id: string;
   localData: any;
   serverData: any;
-  resolution: 'keep-local' | 'keep-server' | 'merge';
+  resolution: "keep-local" | "keep-server" | "merge";
 }
 
 interface OfflineState {
@@ -41,16 +46,21 @@ interface OfflineState {
   syncStatus: SyncStatus;
   lastSyncTime: number | null;
   conflicts: ConflictResolution[];
-  
+
   // Actions
   setOnline: (isOnline: boolean) => void;
-  addToQueue: (item: Omit<QueueItem, 'id' | 'timestamp' | 'status' | 'syncAttempts'>) => string;
+  addToQueue: (
+    item: Omit<QueueItem, "id" | "timestamp" | "status" | "syncAttempts">,
+  ) => string;
   updateQueueItem: (id: string, updates: Partial<QueueItem>) => void;
   removeFromQueue: (id: string) => void;
   clearSyncedItems: () => void;
   setSyncStatus: (status: SyncStatus) => void;
   addConflict: (conflict: ConflictResolution) => void;
-  resolveConflict: (id: string, resolution: 'keep-local' | 'keep-server' | 'merge') => void;
+  resolveConflict: (
+    id: string,
+    resolution: "keep-local" | "keep-server" | "merge",
+  ) => void;
 }
 
 // ============================================================================
@@ -60,9 +70,9 @@ interface OfflineState {
 export const useOfflineStore = create<OfflineState>()(
   persist(
     (set, get) => ({
-      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+      isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
       queue: [],
-      syncStatus: 'idle',
+      syncStatus: "idle",
       lastSyncTime: null,
       conflicts: [],
 
@@ -74,7 +84,7 @@ export const useOfflineStore = create<OfflineState>()(
           ...item,
           id,
           timestamp: Date.now(),
-          status: 'pending',
+          status: "pending",
           syncAttempts: 0,
         };
 
@@ -88,7 +98,7 @@ export const useOfflineStore = create<OfflineState>()(
       updateQueueItem: (id, updates) => {
         set((state) => ({
           queue: state.queue.map((item) =>
-            item.id === id ? { ...item, ...updates } : item
+            item.id === id ? { ...item, ...updates } : item,
           ),
         }));
       },
@@ -101,7 +111,7 @@ export const useOfflineStore = create<OfflineState>()(
 
       clearSyncedItems: () => {
         set((state) => ({
-          queue: state.queue.filter((item) => item.status !== 'synced'),
+          queue: state.queue.filter((item) => item.status !== "synced"),
         }));
       },
 
@@ -120,13 +130,13 @@ export const useOfflineStore = create<OfflineState>()(
       },
     }),
     {
-      name: 'edupay-offline-store',
+      name: "ebursar-offline-store",
       partialize: (state) => ({
         queue: state.queue,
         lastSyncTime: state.lastSyncTime,
       }),
-    }
-  )
+    },
+  ),
 );
 
 // ============================================================================
@@ -139,7 +149,10 @@ interface UseOfflineSyncOptions {
   onSyncStart?: () => void;
   onSyncComplete?: (synced: number, failed: number) => void;
   onSyncError?: (error: Error) => void;
-  onConflict?: (item: QueueItem, serverData: any) => Promise<'keep-local' | 'keep-server' | 'merge'>;
+  onConflict?: (
+    item: QueueItem,
+    serverData: any,
+  ) => Promise<"keep-local" | "keep-server" | "merge">;
 }
 
 export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
@@ -170,51 +183,52 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
     const handleOnline = () => setOnline(true);
     const handleOffline = () => setOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, [setOnline]);
 
   // Listen for service worker messages
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    if ("serviceWorker" in navigator) {
       const handleMessage = (event: MessageEvent) => {
         const { type, ...data } = event.data;
 
         switch (type) {
-          case 'PAYMENT_SYNCED':
+          case "PAYMENT_SYNCED":
             removeFromQueue(data.offlineId);
             break;
-          case 'PAYMENT_QUEUED':
+          case "PAYMENT_QUEUED":
             // Payment was queued by service worker
             break;
-          case 'SYNC_COMPLETE':
-            setSyncStatus('success');
+          case "SYNC_COMPLETE":
+            setSyncStatus("success");
             onSyncComplete?.(data.syncedCount, data.failedCount);
             break;
         }
       };
 
-      navigator.serviceWorker.addEventListener('message', handleMessage);
-      return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
+      navigator.serviceWorker.addEventListener("message", handleMessage);
+      return () =>
+        navigator.serviceWorker.removeEventListener("message", handleMessage);
     }
   }, [removeFromQueue, setSyncStatus, onSyncComplete]);
 
   // Sync function
   const sync = useCallback(async () => {
     const pendingItems = queue.filter(
-      (item) => item.status === 'pending' || item.status === 'failed'
+      (item) => item.status === "pending" || item.status === "failed",
     );
 
     if (pendingItems.length === 0 || !isOnline) {
       return;
     }
 
-    setSyncStatus('syncing');
+    setSyncStatus("syncing");
     onSyncStart?.();
 
     let syncedCount = 0;
@@ -222,7 +236,7 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
 
     for (const item of pendingItems) {
       try {
-        updateQueueItem(item.id, { status: 'syncing' });
+        updateQueueItem(item.id, { status: "syncing" });
 
         const response = await syncItem(item);
 
@@ -236,22 +250,29 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
               serverData: response.serverData,
               resolution,
             });
-            updateQueueItem(item.id, { status: 'conflict', conflictData: response.serverData });
+            updateQueueItem(item.id, {
+              status: "conflict",
+              conflictData: response.serverData,
+            });
           } else {
             // Default: keep server data
-            updateQueueItem(item.id, { status: 'conflict', conflictData: response.serverData });
+            updateQueueItem(item.id, {
+              status: "conflict",
+              conflictData: response.serverData,
+            });
           }
           failedCount++;
         } else if (response.success) {
-          updateQueueItem(item.id, { status: 'synced' });
+          updateQueueItem(item.id, { status: "synced" });
           syncedCount++;
         } else {
-          throw new Error(response.error || 'Sync failed');
+          throw new Error(response.error || "Sync failed");
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
         updateQueueItem(item.id, {
-          status: 'failed',
+          status: "failed",
           syncAttempts: item.syncAttempts + 1,
           lastError: errorMessage,
         });
@@ -259,14 +280,23 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
       }
     }
 
-    setSyncStatus(failedCount > 0 ? 'error' : 'success');
+    setSyncStatus(failedCount > 0 ? "error" : "success");
     onSyncComplete?.(syncedCount, failedCount);
 
     // Clear synced items after a delay
     setTimeout(() => {
       useOfflineStore.getState().clearSyncedItems();
     }, 5000);
-  }, [queue, isOnline, setSyncStatus, updateQueueItem, addConflict, onSyncStart, onSyncComplete, onConflict]);
+  }, [
+    queue,
+    isOnline,
+    setSyncStatus,
+    updateQueueItem,
+    addConflict,
+    onSyncStart,
+    onSyncComplete,
+    onConflict,
+  ]);
 
   // Auto sync when coming online
   useEffect(() => {
@@ -294,9 +324,12 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
 
   // Request background sync via service worker
   const requestBackgroundSync = useCallback(async () => {
-    if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+    if (
+      "serviceWorker" in navigator &&
+      "sync" in window.ServiceWorkerRegistration.prototype
+    ) {
       const registration = await navigator.serviceWorker.ready;
-      await (registration as any).sync.register('sync-payments');
+      await (registration as any).sync.register("sync-payments");
     } else {
       // Fallback: sync immediately
       sync();
@@ -307,7 +340,9 @@ export function useOfflineSync(options: UseOfflineSyncOptions = {}) {
     isOnline,
     queue,
     syncStatus,
-    pendingCount: queue.filter((i) => i.status === 'pending' || i.status === 'failed').length,
+    pendingCount: queue.filter(
+      (i) => i.status === "pending" || i.status === "failed",
+    ).length,
     sync,
     requestBackgroundSync,
   };
@@ -323,22 +358,27 @@ async function syncItem(item: QueueItem): Promise<{
   serverData?: any;
   error?: string;
 }> {
-  const endpoints: Record<QueueItem['type'], string> = {
-    payment: '/api/payments',
-    student: '/api/students',
-    settings: '/api/settings',
+  const endpoints: Record<QueueItem["type"], string> = {
+    payment: "/api/payments",
+    student: "/api/students",
+    settings: "/api/settings",
   };
 
   const endpoint = endpoints[item.type];
-  const method = item.action === 'create' ? 'POST' : item.action === 'update' ? 'PUT' : 'DELETE';
+  const method =
+    item.action === "create"
+      ? "POST"
+      : item.action === "update"
+        ? "PUT"
+        : "DELETE";
 
   try {
     const response = await fetch(endpoint, {
       method,
       headers: {
-        'Content-Type': 'application/json',
-        'X-Offline-Sync': 'true',
-        'X-Offline-Timestamp': item.timestamp.toString(),
+        "Content-Type": "application/json",
+        "X-Offline-Sync": "true",
+        "X-Offline-Timestamp": item.timestamp.toString(),
       },
       body: JSON.stringify(item.data),
     });
@@ -356,7 +396,10 @@ async function syncItem(item: QueueItem): Promise<{
 
     return { success: true };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : 'Network error' };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Network error",
+    };
   }
 }
 
@@ -366,19 +409,19 @@ async function syncItem(item: QueueItem): Promise<{
 
 export function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(
-    typeof navigator !== 'undefined' ? navigator.onLine : true
+    typeof navigator !== "undefined" ? navigator.onLine : true,
   );
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 

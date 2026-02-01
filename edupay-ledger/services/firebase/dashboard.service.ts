@@ -1,6 +1,6 @@
 /**
  * Dashboard Firebase Service
- * Handles all dashboard-related data operations for EduPay Ledger
+ * Handles all dashboard-related data operations for eBursar
  */
 
 import {

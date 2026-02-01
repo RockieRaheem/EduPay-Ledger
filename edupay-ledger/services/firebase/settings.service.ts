@@ -1,6 +1,6 @@
 /**
  * Settings Firebase Service
- * Handles all settings-related database operations for EduPay Ledger
+ * Handles all settings-related database operations for eBursar
  */
 
 import {
@@ -13,8 +13,8 @@ import {
   batchWrite,
   logAuditAction,
   COLLECTIONS,
-} from '@/lib/firebase';
-import { where, orderBy, QueryConstraint } from 'firebase/firestore';
+} from "@/lib/firebase";
+import { where, orderBy, QueryConstraint } from "firebase/firestore";
 
 // ============================================================================
 // TYPES
@@ -23,7 +23,7 @@ import { where, orderBy, QueryConstraint } from 'firebase/firestore';
 export interface SchoolSettings {
   id: string;
   schoolId: string;
-  
+
   // General
   schoolName: string;
   address: string;
@@ -31,40 +31,40 @@ export interface SchoolSettings {
   email: string;
   logo?: string;
   motto?: string;
-  
+
   // Financial
   currency: string;
   currencySymbol: string;
   taxId?: string;
   bankName?: string;
   bankAccount?: string;
-  
+
   // Academic
   currentTermId: string;
   currentTermName: string;
   academicYear: string;
-  
+
   // Notifications
   smsEnabled: boolean;
   emailEnabled: boolean;
-  smsProvider?: 'africas_talking' | 'twilio' | 'custom';
+  smsProvider?: "africas_talking" | "twilio" | "custom";
   smsApiKey?: string;
-  
+
   // Payment Settings
   allowPartialPayments: boolean;
   minimumPaymentAmount: number;
   lateFeePercentage: number;
   gracePeriodDays: number;
-  
+
   // Receipt Settings
   receiptPrefix: string;
   receiptFooter?: string;
   showBalanceOnReceipt: boolean;
-  
+
   // Integrations
   stellarEnabled: boolean;
   stellarPublicKey?: string;
-  
+
   updatedAt: Date;
   updatedBy: string;
 }
@@ -75,7 +75,7 @@ export interface FeeStructure {
   termId: string;
   classId: string;
   className: string;
-  
+
   // Fee breakdown
   tuitionFee: number;
   examFee: number;
@@ -83,9 +83,9 @@ export interface FeeStructure {
   sportsFee: number;
   computerFee: number;
   otherFees: { name: string; amount: number }[];
-  
+
   totalFees: number;
-  
+
   // Dates
   dueDate: Date;
   createdAt: Date;
@@ -97,17 +97,17 @@ export interface InstallmentRule {
   schoolId: string;
   name: string;
   description?: string;
-  
+
   // Installment breakdown
   installments: {
     name: string;
     percentage: number;
     dueDate: Date;
   }[];
-  
+
   isDefault: boolean;
   isActive: boolean;
-  
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -138,14 +138,14 @@ export interface SchoolClass {
 export interface UserSettings {
   id: string;
   userId: string;
-  theme: 'light' | 'dark' | 'system';
+  theme: "light" | "dark" | "system";
   language: string;
   notifications: {
     email: boolean;
     push: boolean;
     sms: boolean;
   };
-  dashboardLayout: 'default' | 'compact' | 'detailed';
+  dashboardLayout: "default" | "compact" | "detailed";
 }
 
 // ============================================================================
@@ -155,7 +155,9 @@ export interface UserSettings {
 /**
  * Get school settings
  */
-export async function getSchoolSettings(schoolId: string): Promise<SchoolSettings | null> {
+export async function getSchoolSettings(
+  schoolId: string,
+): Promise<SchoolSettings | null> {
   return fetchDocument<SchoolSettings>(COLLECTIONS.SETTINGS, schoolId);
 }
 
@@ -165,23 +167,20 @@ export async function getSchoolSettings(schoolId: string): Promise<SchoolSetting
 export async function updateSchoolSettings(
   schoolId: string,
   settings: Partial<SchoolSettings>,
-  userId: string
+  userId: string,
 ): Promise<void> {
   const current = await getSchoolSettings(schoolId);
-  
+
   await updateDocument(COLLECTIONS.SETTINGS, schoolId, {
     ...settings,
     updatedAt: new Date(),
     updatedBy: userId,
   });
 
-  await logAuditAction(
-    'UPDATE',
-    COLLECTIONS.SETTINGS,
-    schoolId,
-    userId,
-    { before: current, after: settings }
-  );
+  await logAuditAction("UPDATE", COLLECTIONS.SETTINGS, schoolId, userId, {
+    before: current,
+    after: settings,
+  });
 }
 
 /**
@@ -190,19 +189,19 @@ export async function updateSchoolSettings(
 export async function initializeSchoolSettings(
   schoolId: string,
   schoolName: string,
-  userId: string
+  userId: string,
 ): Promise<void> {
   const defaultSettings: SchoolSettings = {
     id: schoolId,
     schoolId,
     schoolName,
-    address: '',
-    phone: '',
-    email: '',
-    currency: 'UGX',
-    currencySymbol: 'UGX',
-    currentTermId: '',
-    currentTermName: '',
+    address: "",
+    phone: "",
+    email: "",
+    currency: "UGX",
+    currencySymbol: "UGX",
+    currentTermId: "",
+    currentTermName: "",
     academicYear: new Date().getFullYear().toString(),
     smsEnabled: false,
     emailEnabled: false,
@@ -210,7 +209,7 @@ export async function initializeSchoolSettings(
     minimumPaymentAmount: 10000,
     lateFeePercentage: 0,
     gracePeriodDays: 14,
-    receiptPrefix: 'RCP',
+    receiptPrefix: "RCP",
     showBalanceOnReceipt: true,
     stellarEnabled: false,
     updatedAt: new Date(),
@@ -226,13 +225,13 @@ export async function initializeSchoolSettings(
 export function subscribeToSchoolSettings(
   schoolId: string,
   onData: (settings: SchoolSettings | null) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): () => void {
   return subscribeToDocument<SchoolSettings>(
     COLLECTIONS.SETTINGS,
     schoolId,
     onData,
-    onError
+    onError,
   );
 }
 
@@ -246,15 +245,15 @@ export function subscribeToSchoolSettings(
 export async function getFeeStructure(
   schoolId: string,
   classId: string,
-  termId: string
+  termId: string,
 ): Promise<FeeStructure | null> {
   const structures = await fetchCollection<FeeStructure>(
     COLLECTIONS.FEE_STRUCTURES,
     [
-      where('schoolId', '==', schoolId),
-      where('classId', '==', classId),
-      where('termId', '==', termId),
-    ]
+      where("schoolId", "==", schoolId),
+      where("classId", "==", classId),
+      where("termId", "==", termId),
+    ],
   );
   return structures[0] || null;
 }
@@ -264,27 +263,24 @@ export async function getFeeStructure(
  */
 export async function getFeeStructures(
   schoolId: string,
-  termId: string
+  termId: string,
 ): Promise<FeeStructure[]> {
-  return fetchCollection<FeeStructure>(
-    COLLECTIONS.FEE_STRUCTURES,
-    [
-      where('schoolId', '==', schoolId),
-      where('termId', '==', termId),
-      orderBy('className', 'asc'),
-    ]
-  );
+  return fetchCollection<FeeStructure>(COLLECTIONS.FEE_STRUCTURES, [
+    where("schoolId", "==", schoolId),
+    where("termId", "==", termId),
+    orderBy("className", "asc"),
+  ]);
 }
 
 /**
  * Save fee structure
  */
 export async function saveFeeStructure(
-  structure: Omit<FeeStructure, 'id' | 'createdAt' | 'updatedAt'>,
-  userId: string
+  structure: Omit<FeeStructure, "id" | "createdAt" | "updatedAt">,
+  userId: string,
 ): Promise<string> {
   const structureId = `FEE-${structure.schoolId}-${structure.classId}-${structure.termId}`;
-  
+
   await saveDocument(COLLECTIONS.FEE_STRUCTURES, structureId, {
     ...structure,
     id: structureId,
@@ -293,11 +289,11 @@ export async function saveFeeStructure(
   });
 
   await logAuditAction(
-    'CREATE',
+    "CREATE",
     COLLECTIONS.FEE_STRUCTURES,
     structureId,
     userId,
-    { className: structure.className, totalFees: structure.totalFees }
+    { className: structure.className, totalFees: structure.totalFees },
   );
 
   return structureId;
@@ -309,7 +305,7 @@ export async function saveFeeStructure(
 export async function updateFeeStructure(
   structureId: string,
   updates: Partial<FeeStructure>,
-  userId: string
+  userId: string,
 ): Promise<void> {
   await updateDocument(COLLECTIONS.FEE_STRUCTURES, structureId, {
     ...updates,
@@ -317,11 +313,11 @@ export async function updateFeeStructure(
   });
 
   await logAuditAction(
-    'UPDATE',
+    "UPDATE",
     COLLECTIONS.FEE_STRUCTURES,
     structureId,
     userId,
-    updates
+    updates,
   );
 }
 
@@ -332,30 +328,29 @@ export async function updateFeeStructure(
 /**
  * Get all installment rules for a school
  */
-export async function getInstallmentRules(schoolId: string): Promise<InstallmentRule[]> {
-  return fetchCollection<InstallmentRule>(
-    COLLECTIONS.INSTALLMENT_RULES,
-    [
-      where('schoolId', '==', schoolId),
-      where('isActive', '==', true),
-      orderBy('name', 'asc'),
-    ]
-  );
+export async function getInstallmentRules(
+  schoolId: string,
+): Promise<InstallmentRule[]> {
+  return fetchCollection<InstallmentRule>(COLLECTIONS.INSTALLMENT_RULES, [
+    where("schoolId", "==", schoolId),
+    where("isActive", "==", true),
+    orderBy("name", "asc"),
+  ]);
 }
 
 /**
  * Get default installment rule
  */
 export async function getDefaultInstallmentRule(
-  schoolId: string
+  schoolId: string,
 ): Promise<InstallmentRule | null> {
   const rules = await fetchCollection<InstallmentRule>(
     COLLECTIONS.INSTALLMENT_RULES,
     [
-      where('schoolId', '==', schoolId),
-      where('isDefault', '==', true),
-      where('isActive', '==', true),
-    ]
+      where("schoolId", "==", schoolId),
+      where("isDefault", "==", true),
+      where("isActive", "==", true),
+    ],
   );
   return rules[0] || null;
 }
@@ -364,23 +359,23 @@ export async function getDefaultInstallmentRule(
  * Save installment rule
  */
 export async function saveInstallmentRule(
-  rule: Omit<InstallmentRule, 'id' | 'createdAt' | 'updatedAt'>,
-  userId: string
+  rule: Omit<InstallmentRule, "id" | "createdAt" | "updatedAt">,
+  userId: string,
 ): Promise<string> {
   const ruleId = `INST-${Date.now()}`;
-  
+
   // If this is default, unset other defaults
   if (rule.isDefault) {
     const existingRules = await getInstallmentRules(rule.schoolId);
     const updates = existingRules
       .filter((r) => r.isDefault)
       .map((r) => ({
-        type: 'update' as const,
+        type: "update" as const,
         collection: COLLECTIONS.INSTALLMENT_RULES,
         docId: r.id,
         data: { isDefault: false },
       }));
-    
+
     if (updates.length > 0) {
       await batchWrite(updates);
     }
@@ -394,11 +389,11 @@ export async function saveInstallmentRule(
   });
 
   await logAuditAction(
-    'CREATE',
+    "CREATE",
     COLLECTIONS.INSTALLMENT_RULES,
     ruleId,
     userId,
-    { name: rule.name }
+    { name: rule.name },
   );
 
   return ruleId;
@@ -407,18 +402,21 @@ export async function saveInstallmentRule(
 /**
  * Delete installment rule
  */
-export async function deleteInstallmentRule(ruleId: string, userId: string): Promise<void> {
+export async function deleteInstallmentRule(
+  ruleId: string,
+  userId: string,
+): Promise<void> {
   await updateDocument(COLLECTIONS.INSTALLMENT_RULES, ruleId, {
     isActive: false,
     updatedAt: new Date(),
   });
 
   await logAuditAction(
-    'DELETE',
+    "DELETE",
     COLLECTIONS.INSTALLMENT_RULES,
     ruleId,
     userId,
-    {}
+    {},
   );
 }
 
@@ -430,26 +428,20 @@ export async function deleteInstallmentRule(ruleId: string, userId: string): Pro
  * Get all terms for a school
  */
 export async function getTerms(schoolId: string): Promise<Term[]> {
-  return fetchCollection<Term>(
-    COLLECTIONS.TERMS,
-    [
-      where('schoolId', '==', schoolId),
-      orderBy('startDate', 'desc'),
-    ]
-  );
+  return fetchCollection<Term>(COLLECTIONS.TERMS, [
+    where("schoolId", "==", schoolId),
+    orderBy("startDate", "desc"),
+  ]);
 }
 
 /**
  * Get current term
  */
 export async function getCurrentTerm(schoolId: string): Promise<Term | null> {
-  const terms = await fetchCollection<Term>(
-    COLLECTIONS.TERMS,
-    [
-      where('schoolId', '==', schoolId),
-      where('isCurrent', '==', true),
-    ]
-  );
+  const terms = await fetchCollection<Term>(COLLECTIONS.TERMS, [
+    where("schoolId", "==", schoolId),
+    where("isCurrent", "==", true),
+  ]);
   return terms[0] || null;
 }
 
@@ -457,23 +449,23 @@ export async function getCurrentTerm(schoolId: string): Promise<Term | null> {
  * Create new term
  */
 export async function createTerm(
-  term: Omit<Term, 'id' | 'createdAt'>,
-  userId: string
+  term: Omit<Term, "id" | "createdAt">,
+  userId: string,
 ): Promise<string> {
   const termId = `TERM-${term.schoolId}-${Date.now()}`;
-  
+
   // If this is current, unset other current terms
   if (term.isCurrent) {
     const existingTerms = await getTerms(term.schoolId);
     const updates = existingTerms
       .filter((t) => t.isCurrent)
       .map((t) => ({
-        type: 'update' as const,
+        type: "update" as const,
         collection: COLLECTIONS.TERMS,
         docId: t.id,
         data: { isCurrent: false },
       }));
-    
+
     if (updates.length > 0) {
       await batchWrite(updates);
     }
@@ -494,13 +486,9 @@ export async function createTerm(
     });
   }
 
-  await logAuditAction(
-    'CREATE',
-    COLLECTIONS.TERMS,
-    termId,
-    userId,
-    { termName: term.name }
-  );
+  await logAuditAction("CREATE", COLLECTIONS.TERMS, termId, userId, {
+    termName: term.name,
+  });
 
   return termId;
 }
@@ -511,17 +499,17 @@ export async function createTerm(
 export async function setCurrentTerm(
   schoolId: string,
   termId: string,
-  userId: string
+  userId: string,
 ): Promise<void> {
   // Unset all current terms
   const terms = await getTerms(schoolId);
   const updates = terms.map((t) => ({
-    type: 'update' as const,
+    type: "update" as const,
     collection: COLLECTIONS.TERMS,
     docId: t.id,
     data: { isCurrent: t.id === termId },
   }));
-  
+
   await batchWrite(updates);
 
   // Update school settings
@@ -534,13 +522,9 @@ export async function setCurrentTerm(
     });
   }
 
-  await logAuditAction(
-    'UPDATE',
-    COLLECTIONS.TERMS,
-    termId,
-    userId,
-    { action: 'set_current' }
-  );
+  await logAuditAction("UPDATE", COLLECTIONS.TERMS, termId, userId, {
+    action: "set_current",
+  });
 }
 
 // ============================================================================
@@ -551,38 +535,31 @@ export async function setCurrentTerm(
  * Get all classes for a school
  */
 export async function getClasses(schoolId: string): Promise<SchoolClass[]> {
-  return fetchCollection<SchoolClass>(
-    COLLECTIONS.CLASSES,
-    [
-      where('schoolId', '==', schoolId),
-      where('isActive', '==', true),
-      orderBy('level', 'asc'),
-    ]
-  );
+  return fetchCollection<SchoolClass>(COLLECTIONS.CLASSES, [
+    where("schoolId", "==", schoolId),
+    where("isActive", "==", true),
+    orderBy("level", "asc"),
+  ]);
 }
 
 /**
  * Create class
  */
 export async function createClass(
-  classData: Omit<SchoolClass, 'id' | 'studentCount'>,
-  userId: string
+  classData: Omit<SchoolClass, "id" | "studentCount">,
+  userId: string,
 ): Promise<string> {
   const classId = `CLASS-${classData.schoolId}-${Date.now()}`;
-  
+
   await saveDocument(COLLECTIONS.CLASSES, classId, {
     ...classData,
     id: classId,
     studentCount: 0,
   });
 
-  await logAuditAction(
-    'CREATE',
-    COLLECTIONS.CLASSES,
-    classId,
-    userId,
-    { className: classData.name }
-  );
+  await logAuditAction("CREATE", COLLECTIONS.CLASSES, classId, userId, {
+    className: classData.name,
+  });
 
   return classId;
 }
@@ -593,32 +570,23 @@ export async function createClass(
 export async function updateClass(
   classId: string,
   updates: Partial<SchoolClass>,
-  userId: string
+  userId: string,
 ): Promise<void> {
   await updateDocument(COLLECTIONS.CLASSES, classId, updates);
 
-  await logAuditAction(
-    'UPDATE',
-    COLLECTIONS.CLASSES,
-    classId,
-    userId,
-    updates
-  );
+  await logAuditAction("UPDATE", COLLECTIONS.CLASSES, classId, userId, updates);
 }
 
 /**
  * Delete class (soft delete)
  */
-export async function deleteClass(classId: string, userId: string): Promise<void> {
+export async function deleteClass(
+  classId: string,
+  userId: string,
+): Promise<void> {
   await updateDocument(COLLECTIONS.CLASSES, classId, { isActive: false });
 
-  await logAuditAction(
-    'DELETE',
-    COLLECTIONS.CLASSES,
-    classId,
-    userId,
-    {}
-  );
+  await logAuditAction("DELETE", COLLECTIONS.CLASSES, classId, userId, {});
 }
 
 // ============================================================================
@@ -628,7 +596,9 @@ export async function deleteClass(classId: string, userId: string): Promise<void
 /**
  * Get user settings
  */
-export async function getUserSettings(userId: string): Promise<UserSettings | null> {
+export async function getUserSettings(
+  userId: string,
+): Promise<UserSettings | null> {
   return fetchDocument<UserSettings>(`${COLLECTIONS.SETTINGS}/users`, userId);
 }
 
@@ -637,7 +607,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings | nu
  */
 export async function updateUserSettings(
   userId: string,
-  settings: Partial<UserSettings>
+  settings: Partial<UserSettings>,
 ): Promise<void> {
   await saveDocument(`${COLLECTIONS.SETTINGS}/users`, userId, {
     ...settings,
@@ -669,11 +639,11 @@ export interface OnboardingProgress {
  * Get onboarding progress
  */
 export async function getOnboardingProgress(
-  schoolId: string
+  schoolId: string,
 ): Promise<OnboardingProgress | null> {
   return fetchDocument<OnboardingProgress>(
     `${COLLECTIONS.SETTINGS}/onboarding`,
-    schoolId
+    schoolId,
   );
 }
 
@@ -682,11 +652,11 @@ export async function getOnboardingProgress(
  */
 export async function updateOnboardingProgress(
   schoolId: string,
-  step: keyof OnboardingProgress['steps'],
-  userId: string
+  step: keyof OnboardingProgress["steps"],
+  userId: string,
 ): Promise<void> {
   const current = await getOnboardingProgress(schoolId);
-  
+
   const updatedSteps = {
     ...(current?.steps || {
       basicInfo: false,
@@ -709,11 +679,8 @@ export async function updateOnboardingProgress(
     ...(allComplete ? { completedAt: new Date() } : {}),
   });
 
-  await logAuditAction(
-    'UPDATE',
-    'onboarding',
-    schoolId,
-    userId,
-    { step, completed: true }
-  );
+  await logAuditAction("UPDATE", "onboarding", schoolId, userId, {
+    step,
+    completed: true,
+  });
 }

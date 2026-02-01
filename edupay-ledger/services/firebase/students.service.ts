@@ -1,6 +1,6 @@
 /**
  * Students Firebase Service
- * Handles all student-related database operations for EduPay Ledger
+ * Handles all student-related database operations for eBursar
  */
 
 import {
@@ -15,7 +15,7 @@ import {
   logAuditAction,
   COLLECTIONS,
   Timestamp,
-} from '@/lib/firebase';
+} from "@/lib/firebase";
 import {
   collection,
   query,
@@ -26,8 +26,8 @@ import {
   getCountFromServer,
   DocumentData,
   QueryConstraint,
-} from 'firebase/firestore';
-import type { Student } from '@/types/student';
+} from "firebase/firestore";
+import type { Student } from "@/types/student";
 
 // ============================================================================
 // TYPES
@@ -36,7 +36,7 @@ import type { Student } from '@/types/student';
 export interface StudentFilters {
   schoolId: string;
   classId?: string;
-  status?: 'active' | 'inactive' | 'graduated' | 'transferred';
+  status?: "active" | "inactive" | "graduated" | "transferred";
   searchQuery?: string;
   hasArrears?: boolean;
   termId?: string;
@@ -70,25 +70,25 @@ export async function getStudent(studentId: string): Promise<Student | null> {
  */
 export async function getStudents(
   filters: StudentFilters,
-  pagination?: PaginationOptions
+  pagination?: PaginationOptions,
 ): Promise<{ students: Student[]; lastDoc: DocumentData | null }> {
   const constraints: QueryConstraint[] = [
-    where('schoolId', '==', filters.schoolId),
+    where("schoolId", "==", filters.schoolId),
   ];
 
   if (filters.classId) {
-    constraints.push(where('classId', '==', filters.classId));
+    constraints.push(where("classId", "==", filters.classId));
   }
 
   if (filters.status) {
-    constraints.push(where('status', '==', filters.status));
+    constraints.push(where("status", "==", filters.status));
   }
 
   if (filters.hasArrears === true) {
-    constraints.push(where('balance', '>', 0));
+    constraints.push(where("balance", ">", 0));
   }
 
-  constraints.push(orderBy('lastName', 'asc'));
+  constraints.push(orderBy("lastName", "asc"));
 
   if (pagination?.pageSize) {
     constraints.push(limit(pagination.pageSize));
@@ -100,7 +100,7 @@ export async function getStudents(
 
   const students = await fetchCollection<Student>(
     COLLECTIONS.STUDENTS,
-    constraints
+    constraints,
   );
 
   return {
@@ -114,29 +114,25 @@ export async function getStudents(
  */
 export async function createStudent(
   student: Partial<Student>,
-  userId: string
+  userId: string,
 ): Promise<string> {
   const studentId = `STU-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  
+
   const newStudent = {
     ...student,
     id: studentId,
     balance: student.balance || 0,
     amountPaid: student.amountPaid || 0,
-    status: student.status || 'active',
+    status: student.status || "active",
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   };
 
   await saveDocument(COLLECTIONS.STUDENTS, studentId, newStudent);
-  
-  await logAuditAction(
-    'CREATE',
-    COLLECTIONS.STUDENTS,
-    studentId,
-    userId,
-    { studentName: `${student.firstName} ${student.lastName}` }
-  );
+
+  await logAuditAction("CREATE", COLLECTIONS.STUDENTS, studentId, userId, {
+    studentName: `${student.firstName} ${student.lastName}`,
+  });
 
   return studentId;
 }
@@ -147,60 +143,56 @@ export async function createStudent(
 export async function updateStudent(
   studentId: string,
   updates: Partial<Student>,
-  userId: string
+  userId: string,
 ): Promise<void> {
   const currentStudent = await getStudent(studentId);
-  
+
   await updateDocument(COLLECTIONS.STUDENTS, studentId, {
     ...updates,
     updatedAt: Timestamp.now(),
   });
 
-  await logAuditAction(
-    'UPDATE',
-    COLLECTIONS.STUDENTS,
-    studentId,
-    userId,
-    { 
-      before: currentStudent,
-      after: updates 
-    }
-  );
+  await logAuditAction("UPDATE", COLLECTIONS.STUDENTS, studentId, userId, {
+    before: currentStudent,
+    after: updates,
+  });
 }
 
 /**
  * Delete a student (soft delete - set status to inactive)
  */
-export async function deleteStudent(studentId: string, userId: string): Promise<void> {
+export async function deleteStudent(
+  studentId: string,
+  userId: string,
+): Promise<void> {
   await updateDocument(COLLECTIONS.STUDENTS, studentId, {
-    status: 'inactive',
+    status: "inactive",
     deletedAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   });
 
-  await logAuditAction(
-    'DELETE',
-    COLLECTIONS.STUDENTS,
-    studentId,
-    userId,
-    { softDelete: true }
-  );
+  await logAuditAction("DELETE", COLLECTIONS.STUDENTS, studentId, userId, {
+    softDelete: true,
+  });
 }
 
 /**
  * Permanently delete a student
  */
-export async function permanentlyDeleteStudent(studentId: string, userId: string): Promise<void> {
+export async function permanentlyDeleteStudent(
+  studentId: string,
+  userId: string,
+): Promise<void> {
   const student = await getStudent(studentId);
-  
+
   await removeDocument(COLLECTIONS.STUDENTS, studentId);
 
   await logAuditAction(
-    'PERMANENT_DELETE',
+    "PERMANENT_DELETE",
     COLLECTIONS.STUDENTS,
     studentId,
     userId,
-    { studentData: student }
+    { studentData: student },
   );
 }
 
@@ -214,14 +206,14 @@ export async function permanentlyDeleteStudent(studentId: string, userId: string
 export async function importStudents(
   students: Partial<Student>[],
   schoolId: string,
-  userId: string
+  userId: string,
 ): Promise<{ success: number; failed: number; errors: string[] }> {
   const results = { success: 0, failed: 0, errors: [] as string[] };
 
   const operations = students.map((student, index) => {
     const studentId = `STU-${Date.now()}-${index}-${Math.random().toString(36).substr(2, 6)}`;
     return {
-      type: 'set' as const,
+      type: "set" as const,
       collection: COLLECTIONS.STUDENTS,
       docId: studentId,
       data: {
@@ -230,7 +222,7 @@ export async function importStudents(
         schoolId,
         balance: student.balance || 0,
         amountPaid: student.amountPaid || 0,
-        status: student.status || 'active',
+        status: student.status || "active",
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       },
@@ -240,13 +232,13 @@ export async function importStudents(
   try {
     await batchWrite(operations);
     results.success = students.length;
-    
+
     await logAuditAction(
-      'BULK_IMPORT',
+      "BULK_IMPORT",
       COLLECTIONS.STUDENTS,
       schoolId,
       userId,
-      { count: students.length }
+      { count: students.length },
     );
   } catch (error: any) {
     results.failed = students.length;
@@ -263,10 +255,10 @@ export async function promoteStudents(
   studentIds: string[],
   newClassId: string,
   newClassName: string,
-  userId: string
+  userId: string,
 ): Promise<void> {
   const operations = studentIds.map((id) => ({
-    type: 'update' as const,
+    type: "update" as const,
     collection: COLLECTIONS.STUDENTS,
     docId: id,
     data: {
@@ -280,11 +272,11 @@ export async function promoteStudents(
   await batchWrite(operations);
 
   await logAuditAction(
-    'BULK_PROMOTE',
+    "BULK_PROMOTE",
     COLLECTIONS.STUDENTS,
-    'multiple',
+    "multiple",
     userId,
-    { studentIds, newClassId, newClassName }
+    { studentIds, newClassId, newClassName },
   );
 }
 
@@ -297,36 +289,36 @@ export async function promoteStudents(
  */
 export async function getStudentStats(schoolId: string): Promise<StudentStats> {
   const studentsRef = collection(db, COLLECTIONS.STUDENTS);
-  
+
   // Total students
-  const totalQuery = query(studentsRef, where('schoolId', '==', schoolId));
+  const totalQuery = query(studentsRef, where("schoolId", "==", schoolId));
   const totalSnapshot = await getCountFromServer(totalQuery);
-  
+
   // Active students
   const activeQuery = query(
     studentsRef,
-    where('schoolId', '==', schoolId),
-    where('status', '==', 'active')
+    where("schoolId", "==", schoolId),
+    where("status", "==", "active"),
   );
   const activeSnapshot = await getCountFromServer(activeQuery);
-  
+
   // Students with arrears
   const arrearsQuery = query(
     studentsRef,
-    where('schoolId', '==', schoolId),
-    where('balance', '>', 0)
+    where("schoolId", "==", schoolId),
+    where("balance", ">", 0),
   );
   const arrearsSnapshot = await getCountFromServer(arrearsQuery);
-  
+
   // New this month
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
-  
+
   const newQuery = query(
     studentsRef,
-    where('schoolId', '==', schoolId),
-    where('createdAt', '>=', Timestamp.fromDate(startOfMonth))
+    where("schoolId", "==", schoolId),
+    where("createdAt", ">=", Timestamp.fromDate(startOfMonth)),
   );
   const newSnapshot = await getCountFromServer(newQuery);
 
@@ -348,19 +340,19 @@ export async function getStudentStats(schoolId: string): Promise<StudentStats> {
 export function subscribeToStudents(
   schoolId: string,
   onData: (students: Student[]) => void,
-  onError?: (error: Error) => void
+  onError?: (error: Error) => void,
 ): () => void {
   const constraints: QueryConstraint[] = [
-    where('schoolId', '==', schoolId),
-    where('status', '==', 'active'),
-    orderBy('lastName', 'asc'),
+    where("schoolId", "==", schoolId),
+    where("status", "==", "active"),
+    orderBy("lastName", "asc"),
   ];
 
   return subscribeToCollection<Student>(
     COLLECTIONS.STUDENTS,
     constraints,
     onData,
-    onError
+    onError,
   );
 }
 
@@ -374,27 +366,24 @@ export function subscribeToStudents(
 export async function searchStudents(
   schoolId: string,
   searchTerm: string,
-  maxResults: number = 20
+  maxResults: number = 20,
 ): Promise<Student[]> {
   // Firebase doesn't support full-text search, so we fetch and filter
   // For production, consider using Algolia or Elasticsearch
   const searchLower = searchTerm.toLowerCase();
-  
-  const students = await fetchCollection<Student>(
-    COLLECTIONS.STUDENTS,
-    [
-      where('schoolId', '==', schoolId),
-      where('status', '==', 'active'),
-      limit(100), // Fetch more to filter
-    ]
-  );
+
+  const students = await fetchCollection<Student>(COLLECTIONS.STUDENTS, [
+    where("schoolId", "==", schoolId),
+    where("status", "==", "active"),
+    limit(100), // Fetch more to filter
+  ]);
 
   return students
     .filter((student) => {
       const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
-      const studentIdLower = (student.studentId || '').toLowerCase();
+      const studentIdLower = (student.studentId || "").toLowerCase();
       const id = student.id.toLowerCase();
-      
+
       return (
         fullName.includes(searchLower) ||
         studentIdLower.includes(searchLower) ||
@@ -414,38 +403,41 @@ export async function searchStudents(
 export async function updateStudentBalance(
   studentId: string,
   amount: number,
-  type: 'credit' | 'debit',
-  userId: string
+  type: "credit" | "debit",
+  userId: string,
 ): Promise<void> {
   const student = await getStudent(studentId);
-  if (!student) throw new Error('Student not found');
+  if (!student) throw new Error("Student not found");
 
-  const newBalance = type === 'credit' 
-    ? student.balance - amount  // Payment reduces balance
-    : student.balance + amount; // Fee charge increases balance
+  const newBalance =
+    type === "credit"
+      ? student.balance - amount // Payment reduces balance
+      : student.balance + amount; // Fee charge increases balance
 
-  const newAmountPaid = type === 'credit'
-    ? student.amountPaid + amount
-    : student.amountPaid - amount;
+  const newAmountPaid =
+    type === "credit"
+      ? student.amountPaid + amount
+      : student.amountPaid - amount;
 
   await updateDocument(COLLECTIONS.STUDENTS, studentId, {
     balance: newBalance,
     amountPaid: newAmountPaid,
-    lastPaymentDate: type === 'credit' ? Timestamp.now() : student.lastPaymentDate,
+    lastPaymentDate:
+      type === "credit" ? Timestamp.now() : student.lastPaymentDate,
     updatedAt: Timestamp.now(),
   });
 
   await logAuditAction(
-    'BALANCE_UPDATE',
+    "BALANCE_UPDATE",
     COLLECTIONS.STUDENTS,
     studentId,
     userId,
-    { 
+    {
       previousBalance: student.balance,
       newBalance,
       amount,
-      type 
-    }
+      type,
+    },
   );
 }
 
@@ -454,15 +446,12 @@ export async function updateStudentBalance(
  */
 export async function getStudentsWithHighestArrears(
   schoolId: string,
-  count: number = 10
+  count: number = 10,
 ): Promise<Student[]> {
-  return fetchCollection<Student>(
-    COLLECTIONS.STUDENTS,
-    [
-      where('schoolId', '==', schoolId),
-      where('balance', '>', 0),
-      orderBy('balance', 'desc'),
-      limit(count),
-    ]
-  );
+  return fetchCollection<Student>(COLLECTIONS.STUDENTS, [
+    where("schoolId", "==", schoolId),
+    where("balance", ">", 0),
+    orderBy("balance", "desc"),
+    limit(count),
+  ]);
 }

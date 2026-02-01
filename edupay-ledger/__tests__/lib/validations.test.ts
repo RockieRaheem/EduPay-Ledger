@@ -1,7 +1,7 @@
 /**
  * Validation Schemas Tests
- * 
- * Tests for Zod validation schemas used throughout EduPay Ledger
+ *
+ * Tests for Zod validation schemas used throughout eBursar
  * Ensures data integrity for Ugandan school fee management
  */
 
@@ -108,11 +108,13 @@ describe("emailSchema", () => {
     test("should accept standard email formats", () => {
       expect(emailSchema.safeParse("user@example.com").success).toBe(true);
       expect(emailSchema.safeParse("bursar@school.ac.ug").success).toBe(true);
-      expect(emailSchema.safeParse("admin@edupay.co.ug").success).toBe(true);
+      expect(emailSchema.safeParse("admin@ebursar.co.ug").success).toBe(true);
     });
 
     test("should accept emails with subdomains", () => {
-      expect(emailSchema.safeParse("user@mail.school.ac.ug").success).toBe(true);
+      expect(emailSchema.safeParse("user@mail.school.ac.ug").success).toBe(
+        true,
+      );
     });
 
     test("should accept emails with numbers", () => {
@@ -372,7 +374,12 @@ describe("studentSchema", () => {
   });
 
   test("should accept all guardian relationships", () => {
-    const relationships = ["parent", "guardian", "relative", "sponsor"] as const;
+    const relationships = [
+      "parent",
+      "guardian",
+      "relative",
+      "sponsor",
+    ] as const;
     relationships.forEach((rel) => {
       const student = { ...validStudent, guardianRelationship: rel };
       expect(studentSchema.safeParse(student).success).toBe(true);
@@ -494,7 +501,14 @@ describe("paymentSchema", () => {
 
 describe("paymentMethodSchema", () => {
   test("should accept all valid payment methods", () => {
-    const methods = ["cash", "mobile_money", "bank_transfer", "cheque", "card", "other"];
+    const methods = [
+      "cash",
+      "mobile_money",
+      "bank_transfer",
+      "cheque",
+      "card",
+      "other",
+    ];
     methods.forEach((method) => {
       expect(paymentMethodSchema.safeParse(method).success).toBe(true);
     });
@@ -513,7 +527,9 @@ describe("mobileMoneyProviderSchema", () => {
   });
 
   test("should reject other providers", () => {
-    expect(mobileMoneyProviderSchema.safeParse("safaricom").success).toBe(false);
+    expect(mobileMoneyProviderSchema.safeParse("safaricom").success).toBe(
+      false,
+    );
     expect(mobileMoneyProviderSchema.safeParse("africell").success).toBe(false);
   });
 });
@@ -594,7 +610,9 @@ describe("installmentRuleSchema", () => {
     const invalidRule = {
       name: "Single Payment",
       numberOfInstallments: 1,
-      installments: [{ installmentNumber: 1, percentage: 100, dueDaysFromStart: 0 }],
+      installments: [
+        { installmentNumber: 1, percentage: 100, dueDaysFromStart: 0 },
+      ],
     };
     expect(installmentRuleSchema.safeParse(invalidRule).success).toBe(false);
   });
@@ -669,7 +687,13 @@ describe("schoolOnboardingSchema", () => {
   });
 
   test("should accept all education levels", () => {
-    const levels = ["nursery", "primary", "secondary", "tertiary", "mixed"] as const;
+    const levels = [
+      "nursery",
+      "primary",
+      "secondary",
+      "tertiary",
+      "mixed",
+    ] as const;
     levels.forEach((level) => {
       const school = { ...validSchool, educationLevel: level };
       expect(schoolOnboardingSchema.safeParse(school).success).toBe(true);
@@ -818,7 +842,13 @@ describe("userSchema", () => {
   });
 
   test("should accept all roles", () => {
-    const roles = ["admin", "bursar", "teacher", "accountant", "head_teacher"] as const;
+    const roles = [
+      "admin",
+      "bursar",
+      "teacher",
+      "accountant",
+      "head_teacher",
+    ] as const;
     roles.forEach((role) => {
       const user = {
         email: "test@school.com",
@@ -893,7 +923,9 @@ describe("notificationSettingsSchema", () => {
       dailyDigest: false,
       weeklyReport: true,
     };
-    expect(notificationSettingsSchema.safeParse(validSettings).success).toBe(true);
+    expect(notificationSettingsSchema.safeParse(validSettings).success).toBe(
+      true,
+    );
   });
 
   test("should use defaults for missing values", () => {

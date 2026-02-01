@@ -46,7 +46,7 @@ export default function LoginPage() {
 
   // Load remembered email
   useEffect(() => {
-    const rememberedEmail = localStorage.getItem("edupay_remembered_email");
+    const rememberedEmail = localStorage.getItem("ebursar_remembered_email");
     if (rememberedEmail) {
       setEmail(rememberedEmail);
       setRememberMe(true);
@@ -62,13 +62,13 @@ export default function LoginPage() {
       const loginEmail =
         loginMethod === "email"
           ? email
-          : `${phone.replace(/\D/g, "")}@phone.edupay.ug`;
+          : `${phone.replace(/\D/g, "")}@phone.ebursar.ug`;
 
       // Remember email if checked
       if (rememberMe) {
-        localStorage.setItem("edupay_remembered_email", email);
+        localStorage.setItem("ebursar_remembered_email", email);
       } else {
-        localStorage.removeItem("edupay_remembered_email");
+        localStorage.removeItem("ebursar_remembered_email");
       }
 
       await login(loginEmail, password);
@@ -196,7 +196,7 @@ export default function LoginPage() {
               school
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">EduPay Ledger</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">eBursar</h1>
           <p className="text-white/60 text-sm">School Fee Management System</p>
         </div>
 
@@ -456,7 +456,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-white/40 text-xs mt-8">
-          © 2024 EduPay Ledger Uganda. All rights reserved.
+          © 2024 eBursar Uganda. All rights reserved.
           <br />
           <span className="inline-flex items-center gap-1 mt-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-soft" />

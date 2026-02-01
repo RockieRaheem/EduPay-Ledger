@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Card } from '@/components/ui/Card';
+import React, { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Card } from "@/components/ui/Card";
 
 export default function ParentLoginPage() {
-  const [phone, setPhone] = useState('');
-  const [studentId, setStudentId] = useState('');
+  const [phone, setPhone] = useState("");
+  const [studentId, setStudentId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       // In production, this would verify the phone matches the student's guardian
       // For now, redirect to student profile
       window.location.href = `/parent/student/${studentId}`;
     } catch (err: any) {
-      setError(err.message || 'Failed to login. Please check your details.');
+      setError(err.message || "Failed to login. Please check your details.");
     } finally {
       setLoading(false);
     }
@@ -34,15 +34,19 @@ export default function ParentLoginPage() {
         {/* Logo & Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <span className="material-symbols-outlined text-primary text-3xl">school</span>
+            <span className="material-symbols-outlined text-primary text-3xl">
+              school
+            </span>
           </div>
-          <h1 className="text-2xl font-bold text-white">EduPay Ledger</h1>
+          <h1 className="text-2xl font-bold text-white">eBursar</h1>
           <p className="text-white/70 mt-2">Parent Portal</p>
         </div>
 
         {/* Login Card */}
         <Card className="p-6">
-          <h2 className="text-xl font-bold text-center mb-2">Welcome, Parent!</h2>
+          <h2 className="text-xl font-bold text-center mb-2">
+            Welcome, Parent!
+          </h2>
           <p className="text-center text-slate-500 text-sm mb-6">
             View your child's fee status and payment history
           </p>
@@ -57,7 +61,11 @@ export default function ParentLoginPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+256 7XX XXX XXX"
-                icon={<span className="material-symbols-outlined text-sm">phone</span>}
+                icon={
+                  <span className="material-symbols-outlined text-sm">
+                    phone
+                  </span>
+                }
                 required
               />
               <p className="text-xs text-slate-400 mt-1">
@@ -73,7 +81,11 @@ export default function ParentLoginPage() {
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
                 placeholder="e.g., EDU-2024-ABC1-P7"
-                icon={<span className="material-symbols-outlined text-sm">badge</span>}
+                icon={
+                  <span className="material-symbols-outlined text-sm">
+                    badge
+                  </span>
+                }
                 required
               />
               <p className="text-xs text-slate-400 mt-1">

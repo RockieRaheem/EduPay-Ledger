@@ -1,7 +1,7 @@
 /**
  * SMS Notification Service
  *
- * Professional SMS service for EduPay Ledger using Africa's Talking API
+ * Professional SMS service for eBursar using Africa's Talking API
  * Optimized for Uganda (MTN, Airtel, Africell networks)
  */
 
@@ -86,7 +86,7 @@ const getConfig = (): SMSConfig => ({
     (process.env.NEXT_PUBLIC_SMS_PROVIDER as SMSProvider) || "africastalking",
   apiKey: process.env.AFRICASTALKING_API_KEY || "",
   username: process.env.AFRICASTALKING_USERNAME || "sandbox",
-  senderId: process.env.AFRICASTALKING_SENDER_ID || "EduPay",
+  senderId: process.env.AFRICASTALKING_SENDER_ID || "eBursar",
   shortCode: process.env.AFRICASTALKING_SHORT_CODE,
   environment: process.env.NODE_ENV === "production" ? "production" : "sandbox",
 });

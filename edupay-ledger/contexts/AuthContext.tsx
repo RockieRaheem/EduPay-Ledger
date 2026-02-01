@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Firebase Context Provider for EduPay Ledger
+ * Firebase Context Provider for eBursar
  * Provides Firebase authentication state and user data throughout the app
  */
 
@@ -38,7 +38,7 @@ import {
 // TYPES
 // ============================================================================
 
-export interface EduPayUser {
+export interface EBursarUser {
   uid: string;
   email: string | null;
   displayName: string | null;
@@ -55,7 +55,7 @@ export interface EduPayUser {
 
 export interface AuthContextType {
   // State
-  user: EduPayUser | null;
+  user: EBursarUser | null;
   firebaseUser: FirebaseUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -80,7 +80,7 @@ export interface AuthContextType {
 
   // Permission checks
   hasPermission: (permission: string) => boolean;
-  hasRole: (role: EduPayUser["role"] | EduPayUser["role"][]) => boolean;
+  hasRole: (role: EBursarUser["role"] | EBursarUser["role"][]) => boolean;
 }
 
 // ============================================================================
@@ -95,15 +95,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [user, setUser] = useState<EduPayUser | null>(null);
+  const [user, setUser] = useState<EBursarUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Demo user for trial mode
-  const DEMO_USER: EduPayUser = {
+  const DEMO_USER: EBursarUser = {
     uid: "demo-user-001",
-    email: "demo@edupay.ug",
+    email: "demo@ebursar.ug",
     displayName: "Demo Admin",
     photoURL: null,
     phoneNumber: "+256700000000",
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check for demo mode in localStorage on mount
   useEffect(() => {
-    const savedDemoMode = localStorage.getItem("edupay_demo_mode");
+    const savedDemoMode = localStorage.getItem("ebursar_demo_mode");
     if (savedDemoMode === "true") {
       setIsDemoMode(true);
       setUser(DEMO_USER);
@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (fbUser) {
         try {
           // Fetch user profile from Firestore
-          const userProfile = await fetchDocument<EduPayUser>(
+          const userProfile = await fetchDocument<EBursarUser>(
             COLLECTIONS.USERS,
             fbUser.uid,
           );
@@ -155,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           } else {
             // User exists in Auth but not in Firestore - create basic profile
-            const newUser: EduPayUser = {
+            const newUser: EBursarUser = {
               uid: fbUser.uid,
               email: fbUser.email,
               displayName: fbUser.displayName,
@@ -246,7 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set demo mode
     setIsDemoMode(true);
     setUser(DEMO_USER);
-    localStorage.setItem("edupay_demo_mode", "true");
+    localStorage.setItem("ebursar_demo_mode", "true");
 
     setIsLoading(false);
   };
@@ -264,14 +264,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (result && result.user) {
         // Try to save/update user profile in Firestore (but don't fail if permissions deny)
         try {
-          const existingProfile = await fetchDocument<EduPayUser>(
+          const existingProfile = await fetchDocument<EBursarUser>(
             COLLECTIONS.USERS,
             result.user.uid,
           );
 
           if (!existingProfile) {
             // Create new user profile for Google sign-in
-            const newUser: Partial<EduPayUser> = {
+            const newUser: Partial<EBursarUser> = {
               uid: result.user.uid,
               email: result.user.email,
               displayName: result.user.displayName,
@@ -304,7 +304,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         // Set user state directly from Google auth result
-        const googleUser: EduPayUser = {
+        const googleUser: EBursarUser = {
           uid: result.user.uid,
           email: result.user.email,
           displayName: result.user.displayName,
@@ -337,14 +337,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const result = await getGoogleRedirectResult();
         if (result && result.user) {
           // Check if user profile exists in Firestore
-          const existingProfile = await fetchDocument<EduPayUser>(
+          const existingProfile = await fetchDocument<EBursarUser>(
             COLLECTIONS.USERS,
             result.user.uid,
           );
 
           if (!existingProfile) {
             // Create new user profile for Google sign-in
-            const newUser: Partial<EduPayUser> = {
+            const newUser: Partial<EBursarUser> = {
               uid: result.user.uid,
               email: result.user.email,
               displayName: result.user.displayName,
@@ -401,7 +401,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear demo mode if active
       if (isDemoMode) {
         setIsDemoMode(false);
-        localStorage.removeItem("edupay_demo_mode");
+        localStorage.removeItem("ebursar_demo_mode");
         setUser(null);
         setIsLoading(false);
         return;
@@ -431,7 +431,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const credential = await createUser(email, password, displayName);
 
       // Create user profile in Firestore
-      const newUser: Partial<EduPayUser> = {
+      const newUser: Partial<EBursarUser> = {
         uid: credential.user.uid,
         email: credential.user.email,
         displayName,
@@ -473,7 +473,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Refresh User
   const refreshUser = async () => {
     if (firebaseUser) {
-      const userProfile = await fetchDocument<EduPayUser>(
+      const userProfile = await fetchDocument<EBursarUser>(
         COLLECTIONS.USERS,
         firebaseUser.uid,
       );
@@ -501,7 +501,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check Role
   const hasRole = (
-    role: EduPayUser["role"] | EduPayUser["role"][],
+    role: EBursarUser["role"] | EBursarUser["role"][],
   ): boolean => {
     if (!user) return false;
     if (Array.isArray(role)) {
@@ -601,7 +601,7 @@ export const PERMISSIONS = {
   AUDIT_VIEW: "audit:view",
 } as const;
 
-export const ROLE_PERMISSIONS: Record<EduPayUser["role"], string[]> = {
+export const ROLE_PERMISSIONS: Record<EBursarUser["role"], string[]> = {
   admin: ["all"],
   bursar: [
     PERMISSIONS.STUDENTS_VIEW,

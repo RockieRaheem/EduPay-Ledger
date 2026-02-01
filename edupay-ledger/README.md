@@ -1,12 +1,12 @@
-# 📚 EduPay Ledger
+# 📚 eBursar
 
 **Desktop-First School Fee Management System for Ugandan Schools**
 
 *Built for School Bursars • Works Offline • Syncs When Online*
 
-[![Windows](https://img.shields.io/badge/Download-Windows-0078D6?style=for-the-badge&logo=windows)](https://github.com/your-org/edupay-ledger/releases)
-[![macOS](https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple)](https://github.com/your-org/edupay-ledger/releases)
-[![Linux](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/your-org/edupay-ledger/releases)
+[![Windows](https://img.shields.io/badge/Download-Windows-0078D6?style=for-the-badge&logo=windows)](https://github.com/your-org/ebursar/releases)
+[![macOS](https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple)](https://github.com/your-org/ebursar/releases)
+[![Linux](https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/your-org/ebursar/releases)
 
 ![Version](https://img.shields.io/badge/Version-1.0.0-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -30,7 +30,7 @@
 
 ## Overview
 
-**EduPay Ledger** is a comprehensive school fee management desktop application designed specifically for **School Bursars** in Ugandan primary and secondary schools. 
+**eBursar** is a comprehensive school fee management desktop application designed specifically for **School Bursars** in Ugandan primary and secondary schools. 
 
 ### The Problem We Solve
 
@@ -62,7 +62,7 @@
 ### Offline-First Architecture
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  EduPay Ledger Desktop App                                  │
+│  eBursar Desktop App                                  │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │  Local Database (IndexedDB)                          │   │
 │  │  • All student records                               │   │
@@ -106,30 +106,30 @@
 
 ### Windows
 
-1. **Download** the installer: `EduPay-Ledger-Setup-1.0.0.exe`
+1. **Download** the installer: `ebursar-Setup-1.0.0.exe`
 2. **Run** the installer (you may need to click "More info" → "Run anyway")
-3. **Launch** EduPay Ledger from your desktop or Start menu
+3. **Launch** eBursar from your desktop or Start menu
 4. **Create account** or use demo mode to explore
 
 ### macOS
 
-1. **Download** the disk image: `EduPay-Ledger-1.0.0.dmg`
+1. **Download** the disk image: `ebursar-1.0.0.dmg`
 2. **Open** the DMG file
-3. **Drag** EduPay Ledger to your Applications folder
+3. **Drag** eBursar to your Applications folder
 4. **Launch** from Applications (first time: right-click → Open)
 
 ### Linux
 
 ```bash
 # Ubuntu/Debian
-sudo dpkg -i edupay-ledger_1.0.0_amd64.deb
+sudo dpkg -i ebursar_1.0.0_amd64.deb
 
 # Fedora/RHEL
-sudo rpm -i edupay-ledger-1.0.0.x86_64.rpm
+sudo rpm -i ebursar-1.0.0.x86_64.rpm
 
 # AppImage (any distro)
-chmod +x EduPay-Ledger-1.0.0.AppImage
-./EduPay-Ledger-1.0.0.AppImage
+chmod +x ebursar-1.0.0.AppImage
+./ebursar-1.0.0.AppImage
 ```
 
 ---
@@ -178,7 +178,7 @@ chmod +x EduPay-Ledger-1.0.0.AppImage
 
 ### Offline Mode
 
-EduPay Ledger stores **all data locally** on your computer using IndexedDB. This means:
+eBursar stores **all data locally** on your computer using IndexedDB. This means:
 
 ✅ Works without internet connection  
 ✅ Fast performance (no waiting for server)  
@@ -187,7 +187,7 @@ EduPay Ledger stores **all data locally** on your computer using IndexedDB. This
 
 ### Online Sync
 
-When internet is available, EduPay automatically:
+When internet is available, ebursar automatically:
 
 1. **Uploads** new payments and records to the cloud
 2. **Downloads** any changes from other devices
@@ -223,7 +223,7 @@ When internet is available, EduPay automatically:
 ### Project Structure
 
 ```
-edupay-ledger/
+ebursar/
 ├── electron/                # Electron main process
 │   ├── main.ts             # App entry point
 │   ├── preload.ts          # Secure bridge to renderer
@@ -252,8 +252,8 @@ edupay-ledger/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/edupay-ledger.git
-cd edupay-ledger
+git clone https://github.com/your-org/ebursar.git
+cd ebursar
 
 # Install dependencies
 npm install
@@ -335,14 +335,14 @@ npm run electron:build:all
 - **User Guide**: Built into the app (Help → User Guide)
 - **Email Support**: kamwangaraheem2050@gmail.com
 - **WhatsApp**: +256704057370
-- **Report Issues**: [GitHub Issues](https://github.com/your-org/edupay-ledger/issues)
+- **Report Issues**: [GitHub Issues](https://github.com/your-org/ebursar/issues)
 
 ### Frequently Asked Questions
 
 <details>
-<summary><strong>Can I use EduPay Ledger without internet?</strong></summary>
+<summary><strong>Can I use eBursar without internet?</strong></summary>
 
-Yes! EduPay Ledger is designed to work completely offline. All your data is stored locally on your computer. Internet is only needed for:
+Yes! eBursar is designed to work completely offline. All your data is stored locally on your computer. Internet is only needed for:
 - Initial setup (optional - you can use demo mode)
 - Syncing data to cloud backup
 - Accessing from multiple devices
@@ -351,7 +351,7 @@ Yes! EduPay Ledger is designed to work completely offline. All your data is stor
 <details>
 <summary><strong>What happens if my computer crashes?</strong></summary>
 
-If you have cloud sync enabled, all your data is safely backed up. Simply install EduPay Ledger on a new computer, log in with your account, and all data will sync automatically.
+If you have cloud sync enabled, all your data is safely backed up. Simply install eBursar on a new computer, log in with your account, and all data will sync automatically.
 
 If you're using offline-only mode, we recommend enabling automatic local backups (Settings → Backup → Enable Auto Backup).
 </details>
@@ -387,6 +387,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**EduPay Ledger** - Simplifying School Fee Management
+**eBursar** - Simplifying School Fee Management
 
 *No Internet? No Problem.*
+

@@ -1,87 +1,89 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { Card, StatsCard } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input, Select, Textarea } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { Table } from '@/components/ui/Table';
-import { Modal, ConfirmModal } from '@/components/ui/Modal';
-import { formatUGX } from '@/lib/utils';
+import React, { useState } from "react";
+import Link from "next/link";
+import { Card, StatsCard } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input, Select, Textarea } from "@/components/ui/Input";
+import { Badge } from "@/components/ui/Badge";
+import { Table } from "@/components/ui/Table";
+import { Modal, ConfirmModal } from "@/components/ui/Modal";
+import { formatUGX } from "@/lib/utils";
 
 // Mock data
 const mockRules = [
   {
-    id: '1',
-    name: 'Standard 2-Installment Plan',
+    id: "1",
+    name: "Standard 2-Installment Plan",
     minPercent: 50,
     maxInstallments: 2,
-    appliesTo: 'All Classes',
-    status: 'active',
+    appliesTo: "All Classes",
+    status: "active",
     studentsUsing: 245,
   },
   {
-    id: '2',
-    name: 'Flexible 3-Part Plan',
+    id: "2",
+    name: "Flexible 3-Part Plan",
     minPercent: 35,
     maxInstallments: 3,
-    appliesTo: 'Senior 1-4',
-    status: 'active',
+    appliesTo: "Senior 1-4",
+    status: "active",
     studentsUsing: 128,
   },
   {
-    id: '3',
-    name: 'Boarding Students Plan',
+    id: "3",
+    name: "Boarding Students Plan",
     minPercent: 40,
     maxInstallments: 3,
-    appliesTo: 'Boarding Only',
-    status: 'active',
+    appliesTo: "Boarding Only",
+    status: "active",
     studentsUsing: 89,
   },
   {
-    id: '4',
-    name: 'Emergency Hardship Plan',
+    id: "4",
+    name: "Emergency Hardship Plan",
     minPercent: 25,
     maxInstallments: 4,
-    appliesTo: 'By Approval',
-    status: 'inactive',
+    appliesTo: "By Approval",
+    status: "inactive",
     studentsUsing: 12,
   },
 ];
 
 const classOptions = [
-  { value: 'all', label: 'All Classes' },
-  { value: 'primary', label: 'Primary (P1-P7)' },
-  { value: 'secondary', label: 'Secondary (S1-S6)' },
-  { value: 'senior', label: 'Senior (S1-S4)' },
-  { value: 'advanced', label: 'Advanced (S5-S6)' },
-  { value: 'boarding', label: 'Boarding Students Only' },
-  { value: 'day', label: 'Day Students Only' },
+  { value: "all", label: "All Classes" },
+  { value: "primary", label: "Primary (P1-P7)" },
+  { value: "secondary", label: "Secondary (S1-S6)" },
+  { value: "senior", label: "Senior (S1-S4)" },
+  { value: "advanced", label: "Advanced (S5-S6)" },
+  { value: "boarding", label: "Boarding Students Only" },
+  { value: "day", label: "Day Students Only" },
 ];
 
 export default function InstallmentRulesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedRule, setSelectedRule] = useState<typeof mockRules[0] | null>(null);
-  
+  const [selectedRule, setSelectedRule] = useState<
+    (typeof mockRules)[0] | null
+  >(null);
+
   // Form state
   const [formData, setFormData] = useState({
-    name: '',
+    name: "",
     minPercent: 30,
     maxInstallments: 2,
-    appliesTo: 'all',
-    notes: '',
+    appliesTo: "all",
+    notes: "",
   });
 
-  const handleEdit = (rule: typeof mockRules[0]) => {
+  const handleEdit = (rule: (typeof mockRules)[0]) => {
     setSelectedRule(rule);
     setFormData({
       name: rule.name,
       minPercent: rule.minPercent,
       maxInstallments: rule.maxInstallments,
-      appliesTo: rule.appliesTo.toLowerCase().replace(' ', '_'),
-      notes: '',
+      appliesTo: rule.appliesTo.toLowerCase().replace(" ", "_"),
+      notes: "",
     });
     setIsModalOpen(true);
   };
@@ -89,74 +91,82 @@ export default function InstallmentRulesPage() {
   const handleCreate = () => {
     setSelectedRule(null);
     setFormData({
-      name: '',
+      name: "",
       minPercent: 30,
       maxInstallments: 2,
-      appliesTo: 'all',
-      notes: '',
+      appliesTo: "all",
+      notes: "",
     });
     setIsModalOpen(true);
   };
 
-  const handleDelete = (rule: typeof mockRules[0]) => {
+  const handleDelete = (rule: (typeof mockRules)[0]) => {
     setSelectedRule(rule);
     setIsDeleteModalOpen(true);
   };
 
   const columns = [
     {
-      key: 'name',
-      header: 'Rule Name',
-      render: (rule: typeof mockRules[0]) => (
+      key: "name",
+      header: "Rule Name",
+      render: (rule: (typeof mockRules)[0]) => (
         <div>
-          <p className="font-semibold text-primary dark:text-white">{rule.name}</p>
+          <p className="font-semibold text-primary dark:text-white">
+            {rule.name}
+          </p>
           <p className="text-xs text-slate-400">{rule.appliesTo}</p>
         </div>
       ),
     },
     {
-      key: 'minPercent',
-      header: 'Min. First Payment',
-      render: (rule: typeof mockRules[0]) => (
+      key: "minPercent",
+      header: "Min. First Payment",
+      render: (rule: (typeof mockRules)[0]) => (
         <div className="flex items-center gap-2">
           <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-            <span className="text-lg font-bold text-primary">{rule.minPercent}%</span>
+            <span className="text-lg font-bold text-primary">
+              {rule.minPercent}%
+            </span>
           </div>
         </div>
       ),
     },
     {
-      key: 'maxInstallments',
-      header: 'Max Installments',
-      render: (rule: typeof mockRules[0]) => (
+      key: "maxInstallments",
+      header: "Max Installments",
+      render: (rule: (typeof mockRules)[0]) => (
         <div className="flex items-center gap-1">
           {Array.from({ length: rule.maxInstallments }).map((_, i) => (
             <div
               key={i}
               className="w-6 h-6 rounded bg-emerald-soft/20 flex items-center justify-center"
             >
-              <span className="text-xs font-bold text-emerald-soft">{i + 1}</span>
+              <span className="text-xs font-bold text-emerald-soft">
+                {i + 1}
+              </span>
             </div>
           ))}
         </div>
       ),
     },
     {
-      key: 'studentsUsing',
-      header: 'Students Using',
-      render: (rule: typeof mockRules[0]) => (
+      key: "studentsUsing",
+      header: "Students Using",
+      render: (rule: (typeof mockRules)[0]) => (
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-slate-400 text-sm">group</span>
+          <span className="material-symbols-outlined text-slate-400 text-sm">
+            group
+          </span>
           <span className="font-semibold">{rule.studentsUsing}</span>
         </div>
       ),
     },
     {
-      key: 'status',
-      header: 'Status',
-      render: (rule: typeof mockRules[0]) => (
+      key: "status",
+      header: "Status",
+      render: (rule: (typeof mockRules)[0]) => (
         <Badge
-          variant={rule.status === 'active' ? 'success' : 'secondary'}
+          variant={rule.status === "active" ? "success" : "secondary"}
           className="uppercase text-[10px]"
         >
           {rule.status}
@@ -164,10 +174,10 @@ export default function InstallmentRulesPage() {
       ),
     },
     {
-      key: 'actions',
-      header: 'Actions',
-      align: 'right' as const,
-      render: (rule: typeof mockRules[0]) => (
+      key: "actions",
+      header: "Actions",
+      align: "right" as const,
+      render: (rule: (typeof mockRules)[0]) => (
         <div className="flex items-center justify-end gap-2">
           <button
             onClick={() => handleEdit(rule)}
@@ -192,19 +202,29 @@ export default function InstallmentRulesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <nav className="flex text-sm text-slate-500 mb-2">
-            <Link href="/dashboard" className="hover:text-primary dark:hover:text-white">
+            <Link
+              href="/dashboard"
+              className="hover:text-primary dark:hover:text-white"
+            >
               Dashboard
             </Link>
             <span className="mx-2">/</span>
-            <Link href="/payments" className="hover:text-primary dark:hover:text-white">
+            <Link
+              href="/payments"
+              className="hover:text-primary dark:hover:text-white"
+            >
               Payments
             </Link>
             <span className="mx-2">/</span>
-            <span className="text-primary dark:text-white font-medium">Installment Rules</span>
+            <span className="text-primary dark:text-white font-medium">
+              Installment Rules
+            </span>
           </nav>
           <h1 className="text-2xl font-bold flex items-center gap-3">
             <span className="p-2 bg-primary/10 rounded-lg">
-              <span className="material-symbols-outlined text-primary">tune</span>
+              <span className="material-symbols-outlined text-primary">
+                tune
+              </span>
             </span>
             Installment Rules Configuration
           </h1>
@@ -229,9 +249,10 @@ export default function InstallmentRulesPage() {
               About Installment Rules
             </h4>
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Installment rules define how students can pay their fees in parts. Each rule specifies
-              the minimum percentage for the first payment and the maximum number of installments
-              allowed. Rules are enforced automatically during payment recording.
+              Installment rules define how students can pay their fees in parts.
+              Each rule specifies the minimum percentage for the first payment
+              and the maximum number of installments allowed. Rules are enforced
+              automatically during payment recording.
             </p>
           </div>
         </div>
@@ -241,27 +262,45 @@ export default function InstallmentRulesPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <StatsCard
           label="Active Rules"
-          value={mockRules.filter((r) => r.status === 'active').length.toString()}
-          icon={<span className="material-symbols-outlined text-success">check_circle</span>}
+          value={mockRules
+            .filter((r) => r.status === "active")
+            .length.toString()}
+          icon={
+            <span className="material-symbols-outlined text-success">
+              check_circle
+            </span>
+          }
           iconBg="bg-success/10"
         />
         <StatsCard
           label="Students on Plans"
           value="474"
-          icon={<span className="material-symbols-outlined text-primary">group</span>}
+          icon={
+            <span className="material-symbols-outlined text-primary">
+              group
+            </span>
+          }
           iconBg="bg-primary/10"
         />
         <StatsCard
           label="Avg. First Payment"
           value="42%"
-          icon={<span className="material-symbols-outlined text-warning">percent</span>}
+          icon={
+            <span className="material-symbols-outlined text-warning">
+              percent
+            </span>
+          }
           iconBg="bg-warning/10"
         />
         <StatsCard
           label="Compliance Rate"
           value="96%"
           trend={{ value: 2.5, isPositive: true }}
-          icon={<span className="material-symbols-outlined text-emerald-soft">verified</span>}
+          icon={
+            <span className="material-symbols-outlined text-emerald-soft">
+              verified
+            </span>
+          }
           iconBg="bg-emerald-soft/10"
         />
       </div>
@@ -282,7 +321,9 @@ export default function InstallmentRulesPage() {
       {/* Default Settings */}
       <Card>
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary">settings</span>
+          <span className="material-symbols-outlined text-primary">
+            settings
+          </span>
           Global Default Settings
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -316,7 +357,9 @@ export default function InstallmentRulesPage() {
                 max={30}
                 className="w-24 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-lg"
               />
-              <span className="text-sm font-medium text-slate-400">days before</span>
+              <span className="text-sm font-medium text-slate-400">
+                days before
+              </span>
             </div>
             <p className="text-xs text-slate-400 mt-2">
               SMS reminder before deadline
@@ -334,7 +377,9 @@ export default function InstallmentRulesPage() {
                 max={14}
                 className="w-24 px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-lg"
               />
-              <span className="text-sm font-medium text-slate-400">days after deadline</span>
+              <span className="text-sm font-medium text-slate-400">
+                days after deadline
+              </span>
             </div>
             <p className="text-xs text-slate-400 mt-2">
               Before marking as overdue
@@ -350,7 +395,7 @@ export default function InstallmentRulesPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={selectedRule ? 'Edit Installment Rule' : 'Create New Rule'}
+        title={selectedRule ? "Edit Installment Rule" : "Create New Rule"}
         size="lg"
       >
         <div className="space-y-6">
@@ -360,7 +405,9 @@ export default function InstallmentRulesPage() {
             </label>
             <Input
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
               placeholder="e.g., Standard 2-Installment Plan"
             />
           </div>
@@ -377,7 +424,10 @@ export default function InstallmentRulesPage() {
                   max={75}
                   value={formData.minPercent}
                   onChange={(e) =>
-                    setFormData({ ...formData, minPercent: Number(e.target.value) })
+                    setFormData({
+                      ...formData,
+                      minPercent: Number(e.target.value),
+                    })
                   }
                   className="flex-grow accent-primary"
                 />
@@ -395,11 +445,13 @@ export default function InstallmentRulesPage() {
                   <button
                     key={num}
                     type="button"
-                    onClick={() => setFormData({ ...formData, maxInstallments: num })}
+                    onClick={() =>
+                      setFormData({ ...formData, maxInstallments: num })
+                    }
                     className={`flex-1 py-3 rounded-xl border-2 font-bold transition-all ${
                       formData.maxInstallments === num
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-slate-200 dark:border-slate-700 text-slate-400'
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-slate-200 dark:border-slate-700 text-slate-400"
                     }`}
                   >
                     {num}
@@ -415,7 +467,9 @@ export default function InstallmentRulesPage() {
             </label>
             <Select
               value={formData.appliesTo}
-              onChange={(e) => setFormData({ ...formData, appliesTo: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, appliesTo: e.target.value })
+              }
             >
               {classOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -431,7 +485,9 @@ export default function InstallmentRulesPage() {
             </label>
             <Textarea
               value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, notes: e.target.value })
+              }
               placeholder="Add any notes about when to use this rule..."
               rows={3}
             />
@@ -447,18 +503,26 @@ export default function InstallmentRulesPage() {
                 const firstAmount = 1000000 * (formData.minPercent / 100);
                 const remaining = 1000000 - firstAmount;
                 const perInstallment =
-                  i === 0 ? firstAmount : remaining / (formData.maxInstallments - 1);
+                  i === 0
+                    ? firstAmount
+                    : remaining / (formData.maxInstallments - 1);
                 return (
                   <div
                     key={i}
                     className="flex-1 p-3 bg-white dark:bg-slate-900 rounded-lg text-center"
                   >
                     <p className="text-[10px] text-slate-400 uppercase">
-                      {i === 0 ? 'First' : `${i + 1}${i === 1 ? 'nd' : i === 2 ? 'rd' : 'th'}`}
+                      {i === 0
+                        ? "First"
+                        : `${i + 1}${i === 1 ? "nd" : i === 2 ? "rd" : "th"}`}
                     </p>
-                    <p className="font-bold text-primary">{formatUGX(perInstallment)}</p>
+                    <p className="font-bold text-primary">
+                      {formatUGX(perInstallment)}
+                    </p>
                     <p className="text-[10px] text-slate-400">
-                      {i === 0 ? `${formData.minPercent}%` : `${Math.round((perInstallment / 1000000) * 100)}%`}
+                      {i === 0
+                        ? `${formData.minPercent}%`
+                        : `${Math.round((perInstallment / 1000000) * 100)}%`}
                     </p>
                   </div>
                 );
@@ -467,15 +531,21 @@ export default function InstallmentRulesPage() {
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <Button variant="outline" fullWidth onClick={() => setIsModalOpen(false)}>
+            <Button
+              variant="outline"
+              fullWidth
+              onClick={() => setIsModalOpen(false)}
+            >
               Cancel
             </Button>
             <Button
               variant="primary"
               fullWidth
-              icon={<span className="material-symbols-outlined text-sm">save</span>}
+              icon={
+                <span className="material-symbols-outlined text-sm">save</span>
+              }
             >
-              {selectedRule ? 'Save Changes' : 'Create Rule'}
+              {selectedRule ? "Save Changes" : "Create Rule"}
             </Button>
           </div>
         </div>
@@ -507,7 +577,7 @@ export default function InstallmentRulesPage() {
             Compliance Monitoring On
           </span>
         </div>
-        <p>© 2024 EduPay Ledger Uganda. Built for Security & Trust.</p>
+        <p>© 2024 eBursar Uganda. Built for Security & Trust.</p>
       </footer>
     </div>
   );

@@ -36,7 +36,7 @@ export default function OverduePage() {
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
   const [smsMessage, setSmsMessage] = useState(
-    "Dear Parent/Guardian, this is a reminder that school fees balance of {balance} for {student} is overdue. Please make payment at your earliest convenience. - EduPay",
+    "Dear Parent/Guardian, this is a reminder that school fees balance of {balance} for {student} is overdue. Please make payment at your earliest convenience. - eBursar",
   );
 
   // Apply URL filter on mount
@@ -586,7 +586,7 @@ export default function OverduePage() {
             Auto-reminders Active
           </span>
         </div>
-        <p>© 2024 EduPay Ledger Uganda. Built for Security & Trust.</p>
+        <p>© 2024 eBursar Uganda. Built for Security & Trust.</p>
       </footer>
     </div>
   );
