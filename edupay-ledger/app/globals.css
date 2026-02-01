@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
 
 :root {
   --primary: #1b2b4b;
-  --emerald-soft: #2D9C6F;
+  --emerald-soft: #2d9c6f;
   --background-light: #f6f7f8;
   --background-dark: #14171e;
   --border-light: #d5d9e2;
@@ -19,17 +19,21 @@
 }
 
 html {
-  font-family: 'Lexend', sans-serif;
+  font-family: "Lexend", sans-serif;
 }
 
 body {
-  font-family: 'Lexend', sans-serif;
+  font-family: "Lexend", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
 }
 
 /* Heatmap cell styles */
@@ -53,37 +57,193 @@ body {
   border-left: 2px dashed #d5d9e2;
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling - Professional Design */
+/* Base scrollbar for webkit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #475569 0%, #334155 100%);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+/* Horizontal scrollbar specific styling */
+::-webkit-scrollbar:horizontal {
+  height: 10px;
+}
+
+::-webkit-scrollbar-track:horizontal {
+  background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+  background: linear-gradient(90deg, #94a3b8 0%, #64748b 100%);
+}
+
+::-webkit-scrollbar-thumb:horizontal:hover {
+  background: linear-gradient(90deg, #64748b 0%, #475569 100%);
 }
 
 /* Dark mode scrollbar */
 .dark ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: linear-gradient(180deg, #475569 0%, #334155 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
+  background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+  background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+  background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-corner {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-track:horizontal {
+  background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
+}
+
+.dark ::-webkit-scrollbar-thumb:horizontal {
+  background: linear-gradient(90deg, #475569 0%, #334155 100%);
+}
+
+.dark ::-webkit-scrollbar-thumb:horizontal:hover {
+  background: linear-gradient(90deg, #64748b 0%, #475569 100%);
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+.dark * {
+  scrollbar-color: #475569 #1e293b;
+}
+
+/* Thin scrollbar variant for compact areas */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Auto-hide scrollbar (shows on hover) */
+.scrollbar-auto-hide {
+  overflow: auto;
+}
+
+.scrollbar-auto-hide::-webkit-scrollbar-thumb {
+  background: transparent;
+  transition: background 0.3s ease;
+}
+
+.scrollbar-auto-hide:hover::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+}
+
+.dark .scrollbar-auto-hide:hover::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #475569 0%, #334155 100%);
+}
+
+/* Primary colored scrollbar for special sections */
+.scrollbar-primary::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.scrollbar-primary::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Success/emerald scrollbar for positive content areas */
+.scrollbar-success::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+}
+
+.scrollbar-success::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+}
+
+/* Dark sidebar scrollbar - for primary colored backgrounds */
+.bg-primary .scrollbar-thin::-webkit-scrollbar-track,
+.bg-primary::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+}
+
+.bg-primary .scrollbar-thin::-webkit-scrollbar-thumb,
+.bg-primary::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.15) 100%
+  );
+  border: none;
+}
+
+.bg-primary .scrollbar-thin::-webkit-scrollbar-thumb:hover,
+.bg-primary::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.25) 100%
+  );
+}
+
+/* Smooth scroll behavior for all scrollable containers */
+.scroll-smooth {
+  scroll-behavior: smooth;
 }
 
 /* Mobile-first touch targets */
@@ -99,7 +259,8 @@ body {
 
 /* Offline indicator animation */
 @keyframes pulse-offline {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -133,7 +294,7 @@ body {
   .no-print {
     display: none !important;
   }
-  
+
   body {
     background: white !important;
   }

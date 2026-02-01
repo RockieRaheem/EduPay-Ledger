@@ -219,7 +219,7 @@ function ActivityFeed({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+      <div className="space-y-4 overflow-y-auto flex-1 pr-2 scroll-smooth scrollbar-thin">
         {displayedActivities.length === 0 ? (
           <div className="text-center py-8 text-slate-400">
             <span className="material-symbols-outlined text-4xl mb-2">
@@ -780,7 +780,7 @@ export default function DashboardPage() {
         title="All Recent Activity"
         size="lg"
       >
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="max-h-[60vh] overflow-y-auto scroll-smooth">
           <ActivityFeed activities={recentActivity} maxItems={50} />
         </div>
       </Modal>

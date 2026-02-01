@@ -109,14 +109,14 @@ export function Modal({
         ref={modalRef}
         tabIndex={-1}
         className={cn(
-          "relative w-full bg-white dark:bg-slate-900 rounded-xl shadow-2xl focus:outline-none",
+          "relative w-full bg-white dark:bg-slate-900 rounded-xl shadow-2xl focus:outline-none max-h-[90vh] flex flex-col",
           sizes[size],
           className,
         )}
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex-shrink-0">
             <h2
               id={titleId.current}
               className="text-lg font-bold text-primary dark:text-white"
@@ -135,8 +135,10 @@ export function Modal({
           </div>
         )}
 
-        {/* Body */}
-        <div className="p-6">{children}</div>
+        {/* Body with scroll */}
+        <div className="p-6 overflow-y-auto overflow-x-hidden flex-1 scroll-smooth">
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -49,10 +49,10 @@ export function Sidebar({
   };
 
   return (
-    <aside className="w-64 bg-primary text-white flex flex-col justify-between shrink-0 h-screen sticky top-0">
-      <div className="p-6">
-        {/* Logo */}
-        <div className="flex items-center gap-3 mb-10">
+    <aside className="w-64 bg-primary text-white flex flex-col shrink-0 h-screen sticky top-0">
+      {/* Logo - Fixed at top */}
+      <div className="p-6 pb-4 flex-shrink-0">
+        <div className="flex items-center gap-3">
           <div className="size-8 bg-emerald-soft rounded-lg flex items-center justify-center">
             <span className="material-symbols-outlined text-white">
               account_balance_wallet
@@ -67,8 +67,10 @@ export function Sidebar({
             )}
           </div>
         </div>
+      </div>
 
-        {/* Navigation */}
+      {/* Navigation - Scrollable */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth scrollbar-thin px-6 py-2">
         <nav className="space-y-2">
           {navItems.map((item) => {
             const isActive =
@@ -92,8 +94,8 @@ export function Sidebar({
         </nav>
       </div>
 
-      {/* User Info */}
-      <div className="p-6 border-t border-white/10">
+      {/* User Info - Fixed at bottom */}
+      <div className="p-6 border-t border-white/10 flex-shrink-0 mt-auto">
         <div className="flex items-center gap-3 mb-4">
           <Avatar
             src={userAvatar}

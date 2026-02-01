@@ -3,14 +3,14 @@
  * UI components for bursar quick action dashboard
  */
 
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import { Input } from '../ui/Input';
+import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { Card } from "../ui/Card";
+import { Button } from "../ui/Button";
+import { Badge } from "../ui/Badge";
+import { Input } from "../ui/Input";
 import {
   QuickAction,
   DailySummary,
@@ -20,7 +20,7 @@ import {
   formatTimeAgo,
   getPriorityColor,
   getAlertColor,
-} from '../../types/quick-actions';
+} from "../../types/quick-actions";
 
 // ============================================
 // QUICK ACTION BUTTON
@@ -33,20 +33,25 @@ interface QuickActionButtonProps {
   onUnpin?: () => void;
 }
 
-export function QuickActionButton({ action, isPinned, onPin, onUnpin }: QuickActionButtonProps) {
+export function QuickActionButton({
+  action,
+  isPinned,
+  onPin,
+  onUnpin,
+}: QuickActionButtonProps) {
   const colorClasses = {
-    blue: 'bg-blue-100 hover:bg-blue-200 text-blue-700',
-    green: 'bg-green-100 hover:bg-green-200 text-green-700',
-    yellow: 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700',
-    red: 'bg-red-100 hover:bg-red-200 text-red-700',
-    purple: 'bg-purple-100 hover:bg-purple-200 text-purple-700',
-    orange: 'bg-orange-100 hover:bg-orange-200 text-orange-700',
-    gray: 'bg-gray-100 hover:bg-gray-200 text-gray-700',
+    blue: "bg-blue-100 hover:bg-blue-200 text-blue-700",
+    green: "bg-green-100 hover:bg-green-200 text-green-700",
+    yellow: "bg-yellow-100 hover:bg-yellow-200 text-yellow-700",
+    red: "bg-red-100 hover:bg-red-200 text-red-700",
+    purple: "bg-purple-100 hover:bg-purple-200 text-purple-700",
+    orange: "bg-orange-100 hover:bg-orange-200 text-orange-700",
+    gray: "bg-gray-100 hover:bg-gray-200 text-gray-700",
   };
 
   return (
     <div className="relative group">
-      <Link href={action.href || '#'}>
+      <Link href={action.href || "#"}>
         <div
           className={`p-4 rounded-xl transition-all cursor-pointer ${colorClasses[action.color]} 
             hover:shadow-md hover:-translate-y-0.5`}
@@ -55,7 +60,9 @@ export function QuickActionButton({ action, isPinned, onPin, onUnpin }: QuickAct
             <span className="text-2xl">{action.icon}</span>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm truncate">{action.title}</p>
-              <p className="text-xs opacity-70 truncate">{action.description}</p>
+              <p className="text-xs opacity-70 truncate">
+                {action.description}
+              </p>
             </div>
             {action.badge && action.badge > 0 && (
               <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
@@ -68,7 +75,7 @@ export function QuickActionButton({ action, isPinned, onPin, onUnpin }: QuickAct
           )}
         </div>
       </Link>
-      
+
       {/* Pin/Unpin button */}
       {(onPin || onUnpin) && (
         <button
@@ -78,9 +85,9 @@ export function QuickActionButton({ action, isPinned, onPin, onUnpin }: QuickAct
             isPinned ? onUnpin?.() : onPin?.();
           }}
           className="absolute top-1 right-1 p-1 rounded-full bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity"
-          title={isPinned ? 'Unpin' : 'Pin to dashboard'}
+          title={isPinned ? "Unpin" : "Pin to dashboard"}
         >
-          <span className="text-sm">{isPinned ? '📌' : '📍'}</span>
+          <span className="text-sm">{isPinned ? "📌" : "📍"}</span>
         </button>
       )}
     </div>
@@ -109,9 +116,9 @@ export function QuickActionsGrid({
   pinnedIds = [],
 }: QuickActionsGridProps) {
   const gridCols = {
-    2: 'grid-cols-1 sm:grid-cols-2',
-    3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4',
+    2: "grid-cols-1 sm:grid-cols-2",
+    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+    4: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
   };
 
   return (
@@ -142,24 +149,33 @@ interface DailySummaryWidgetProps {
   isRefreshing?: boolean;
 }
 
-export function DailySummaryWidget({ summary, onRefresh, isRefreshing }: DailySummaryWidgetProps) {
+export function DailySummaryWidget({
+  summary,
+  onRefresh,
+  isRefreshing,
+}: DailySummaryWidgetProps) {
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="font-semibold">Today's Summary</h3>
           <p className="text-xs text-gray-500">
-            {new Date(summary.date).toLocaleDateString('en-UG', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
+            {new Date(summary.date).toLocaleDateString("en-UG", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
             })}
           </p>
         </div>
         {onRefresh && (
-          <Button variant="ghost" size="sm" onClick={onRefresh} disabled={isRefreshing}>
-            {isRefreshing ? '⏳' : '🔄'}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? "⏳" : "🔄"}
           </Button>
         )}
       </div>
@@ -173,7 +189,9 @@ export function DailySummaryWidget({ summary, onRefresh, isRefreshing }: DailySu
           <p className="text-xs text-gray-500">Collected Today</p>
         </div>
         <div className="bg-blue-50 rounded-lg p-3 text-center">
-          <p className="text-2xl font-bold text-blue-600">{summary.transactionCount}</p>
+          <p className="text-2xl font-bold text-blue-600">
+            {summary.transactionCount}
+          </p>
           <p className="text-xs text-gray-500">Transactions</p>
         </div>
       </div>
@@ -196,10 +214,15 @@ export function DailySummaryWidget({ summary, onRefresh, isRefreshing }: DailySu
 
       {/* Payment Methods */}
       <div className="border-t pt-3">
-        <p className="text-xs font-medium text-gray-500 mb-2">Payment Methods</p>
+        <p className="text-xs font-medium text-gray-500 mb-2">
+          Payment Methods
+        </p>
         <div className="space-y-2">
           {summary.topPaymentMethods.slice(0, 3).map((method, index) => (
-            <div key={index} className="flex items-center justify-between text-sm">
+            <div
+              key={index}
+              className="flex items-center justify-between text-sm"
+            >
               <span className="text-gray-600">{method.method}</span>
               <span className="font-medium">
                 UGX {method.amount.toLocaleString()} ({method.count})
@@ -217,11 +240,14 @@ export function DailySummaryWidget({ summary, onRefresh, isRefreshing }: DailySu
 // ============================================
 
 interface RecentPaymentsWidgetProps {
-  payments: DailySummary['recentPayments'];
+  payments: DailySummary["recentPayments"];
   onViewAll?: () => void;
 }
 
-export function RecentPaymentsWidget({ payments, onViewAll }: RecentPaymentsWidgetProps) {
+export function RecentPaymentsWidget({
+  payments,
+  onViewAll,
+}: RecentPaymentsWidgetProps) {
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between mb-3">
@@ -234,7 +260,9 @@ export function RecentPaymentsWidget({ payments, onViewAll }: RecentPaymentsWidg
       </div>
 
       {payments.length === 0 ? (
-        <p className="text-gray-500 text-sm text-center py-4">No payments today</p>
+        <p className="text-gray-500 text-sm text-center py-4">
+          No payments today
+        </p>
       ) : (
         <div className="space-y-3">
           {payments.map((payment) => (
@@ -243,14 +271,18 @@ export function RecentPaymentsWidget({ payments, onViewAll }: RecentPaymentsWidg
                 <span className="text-green-600">💵</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{payment.studentName}</p>
+                <p className="font-medium text-sm truncate">
+                  {payment.studentName}
+                </p>
                 <p className="text-xs text-gray-500">{payment.method}</p>
               </div>
               <div className="text-right">
                 <p className="font-semibold text-green-600 text-sm">
                   +{payment.amount.toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-400">{formatTimeAgo(payment.time)}</p>
+                <p className="text-xs text-gray-400">
+                  {formatTimeAgo(payment.time)}
+                </p>
               </div>
             </div>
           ))}
@@ -271,15 +303,20 @@ interface PendingTasksWidgetProps {
   maxItems?: number;
 }
 
-export function PendingTasksWidget({ tasks, onTaskClick, onViewAll, maxItems = 5 }: PendingTasksWidgetProps) {
+export function PendingTasksWidget({
+  tasks,
+  onTaskClick,
+  onViewAll,
+  maxItems = 5,
+}: PendingTasksWidgetProps) {
   const displayTasks = tasks.slice(0, maxItems);
 
   const typeIcons = {
-    promise_due: '🤝',
-    follow_up: '📞',
-    clearance_request: '✅',
-    reconciliation: '🏦',
-    report_due: '📊',
+    promise_due: "🤝",
+    follow_up: "📞",
+    clearance_request: "✅",
+    reconciliation: "🏦",
+    report_due: "📊",
   };
 
   return (
@@ -314,25 +351,31 @@ export function PendingTasksWidget({ tasks, onTaskClick, onViewAll, maxItems = 5
               className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
             >
               <div className="flex items-start gap-3">
-                <span className="text-lg">{typeIcons[task.type] || '📋'}</span>
+                <span className="text-lg">{typeIcons[task.type] || "📋"}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-medium text-sm truncate">{task.title}</p>
                     <Badge
                       variant={
-                        task.priority === 'urgent' ? 'danger' :
-                        task.priority === 'high' ? 'warning' : 'secondary'
+                        task.priority === "urgent"
+                          ? "danger"
+                          : task.priority === "high"
+                            ? "warning"
+                            : "secondary"
                       }
                       className="shrink-0"
                     >
                       {task.priority}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-500 truncate">{task.description}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {task.description}
+                  </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Due: {new Date(task.dueDate).toLocaleDateString('en-UG', {
-                      day: 'numeric',
-                      month: 'short',
+                    Due:{" "}
+                    {new Date(task.dueDate).toLocaleDateString("en-UG", {
+                      day: "numeric",
+                      month: "short",
                     })}
                   </p>
                 </div>
@@ -355,14 +398,18 @@ interface AlertsWidgetProps {
   onDismiss?: (alertId: string) => void;
 }
 
-export function AlertsWidget({ alerts, onMarkRead, onDismiss }: AlertsWidgetProps) {
+export function AlertsWidget({
+  alerts,
+  onMarkRead,
+  onDismiss,
+}: AlertsWidgetProps) {
   if (alerts.length === 0) return null;
 
   const alertIcons = {
-    info: 'ℹ️',
-    warning: '⚠️',
-    error: '❌',
-    success: '✅',
+    info: "ℹ️",
+    warning: "⚠️",
+    error: "❌",
+    success: "✅",
   };
 
   return (
@@ -371,7 +418,7 @@ export function AlertsWidget({ alerts, onMarkRead, onDismiss }: AlertsWidgetProp
         <div
           key={alert.id}
           className={`p-3 rounded-lg border ${getAlertColor(alert.type)} ${
-            !alert.isRead ? 'border-l-4' : ''
+            !alert.isRead ? "border-l-4" : ""
           }`}
         >
           <div className="flex items-start gap-2">
@@ -380,7 +427,10 @@ export function AlertsWidget({ alerts, onMarkRead, onDismiss }: AlertsWidgetProp
               <p className="font-semibold text-sm">{alert.title}</p>
               <p className="text-xs mt-0.5">{alert.message}</p>
               {alert.action && (
-                <Link href={alert.action.href || '#'} className="text-xs font-medium mt-1 inline-block">
+                <Link
+                  href={alert.action.href || "#"}
+                  className="text-xs font-medium mt-1 inline-block"
+                >
                   {alert.action.label} →
                 </Link>
               )}
@@ -431,7 +481,7 @@ export function QuickSearchBox({
   results,
   isSearching,
   onClear,
-  placeholder = 'Search students, payments...',
+  placeholder = "Search students, payments...",
 }: QuickSearchBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -441,16 +491,18 @@ export function QuickSearchBox({
   }, [query]);
 
   const typeIcons = {
-    student: '👤',
-    payment: '💰',
-    promise: '🤝',
-    class: '📚',
+    student: "👤",
+    payment: "💰",
+    promise: "🤝",
+    class: "📚",
   };
 
   return (
     <div className="relative">
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          🔍
+        </span>
         <input
           ref={inputRef}
           type="text"
@@ -475,7 +527,7 @@ export function QuickSearchBox({
 
       {/* Results dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border z-50 max-h-80 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border z-50 max-h-80 overflow-y-auto scroll-smooth scrollbar-thin">
           {isSearching ? (
             <div className="p-4 text-center text-gray-500">
               <span className="animate-spin inline-block">⏳</span> Searching...
@@ -491,8 +543,12 @@ export function QuickSearchBox({
                 >
                   <span className="text-lg">{typeIcons[result.type]}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{result.title}</p>
-                    <p className="text-xs text-gray-500 truncate">{result.subtitle}</p>
+                    <p className="font-medium text-sm truncate">
+                      {result.title}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {result.subtitle}
+                    </p>
                   </div>
                 </Link>
               ))}
@@ -528,29 +584,40 @@ export function ShortcutHints({ actions, show, onClose }: ShortcutHintsProps) {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
       <div onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <Card className="p-6 max-w-md w-full m-4">
           <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold">Keyboard Shortcuts</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
-        </div>
-        <div className="space-y-2">
-          {actionsWithShortcuts.map((action) => (
-            <div key={action.id} className="flex items-center justify-between py-2 border-b last:border-0">
-              <div className="flex items-center gap-2">
-                <span>{action.icon}</span>
-                <span className="text-sm">{action.title}</span>
+            <h3 className="font-semibold">Keyboard Shortcuts</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="space-y-2">
+            {actionsWithShortcuts.map((action) => (
+              <div
+                key={action.id}
+                className="flex items-center justify-between py-2 border-b last:border-0"
+              >
+                <div className="flex items-center gap-2">
+                  <span>{action.icon}</span>
+                  <span className="text-sm">{action.title}</span>
+                </div>
+                <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">
+                  {action.shortcut}
+                </kbd>
               </div>
-              <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-mono">
-                {action.shortcut}
-              </kbd>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-gray-400 mt-4 text-center">
-          Press Alt+? to toggle shortcuts
-        </p>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-4 text-center">
+            Press Alt+? to toggle shortcuts
+          </p>
         </Card>
       </div>
     </div>

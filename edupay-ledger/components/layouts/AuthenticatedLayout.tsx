@@ -91,7 +91,9 @@ export function AuthenticatedLayout({
           userAvatar={user?.photoURL || undefined}
           schoolName={user?.schoolName}
         />
-        <div className="flex-1 overflow-y-auto pb-20 lg:pb-0">{children}</div>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth pb-20 lg:pb-0">
+          {children}
+        </div>
       </main>
 
       {/* Mobile Bottom Nav */}
