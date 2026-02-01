@@ -88,7 +88,7 @@ interface HeatmapProps {
   onCellClick?: (classId: string, streamName: string) => void;
 }
 
-function ArrearsHeatmap({ data, onCellClick }: HeatmapProps) {
+function OverdueHeatmap({ data, onCellClick }: HeatmapProps) {
   const formatAmount = (amount: number) => {
     if (amount >= 1000000) {
       return `${(amount / 1000000).toFixed(1)}M`;
@@ -536,7 +536,7 @@ export default function DashboardPage() {
           subtitle={`${stats.overdueStudents} students overdue`}
           icon="warning"
           iconBg="bg-red-500"
-          onClick={() => router.push("/arrears?filter=overdue")}
+          onClick={() => router.push("/overdue?filter=overdue")}
         />
         <DashboardStatsCard
           title="Collection Progress"
@@ -579,10 +579,10 @@ export default function DashboardPage() {
             />
           </Card>
 
-          {/* Class Arrears Heatmap */}
+          {/* Class Overdue Heatmap */}
           <Card>
             <div className="flex items-center justify-between mb-4">
-              <CardTitle>Class/Stream Arrears Heatmap</CardTitle>
+              <CardTitle>Class/Stream Overdue Heatmap</CardTitle>
               <div className="flex items-center gap-4 text-xs">
                 <div className="flex items-center gap-1">
                   <div className="w-3 h-3 rounded bg-emerald-100 border border-emerald-200"></div>
@@ -598,7 +598,7 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
-            <ArrearsHeatmap
+            <OverdueHeatmap
               data={heatmap}
               onCellClick={handleHeatmapCellClick}
             />
@@ -685,7 +685,7 @@ export default function DashboardPage() {
                   </div>
                 </Button>
               </Link>
-              <Link href="/arrears">
+              <Link href="/overdue">
                 <Button
                   variant="outline"
                   fullWidth
@@ -701,7 +701,7 @@ export default function DashboardPage() {
                     <span className="material-symbols-outlined bg-red-100 dark:bg-red-900/30 text-red-600 p-2 rounded-md">
                       warning
                     </span>
-                    <span>View Arrears ({stats.overdueStudents})</span>
+                    <span>View Overdue ({stats.overdueStudents})</span>
                   </div>
                 </Button>
               </Link>
@@ -851,7 +851,7 @@ export default function DashboardPage() {
               onClick={() => setSelectedCell(null)}
             >
               <Button variant="primary" fullWidth>
-                View Students with Arrears
+                View Students with Overdue Balances
               </Button>
             </Link>
           </div>

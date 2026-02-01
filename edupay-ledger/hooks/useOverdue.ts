@@ -1,5 +1,5 @@
 /**
- * useArrears Hook
+ * useOverdue Hook
  * Manages arrears data with Firebase integration
  */
 
@@ -28,7 +28,7 @@ import type { Student } from "@/types/student";
 
 export type SeverityLevel = 'critical' | 'high' | 'medium' | 'low';
 
-export interface ArrearsStudent {
+export interface OverdueStudent {
   id: string;
   studentId: string;
   name: string;
@@ -47,7 +47,7 @@ export interface ArrearsStudent {
   contactAttempts: number;
 }
 
-export interface ArrearsStats {
+export interface OverdueStats {
   totalInArrears: number;
   totalArrearsAmount: number;
   criticalCount: number;
@@ -58,7 +58,7 @@ export interface ArrearsStats {
   recoveredThisWeek: number;
 }
 
-export interface ArrearsFilters {
+export interface OverdueFilters {
   search: string;
   severity: string;
   className: string;
@@ -66,16 +66,16 @@ export interface ArrearsFilters {
   sortOrder: 'asc' | 'desc';
 }
 
-interface UseArrearsOptions {
+interface UseOverdueOptions {
   pageSize?: number;
   useMockData?: boolean;
 }
 
-interface UseArrearsReturn {
-  students: ArrearsStudent[];
-  stats: ArrearsStats;
-  filters: ArrearsFilters;
-  setFilters: (filters: Partial<ArrearsFilters>) => void;
+interface UseOverdueReturn {
+  students: OverdueStudent[];
+  stats: OverdueStats;
+  filters: OverdueFilters;
+  setFilters: (filters: Partial<OverdueFilters>) => void;
   resetFilters: () => void;
   currentPage: number;
   totalPages: number;
@@ -95,7 +95,7 @@ interface UseArrearsReturn {
 // MOCK DATA
 // ============================================================================
 
-const mockArrearsStudents: ArrearsStudent[] = [
+const mockOverdueStudents: OverdueStudent[] = [
   {
     id: 'EDU-2023-089-JK',
     studentId: 'EDU-2023-089-JK',
@@ -170,7 +170,7 @@ const mockArrearsStudents: ArrearsStudent[] = [
   },
 ];
 
-const mockStats: ArrearsStats = {
+const mockStats: OverdueStats = {
   totalInArrears: 64,
   totalArrearsAmount: 28450000,
   criticalCount: 12,
@@ -192,7 +192,7 @@ function calculateSeverity(daysOverdue: number): SeverityLevel {
   return 'low';
 }
 
-function studentToArrearsStudent(student: Student): ArrearsStudent {
+function studentToOverdueStudent(student: Student): OverdueStudent {
   const now = new Date();
   const lastPayment = student.lastPaymentDate 
     ? (student.lastPaymentDate as any).toDate?.() || new Date()
@@ -226,7 +226,7 @@ function studentToArrearsStudent(student: Student): ArrearsStudent {
 // DEFAULT VALUES
 // ============================================================================
 
-const DEFAULT_FILTERS: ArrearsFilters = {
+const DEFAULT_FILTERS: OverdueFilters = {
   search: '',
   severity: 'all',
   className: 'All Classes',
@@ -238,15 +238,15 @@ const DEFAULT_FILTERS: ArrearsFilters = {
 // HOOK IMPLEMENTATION
 // ============================================================================
 
-export function useArrears(options: UseArrearsOptions = {}): UseArrearsReturn {
+export function useOverdue(options: UseOverdueOptions = {}): UseOverdueReturn {
   const { pageSize = 10, useMockData = true } = options;
   const { user } = useAuth();
   const schoolId = user?.schoolId;
 
   // State
-  const [allStudents, setAllStudents] = useState<ArrearsStudent[]>([]);
-  const [stats, setStats] = useState<ArrearsStats>(mockStats);
-  const [filters, setFiltersState] = useState<ArrearsFilters>(DEFAULT_FILTERS);
+  const [allStudents, setAllStudents] = useState<OverdueStudent[]>([]);
+  const [stats, setStats] = useState<OverdueStats>(mockStats);
+  const [filters, setFiltersState] = useState<OverdueFilters>(DEFAULT_FILTERS);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -259,23 +259,23 @@ export function useArrears(options: UseArrearsOptions = {}): UseArrearsReturn {
     try {
       if (useMockData || !schoolId) {
         // Use mock data
-        setAllStudents(mockArrearsStudents);
+        setAllStudents(mockOverdueStudents);
         setStats(mockStats);
       } else {
         // Fetch from Firebase
         const students = await getStudentsWithArrears(schoolId);
 
-        const arrearsStudents = students.map(studentToArrearsStudent);
-        setAllStudents(arrearsStudents);
+        const OverdueStudents = students.map(studentToOverdueStudent);
+        setAllStudents(OverdueStudents);
 
         // Calculate stats
-        const newStats: ArrearsStats = {
-          totalInArrears: arrearsStudents.length,
-          totalArrearsAmount: arrearsStudents.reduce((sum: number, s: ArrearsStudent) => sum + s.balance, 0),
-          criticalCount: arrearsStudents.filter((s: ArrearsStudent) => s.severity === 'critical').length,
-          highCount: arrearsStudents.filter((s: ArrearsStudent) => s.severity === 'high').length,
-          mediumCount: arrearsStudents.filter((s: ArrearsStudent) => s.severity === 'medium').length,
-          lowCount: arrearsStudents.filter((s: ArrearsStudent) => s.severity === 'low').length,
+        const newStats: OverdueStats = {
+          totalInArrears: OverdueStudents.length,
+          totalArrearsAmount: OverdueStudents.reduce((sum: number, s: OverdueStudent) => sum + s.balance, 0),
+          criticalCount: OverdueStudents.filter((s: OverdueStudent) => s.severity === 'critical').length,
+          highCount: OverdueStudents.filter((s: OverdueStudent) => s.severity === 'high').length,
+          mediumCount: OverdueStudents.filter((s: OverdueStudent) => s.severity === 'medium').length,
+          lowCount: OverdueStudents.filter((s: OverdueStudent) => s.severity === 'low').length,
           smssSentToday: 0, // Would come from SMS service
           recoveredThisWeek: 0, // Would come from payments service
         };
@@ -285,7 +285,7 @@ export function useArrears(options: UseArrearsOptions = {}): UseArrearsReturn {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load arrears data';
       setError(errorMessage);
       // Fall back to mock data on error
-      setAllStudents(mockArrearsStudents);
+      setAllStudents(mockOverdueStudents);
       setStats(mockStats);
     } finally {
       setIsLoading(false);
@@ -356,7 +356,7 @@ export function useArrears(options: UseArrearsOptions = {}): UseArrearsReturn {
   }, [allStudents]);
 
   // Actions
-  const setFilters = useCallback((newFilters: Partial<ArrearsFilters>) => {
+  const setFilters = useCallback((newFilters: Partial<OverdueFilters>) => {
     setFiltersState((prev) => ({ ...prev, ...newFilters }));
     setCurrentPage(1);
   }, []);
@@ -459,13 +459,13 @@ export function useArrears(options: UseArrearsOptions = {}): UseArrearsReturn {
 }
 
 /**
- * Firebase-connected version of useArrears
+ * Firebase-connected version of useOverdue
  */
-export function useFirebaseArrears(options: { pageSize?: number } = {}) {
+export function useFirebaseOverdue(options: { pageSize?: number } = {}) {
   const { user, loading: authLoading } = useAuth();
   const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
   
-  const arrears = useArrears({
+  const arrears = useOverdue({
     pageSize: options.pageSize ?? 10,
     useMockData: USE_MOCK_DATA || !user?.schoolId,
   });
@@ -477,4 +477,4 @@ export function useFirebaseArrears(options: { pageSize?: number } = {}) {
   };
 }
 
-export default useArrears;
+export default useOverdue;

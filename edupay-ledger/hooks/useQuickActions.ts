@@ -3,7 +3,7 @@
  * React hooks for quick action dashboard functionality
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   getDailySummary,
   getPendingTasks,
@@ -20,7 +20,7 @@ import {
   getMockDailySummary,
   getMockPendingTasks,
   getMockAlerts,
-} from '../lib/services/quick-actions.service';
+} from "../lib/services/quick-actions.service";
 import {
   DailySummary,
   PendingTask,
@@ -29,9 +29,9 @@ import {
   QuickAction,
   QuickSearchResult,
   DEFAULT_QUICK_ACTIONS,
-} from '../types/quick-actions';
+} from "../types/quick-actions";
 
-const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
 
 // ============================================
 // DAILY SUMMARY HOOK
@@ -67,12 +67,12 @@ export function useDailySummary(schoolId: string) {
       setSummary(getMockDailySummary());
       return;
     }
-    
+
     try {
       const data = await getDailySummary(schoolId);
       setSummary(data);
     } catch (err) {
-      setError('Failed to refresh summary');
+      setError("Failed to refresh summary");
     }
   }, [schoolId]);
 
@@ -120,7 +120,8 @@ export function usePendingTasks(schoolId: string) {
 
   // Count urgent tasks
   const urgentCount = useMemo(() => {
-    return tasks.filter((t) => t.priority === 'urgent' || t.priority === 'high').length;
+    return tasks.filter((t) => t.priority === "urgent" || t.priority === "high")
+      .length;
   }, [tasks]);
 
   return { tasks, tasksByType, urgentCount, isLoading, error };
@@ -152,27 +153,40 @@ export function useDashboardAlerts(schoolId: string) {
       .finally(() => setIsLoading(false));
   }, [schoolId]);
 
-  const markRead = useCallback(async (alertId: string) => {
-    if (USE_MOCK_DATA) {
-      setAlerts((prev) => prev.map((a) => a.id === alertId ? { ...a, isRead: true } : a));
-      return;
-    }
-    
-    await markAlertRead(schoolId, alertId);
-    setAlerts((prev) => prev.map((a) => a.id === alertId ? { ...a, isRead: true } : a));
-  }, [schoolId]);
+  const markRead = useCallback(
+    async (alertId: string) => {
+      if (USE_MOCK_DATA) {
+        setAlerts((prev) =>
+          prev.map((a) => (a.id === alertId ? { ...a, isRead: true } : a)),
+        );
+        return;
+      }
 
-  const dismiss = useCallback(async (alertId: string) => {
-    if (USE_MOCK_DATA) {
+      await markAlertRead(schoolId, alertId);
+      setAlerts((prev) =>
+        prev.map((a) => (a.id === alertId ? { ...a, isRead: true } : a)),
+      );
+    },
+    [schoolId],
+  );
+
+  const dismiss = useCallback(
+    async (alertId: string) => {
+      if (USE_MOCK_DATA) {
+        setAlerts((prev) => prev.filter((a) => a.id !== alertId));
+        return;
+      }
+
+      await dismissAlert(schoolId, alertId);
       setAlerts((prev) => prev.filter((a) => a.id !== alertId));
-      return;
-    }
-    
-    await dismissAlert(schoolId, alertId);
-    setAlerts((prev) => prev.filter((a) => a.id !== alertId));
-  }, [schoolId]);
+    },
+    [schoolId],
+  );
 
-  const unreadCount = useMemo(() => alerts.filter((a) => !a.isRead).length, [alerts]);
+  const unreadCount = useMemo(
+    () => alerts.filter((a) => !a.isRead).length,
+    [alerts],
+  );
 
   return { alerts, unreadCount, isLoading, error, markRead, dismiss };
 }
@@ -191,12 +205,17 @@ export function useQuickActions(userId: string) {
     if (USE_MOCK_DATA) {
       setConfig({
         userId,
-        layout: 'default',
+        layout: "default",
         showDailySummary: true,
         showPendingTasks: true,
         showRecentPayments: true,
         showAlerts: true,
-        pinnedActions: ['record-payment', 'view-arrears', 'send-reminder', 'clear-student'],
+        pinnedActions: [
+          "record-payment",
+          "view-overdue",
+          "send-reminder",
+          "clear-student",
+        ],
         quickAccessItems: [],
         refreshInterval: 60,
       });
@@ -227,40 +246,49 @@ export function useQuickActions(userId: string) {
   }, [config, allActions]);
 
   // Pin an action
-  const pin = useCallback(async (actionId: string) => {
-    if (!config) return;
-    
-    const newPinned = [...config.pinnedActions, actionId];
-    setConfig({ ...config, pinnedActions: newPinned });
-    
-    if (!USE_MOCK_DATA) {
-      await pinAction(userId, actionId);
-    }
-  }, [config, userId]);
+  const pin = useCallback(
+    async (actionId: string) => {
+      if (!config) return;
+
+      const newPinned = [...config.pinnedActions, actionId];
+      setConfig({ ...config, pinnedActions: newPinned });
+
+      if (!USE_MOCK_DATA) {
+        await pinAction(userId, actionId);
+      }
+    },
+    [config, userId],
+  );
 
   // Unpin an action
-  const unpin = useCallback(async (actionId: string) => {
-    if (!config) return;
-    
-    const newPinned = config.pinnedActions.filter((id) => id !== actionId);
-    setConfig({ ...config, pinnedActions: newPinned });
-    
-    if (!USE_MOCK_DATA) {
-      await unpinAction(userId, actionId);
-    }
-  }, [config, userId]);
+  const unpin = useCallback(
+    async (actionId: string) => {
+      if (!config) return;
+
+      const newPinned = config.pinnedActions.filter((id) => id !== actionId);
+      setConfig({ ...config, pinnedActions: newPinned });
+
+      if (!USE_MOCK_DATA) {
+        await unpinAction(userId, actionId);
+      }
+    },
+    [config, userId],
+  );
 
   // Update config
-  const updateConfig = useCallback(async (updates: Partial<DashboardConfig>) => {
-    if (!config) return;
-    
-    const newConfig = { ...config, ...updates };
-    setConfig(newConfig);
-    
-    if (!USE_MOCK_DATA) {
-      await updateDashboardConfig(userId, updates);
-    }
-  }, [config, userId]);
+  const updateConfig = useCallback(
+    async (updates: Partial<DashboardConfig>) => {
+      if (!config) return;
+
+      const newConfig = { ...config, ...updates };
+      setConfig(newConfig);
+
+      if (!USE_MOCK_DATA) {
+        await updateDashboardConfig(userId, updates);
+      }
+    },
+    [config, userId],
+  );
 
   return {
     config,
@@ -279,7 +307,7 @@ export function useQuickActions(userId: string) {
 // ============================================
 
 export function useQuickSearch(schoolId: string) {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState<QuickSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -291,12 +319,24 @@ export function useQuickSearch(schoolId: string) {
 
     const timeout = setTimeout(async () => {
       setIsSearching(true);
-      
+
       if (USE_MOCK_DATA) {
         // Mock search results
         setResults([
-          { id: '1', type: 'student', title: 'John Mukasa', subtitle: 'P7 Blue - EDU-2024-001', href: '/students/1' },
-          { id: '2', type: 'payment', title: 'Payment: UGX 500,000', subtitle: 'RCP-001 - John Mukasa', href: '/payments/1' },
+          {
+            id: "1",
+            type: "student",
+            title: "John Mukasa",
+            subtitle: "P7 Blue - EDU-2024-001",
+            href: "/students/1",
+          },
+          {
+            id: "2",
+            type: "payment",
+            title: "Payment: UGX 500,000",
+            subtitle: "RCP-001 - John Mukasa",
+            href: "/payments/1",
+          },
         ]);
         setIsSearching(false);
         return;
@@ -306,7 +346,7 @@ export function useQuickSearch(schoolId: string) {
         const data = await quickSearch(schoolId, query);
         setResults(data);
       } catch (err) {
-        console.error('Search error:', err);
+        console.error("Search error:", err);
       } finally {
         setIsSearching(false);
       }
@@ -316,7 +356,7 @@ export function useQuickSearch(schoolId: string) {
   }, [query, schoolId]);
 
   const clear = useCallback(() => {
-    setQuery('');
+    setQuery("");
     setResults([]);
   }, []);
 
@@ -329,7 +369,7 @@ export function useQuickSearch(schoolId: string) {
 
 export function useKeyboardShortcuts(
   actions: QuickAction[],
-  onAction: (action: QuickAction) => void
+  onAction: (action: QuickAction) => void,
 ) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -339,7 +379,7 @@ export function useKeyboardShortcuts(
       const key = e.key.toLowerCase();
       const action = actions.find((a) => {
         if (!a.shortcut) return false;
-        const shortcutKey = a.shortcut.split('+').pop()?.toLowerCase();
+        const shortcutKey = a.shortcut.split("+").pop()?.toLowerCase();
         return shortcutKey === key;
       });
 
@@ -349,8 +389,8 @@ export function useKeyboardShortcuts(
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [actions, onAction]);
 }
 
@@ -359,12 +399,32 @@ export function useKeyboardShortcuts(
 // ============================================
 
 export function useBursarDashboard(schoolId: string, userId: string) {
-  const { summary, isLoading: summaryLoading, refresh: refreshSummary } = useDailySummary(schoolId);
-  const { tasks, urgentCount, isLoading: tasksLoading } = usePendingTasks(schoolId);
-  const { alerts, unreadCount, isLoading: alertsLoading, markRead, dismiss } = useDashboardAlerts(schoolId);
-  const { pinnedActions, unpinnedActions, config, isLoading: configLoading } = useQuickActions(userId);
+  const {
+    summary,
+    isLoading: summaryLoading,
+    refresh: refreshSummary,
+  } = useDailySummary(schoolId);
+  const {
+    tasks,
+    urgentCount,
+    isLoading: tasksLoading,
+  } = usePendingTasks(schoolId);
+  const {
+    alerts,
+    unreadCount,
+    isLoading: alertsLoading,
+    markRead,
+    dismiss,
+  } = useDashboardAlerts(schoolId);
+  const {
+    pinnedActions,
+    unpinnedActions,
+    config,
+    isLoading: configLoading,
+  } = useQuickActions(userId);
 
-  const isLoading = summaryLoading || tasksLoading || alertsLoading || configLoading;
+  const isLoading =
+    summaryLoading || tasksLoading || alertsLoading || configLoading;
 
   const refresh = useCallback(() => {
     refreshSummary();

@@ -11,13 +11,13 @@ import { FilterChip } from "@/components/ui/Chip";
 import { Modal } from "@/components/ui/Modal";
 import { Textarea } from "@/components/ui/Input";
 import { formatUGX, formatPhone, formatDate } from "@/lib/utils";
-import { useFirebaseArrears } from "@/hooks/useArrears";
+import { useFirebaseOverdue } from "@/hooks/useOverdue";
 
-export default function ArrearsPage() {
+export default function OverduePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
-    students: arrearsStudents,
+    students: overdueStudents,
     stats,
     filters,
     setFilters,
@@ -31,7 +31,7 @@ export default function ArrearsPage() {
     sendBulkReminders,
     isAuthenticated,
     authLoading,
-  } = useFirebaseArrears({ pageSize: 10 });
+  } = useFirebaseOverdue({ pageSize: 10 });
 
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
@@ -54,11 +54,11 @@ export default function ArrearsPage() {
       !authLoading &&
       !isAuthenticated &&
       !isLoading &&
-      arrearsStudents.length === 0
+      overdueStudents.length === 0
     ) {
       router.push("/login");
     }
-  }, [authLoading, isAuthenticated, isLoading, arrearsStudents.length, router]);
+  }, [authLoading, isAuthenticated, isLoading, overdueStudents.length, router]);
 
   const severityFilters = [
     { label: "All Severities", value: "all", count: stats.totalInArrears },
@@ -83,10 +83,10 @@ export default function ArrearsPage() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedStudents.length === arrearsStudents.length) {
+    if (selectedStudents.length === overdueStudents.length) {
       setSelectedStudents([]);
     } else {
-      setSelectedStudents(arrearsStudents.map((s) => s.id));
+      setSelectedStudents(overdueStudents.map((s) => s.id));
     }
   };
 
@@ -121,14 +121,14 @@ export default function ArrearsPage() {
         <input
           type="checkbox"
           checked={
-            selectedStudents.length === arrearsStudents.length &&
-            arrearsStudents.length > 0
+            selectedStudents.length === overdueStudents.length &&
+            overdueStudents.length > 0
           }
           onChange={toggleSelectAll}
           className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
         />
       ),
-      render: (student: (typeof arrearsStudents)[0]) => (
+      render: (student: (typeof overdueStudents)[0]) => (
         <input
           type="checkbox"
           checked={selectedStudents.includes(student.id)}
@@ -140,7 +140,7 @@ export default function ArrearsPage() {
     {
       key: "student",
       header: "Student",
-      render: (student: (typeof arrearsStudents)[0]) => (
+      render: (student: (typeof overdueStudents)[0]) => (
         <div className="flex items-center gap-3">
           {student.photo ? (
             <img
@@ -172,7 +172,7 @@ export default function ArrearsPage() {
     {
       key: "balance",
       header: "Balance Due",
-      render: (student: (typeof arrearsStudents)[0]) => (
+      render: (student: (typeof overdueStudents)[0]) => (
         <div>
           <p className="font-bold text-danger">{formatUGX(student.balance)}</p>
           <p className="text-[10px] text-slate-400">
@@ -184,7 +184,7 @@ export default function ArrearsPage() {
     {
       key: "overdue",
       header: "Days Overdue",
-      render: (student: (typeof arrearsStudents)[0]) => (
+      render: (student: (typeof overdueStudents)[0]) => (
         <div className="flex items-center gap-2">
           <SeverityBadge severity={student.severity} />
           <span className="font-bold">{student.daysOverdue}</span>
@@ -194,7 +194,7 @@ export default function ArrearsPage() {
     {
       key: "guardian",
       header: "Guardian Contact",
-      render: (student: (typeof arrearsStudents)[0]) => (
+      render: (student: (typeof overdueStudents)[0]) => (
         <div>
           <p className="text-sm font-medium">{student.guardian}</p>
           <p className="text-xs text-primary dark:text-blue-400 font-mono">
@@ -206,7 +206,7 @@ export default function ArrearsPage() {
     {
       key: "lastContact",
       header: "Last Contact",
-      render: (student: (typeof arrearsStudents)[0]) => (
+      render: (student: (typeof overdueStudents)[0]) => (
         <div>
           {student.lastContactDate ? (
             <>
@@ -228,7 +228,7 @@ export default function ArrearsPage() {
       key: "actions",
       header: "Actions",
       align: "right" as const,
-      render: (student: (typeof arrearsStudents)[0]) => (
+      render: (student: (typeof overdueStudents)[0]) => (
         <div className="flex items-center justify-end gap-1">
           <button
             className="p-2 hover:bg-primary/10 rounded-lg text-primary"
@@ -274,7 +274,7 @@ export default function ArrearsPage() {
             </Link>
             <span className="mx-2">/</span>
             <span className="text-primary dark:text-white font-medium">
-              Arrears & Debt Management
+              Overdue & Debt Management
             </span>
           </nav>
           <h1 className="text-2xl font-bold flex items-center gap-3">
@@ -283,7 +283,7 @@ export default function ArrearsPage() {
                 warning
               </span>
             </span>
-            Arrears & Debt Management
+            Overdue & Debt Management
           </h1>
         </div>
         <div className="flex gap-3">
@@ -331,7 +331,7 @@ export default function ArrearsPage() {
       {/* Stats Overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatsCard
-          label="Total in Arrears"
+          label="Total Overdue"
           value={stats.totalInArrears.toString()}
           icon={
             <span className="material-symbols-outlined text-danger">
@@ -433,7 +433,7 @@ export default function ArrearsPage() {
         ))}
       </div>
 
-      {/* Arrears Table */}
+      {/* Overdue Table */}
       <Card padding="none">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -478,13 +478,13 @@ export default function ArrearsPage() {
 
         <Table
           columns={columns}
-          data={arrearsStudents}
+          data={overdueStudents}
           keyExtractor={(s) => s.id}
         />
 
         <div className="p-4 bg-slate-50 dark:bg-slate-800/30 flex flex-col md:flex-row justify-between items-center gap-4">
           <span className="text-xs text-slate-500">
-            Showing {arrearsStudents.length} students in arrears
+            Showing {overdueStudents.length} students with overdue balances
           </span>
           <Pagination
             currentPage={currentPage}

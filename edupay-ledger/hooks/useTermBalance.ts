@@ -3,10 +3,10 @@
  * React hooks for managing term balance carryovers
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from './useAuth';
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "./useAuth";
 import {
   TermBalanceCarryover,
   StudentCumulativeBalance,
@@ -15,7 +15,7 @@ import {
   ArrearsReport,
   AcademicPeriod,
   BalanceAdjustment,
-} from '../types/term-balance';
+} from "../types/term-balance";
 import {
   getSchoolCarryovers,
   getStudentCarryovers,
@@ -28,9 +28,9 @@ import {
   getMockStudentCarryovers,
   getMockStudentCumulativeBalance,
   getMockArrearsReport,
-} from '../lib/services/term-balance.service';
+} from "../lib/services/term-balance.service";
 
-const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
 
 // ============================================
 // Hook: useTermCarryovers
@@ -45,7 +45,7 @@ export function useTermCarryovers(period?: AcademicPeriod) {
 
   const fetchCarryovers = useCallback(async () => {
     if (!schoolId) return;
-    
+
     setIsLoading(true);
     setError(null);
 
@@ -70,17 +70,17 @@ export function useTermCarryovers(period?: AcademicPeriod) {
   // Calculate summary statistics
   const summary = {
     totalCarryovers: carryovers.length,
-    totalDebits: carryovers.filter(c => c.carryoverType === 'debit').length,
-    totalCredits: carryovers.filter(c => c.carryoverType === 'credit').length,
+    totalDebits: carryovers.filter((c) => c.carryoverType === "debit").length,
+    totalCredits: carryovers.filter((c) => c.carryoverType === "credit").length,
     debitAmount: carryovers
-      .filter(c => c.carryoverType === 'debit')
+      .filter((c) => c.carryoverType === "debit")
       .reduce((sum, c) => sum + c.adjustedAmount, 0),
     creditAmount: carryovers
-      .filter(c => c.carryoverType === 'credit')
+      .filter((c) => c.carryoverType === "credit")
       .reduce((sum, c) => sum + c.adjustedAmount, 0),
-    pendingCount: carryovers.filter(c => c.status === 'pending').length,
-    appliedCount: carryovers.filter(c => c.status === 'applied').length,
-    waivedCount: carryovers.filter(c => c.status === 'waived').length,
+    pendingCount: carryovers.filter((c) => c.status === "pending").length,
+    appliedCount: carryovers.filter((c) => c.status === "applied").length,
+    waivedCount: carryovers.filter((c) => c.status === "waived").length,
   };
 
   return {
@@ -96,7 +96,10 @@ export function useTermCarryovers(period?: AcademicPeriod) {
 // Hook: useStudentTermBalance
 // Get cumulative balance for a specific student
 // ============================================
-export function useStudentTermBalance(studentId: string, currentPeriod?: AcademicPeriod) {
+export function useStudentTermBalance(
+  studentId: string,
+  currentPeriod?: AcademicPeriod,
+) {
   const { user } = useAuth();
   const schoolId = user?.schoolId;
   const [balance, setBalance] = useState<StudentCumulativeBalance | null>(null);
@@ -105,11 +108,14 @@ export function useStudentTermBalance(studentId: string, currentPeriod?: Academi
   const [error, setError] = useState<string | null>(null);
 
   // Default to current period if not specified
-  const period = currentPeriod || { year: new Date().getFullYear(), term: 'term_2' as const };
+  const period = currentPeriod || {
+    year: new Date().getFullYear(),
+    term: "term_2" as const,
+  };
 
   const fetchBalance = useCallback(async () => {
     if (!schoolId || !studentId) return;
-    
+
     setIsLoading(true);
     setError(null);
 
@@ -157,71 +163,109 @@ export function useCarryoverProcessing() {
   const [result, setResult] = useState<CarryoverProcessingResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const processCarryovers = useCallback(async (
-    fromPeriod: AcademicPeriod,
-    toPeriod: AcademicPeriod,
-    options?: Partial<CarryoverOptions>
-  ) => {
-    if (!schoolId || !user?.uid) {
-      setError('Not authenticated');
-      return null;
-    }
+  const processCarryovers = useCallback(
+    async (
+      fromPeriod: AcademicPeriod,
+      toPeriod: AcademicPeriod,
+      options?: Partial<CarryoverOptions>,
+    ) => {
+      if (!schoolId || !user?.uid) {
+        setError("Not authenticated");
+        return null;
+      }
 
-    setIsProcessing(true);
-    setError(null);
-    setResult(null);
+      setIsProcessing(true);
+      setError(null);
+      setResult(null);
 
-    try {
-      const fullOptions: CarryoverOptions = {
-        schoolId: schoolId,
-        fromPeriod,
-        toPeriod,
-        includeCredits: true,
-        autoApply: true,
-        generateReport: true,
-        notifyParents: false,
-        notifyTeachers: false,
-        ...options,
-      };
-
-      if (useMockData) {
-        // Return mock result
-        const mockResult: CarryoverProcessingResult = {
+      try {
+        const fullOptions: CarryoverOptions = {
           schoolId: schoolId,
           fromPeriod,
           toPeriod,
-          processedAt: new Date(),
-          processedBy: user.uid,
-          totalStudentsProcessed: 150,
-          studentsWithDebits: 45,
-          studentsWithCredits: 8,
-          studentsCleared: 97,
-          totalDebitCarryover: 28500000,
-          totalCreditCarryover: 1200000,
-          netCarryover: 27300000,
-          classBreakdown: [
-            { className: 'S.1', totalStudents: 45, studentsWithDebits: 12, studentsWithCredits: 2, totalDebit: 7200000, totalCredit: 300000, netBalance: 6900000 },
-            { className: 'S.2', totalStudents: 42, studentsWithDebits: 10, studentsWithCredits: 3, totalDebit: 6500000, totalCredit: 450000, netBalance: 6050000 },
-            { className: 'S.3', totalStudents: 38, studentsWithDebits: 8, studentsWithCredits: 1, totalDebit: 5800000, totalCredit: 150000, netBalance: 5650000 },
-            { className: 'S.4', totalStudents: 25, studentsWithDebits: 15, studentsWithCredits: 2, totalDebit: 9000000, totalCredit: 300000, netBalance: 8700000 },
-          ],
-          carryovers: [],
-          errors: [],
+          includeCredits: true,
+          autoApply: true,
+          generateReport: true,
+          notifyParents: false,
+          notifyTeachers: false,
+          ...options,
         };
-        setResult(mockResult);
-        return mockResult;
-      }
 
-      const processingResult = await processTermCarryovers(fullOptions, user.uid);
-      setResult(processingResult);
-      return processingResult;
-    } catch (err) {
-      setError((err as Error).message);
-      return null;
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [schoolId, user?.uid]);
+        if (useMockData) {
+          // Return mock result
+          const mockResult: CarryoverProcessingResult = {
+            schoolId: schoolId,
+            fromPeriod,
+            toPeriod,
+            processedAt: new Date(),
+            processedBy: user.uid,
+            totalStudentsProcessed: 150,
+            studentsWithDebits: 45,
+            studentsWithCredits: 8,
+            studentsCleared: 97,
+            totalDebitCarryover: 28500000,
+            totalCreditCarryover: 1200000,
+            netCarryover: 27300000,
+            classBreakdown: [
+              {
+                className: "S.1",
+                totalStudents: 45,
+                studentsWithDebits: 12,
+                studentsWithCredits: 2,
+                totalDebit: 7200000,
+                totalCredit: 300000,
+                netBalance: 6900000,
+              },
+              {
+                className: "S.2",
+                totalStudents: 42,
+                studentsWithDebits: 10,
+                studentsWithCredits: 3,
+                totalDebit: 6500000,
+                totalCredit: 450000,
+                netBalance: 6050000,
+              },
+              {
+                className: "S.3",
+                totalStudents: 38,
+                studentsWithDebits: 8,
+                studentsWithCredits: 1,
+                totalDebit: 5800000,
+                totalCredit: 150000,
+                netBalance: 5650000,
+              },
+              {
+                className: "S.4",
+                totalStudents: 25,
+                studentsWithDebits: 15,
+                studentsWithCredits: 2,
+                totalDebit: 9000000,
+                totalCredit: 300000,
+                netBalance: 8700000,
+              },
+            ],
+            carryovers: [],
+            errors: [],
+          };
+          setResult(mockResult);
+          return mockResult;
+        }
+
+        const processingResult = await processTermCarryovers(
+          fullOptions,
+          user.uid,
+        );
+        setResult(processingResult);
+        return processingResult;
+      } catch (err) {
+        setError((err as Error).message);
+        return null;
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [schoolId, user?.uid],
+  );
 
   return {
     processCarryovers,
@@ -240,69 +284,75 @@ export function useCarryoverAdjustments() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const applyAdjustment = useCallback(async (
-    carryoverId: string,
-    type: BalanceAdjustment['type'],
-    amount: number,
-    reason: string,
-    notes?: string
-  ) => {
-    if (!user?.uid) {
-      setError('Not authenticated');
-      return null;
-    }
-
-    setIsUpdating(true);
-    setError(null);
-
-    try {
-      if (useMockData) {
-        // Return mock success
-        return { success: true };
+  const applyAdjustment = useCallback(
+    async (
+      carryoverId: string,
+      type: BalanceAdjustment["type"],
+      amount: number,
+      reason: string,
+      notes?: string,
+    ) => {
+      if (!user?.uid) {
+        setError("Not authenticated");
+        return null;
       }
 
-      const adjustment: Omit<BalanceAdjustment, 'id'> = {
-        type,
-        amount,
-        reason,
-        approvedBy: user.uid,
-        approvedAt: new Date(),
-        notes,
-      };
+      setIsUpdating(true);
+      setError(null);
 
-      const updated = await applyBalanceAdjustment(carryoverId, adjustment);
-      return updated;
-    } catch (err) {
-      setError((err as Error).message);
-      return null;
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [user?.uid]);
+      try {
+        if (useMockData) {
+          // Return mock success
+          return { success: true };
+        }
 
-  const waive = useCallback(async (carryoverId: string, reason: string) => {
-    if (!user?.uid) {
-      setError('Not authenticated');
-      return null;
-    }
+        const adjustment: Omit<BalanceAdjustment, "id"> = {
+          type,
+          amount,
+          reason,
+          approvedBy: user.uid,
+          approvedAt: new Date(),
+          notes,
+        };
 
-    setIsUpdating(true);
-    setError(null);
+        const updated = await applyBalanceAdjustment(carryoverId, adjustment);
+        return updated;
+      } catch (err) {
+        setError((err as Error).message);
+        return null;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [user?.uid],
+  );
 
-    try {
-      if (useMockData) {
-        return { success: true };
+  const waive = useCallback(
+    async (carryoverId: string, reason: string) => {
+      if (!user?.uid) {
+        setError("Not authenticated");
+        return null;
       }
 
-      const updated = await waiveCarryover(carryoverId, reason, user.uid);
-      return updated;
-    } catch (err) {
-      setError((err as Error).message);
-      return null;
-    } finally {
-      setIsUpdating(false);
-    }
-  }, [user?.uid]);
+      setIsUpdating(true);
+      setError(null);
+
+      try {
+        if (useMockData) {
+          return { success: true };
+        }
+
+        const updated = await waiveCarryover(carryoverId, reason, user.uid);
+        return updated;
+      } catch (err) {
+        setError((err as Error).message);
+        return null;
+      } finally {
+        setIsUpdating(false);
+      }
+    },
+    [user?.uid],
+  );
 
   return {
     applyAdjustment,
@@ -313,10 +363,10 @@ export function useCarryoverAdjustments() {
 }
 
 // ============================================
-// Hook: useArrearsReport
-// Generate and view arrears report
+// Hook: useOverdueReport
+// Generate and view overdue report
 // ============================================
-export function useArrearsReport(asOfPeriod?: AcademicPeriod) {
+export function useOverdueReport(asOfPeriod?: AcademicPeriod) {
   const { user } = useAuth();
   const schoolId = user?.schoolId;
   const [report, setReport] = useState<ArrearsReport | null>(null);
@@ -325,11 +375,14 @@ export function useArrearsReport(asOfPeriod?: AcademicPeriod) {
   const [error, setError] = useState<string | null>(null);
 
   // Default period
-  const period = asOfPeriod || { year: new Date().getFullYear(), term: 'term_2' as const };
+  const period = asOfPeriod || {
+    year: new Date().getFullYear(),
+    term: "term_2" as const,
+  };
 
   const generateReport = useCallback(async () => {
     if (!schoolId || !user?.uid) {
-      setError('Not authenticated');
+      setError("Not authenticated");
       return null;
     }
 
@@ -385,7 +438,10 @@ export function useFirebaseTermCarryovers(period?: AcademicPeriod) {
   return useTermCarryovers(period);
 }
 
-export function useFirebaseStudentTermBalance(studentId: string, currentPeriod?: AcademicPeriod) {
+export function useFirebaseStudentTermBalance(
+  studentId: string,
+  currentPeriod?: AcademicPeriod,
+) {
   return useStudentTermBalance(studentId, currentPeriod);
 }
 
@@ -397,6 +453,6 @@ export function useFirebaseCarryoverAdjustments() {
   return useCarryoverAdjustments();
 }
 
-export function useFirebaseArrearsReport(asOfPeriod?: AcademicPeriod) {
-  return useArrearsReport(asOfPeriod);
+export function useFirebaseOverdueReport(asOfPeriod?: AcademicPeriod) {
+  return useOverdueReport(asOfPeriod);
 }
