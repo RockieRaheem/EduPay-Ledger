@@ -12,10 +12,9 @@
 
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui";
-import { StellarVerifiedIcon, StellarTxLink } from "@/components/stellar";
+import { StellarTxLink } from "@/components/stellar";
 
 // =============================================================================
 // Types
@@ -268,7 +267,19 @@ function VerifyPageContent() {
                 <div className="text-center">
                   <div className="flex justify-center mb-4">
                     <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center">
-                      <StellarVerifiedIcon className="w-10 h-10 text-emerald-400" />
+                      <svg
+                        className="w-10 h-10 text-emerald-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                        />
+                      </svg>
                     </div>
                   </div>
                   <h3 className="text-xl font-bold text-emerald-400 mb-2">
@@ -286,7 +297,9 @@ function VerifyPageContent() {
                         </span>
                         <StellarTxLink
                           txHash={result.txHash}
-                          network={result.network as "TESTNET" | "PUBLIC"}
+                          network={
+                            result.network === "PUBLIC" ? "MAINNET" : "TESTNET"
+                          }
                         />
                       </div>
                     )}
