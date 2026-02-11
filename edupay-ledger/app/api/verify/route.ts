@@ -10,9 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import CryptoJS from "crypto-js";
-import { verifyPaymentOnStellar, getStellarHealthStatus } from "@/lib/stellar";
-import type { StellarVerificationResult } from "@/types/stellar";
+import { getTransactionByHash, getStellarHealthStatus } from "@/lib/stellar";
 
 // =============================================================================
 // Types
@@ -21,15 +19,12 @@ import type { StellarVerificationResult } from "@/types/stellar";
 interface VerifyByHashRequest {
   type: "hash";
   txHash: string;
-  expectedHash?: string;
 }
 
 interface VerifyByReceiptRequest {
   type: "receipt";
   receiptNumber: string;
-  schoolId: string;
   amount?: number;
-  studentId?: string;
 }
 
 type VerifyRequest = VerifyByHashRequest | VerifyByReceiptRequest;
@@ -45,7 +40,6 @@ interface VerifyResponse {
   error?: string;
   details?: {
     receiptNumber?: string;
-    schoolId?: string;
     amount?: number;
     verifiedAt: string;
   };
@@ -114,10 +108,7 @@ function sanitizeInput(input: string): string {
 /**
  * Verify a payment by Stellar transaction hash
  */
-async function verifyByHash(
-  txHash: string,
-  expectedHash?: string,
-): Promise<VerifyResponse> {
+async function verifyByHash(txHash: string): Promise<VerifyResponse> {
   if (!validateTxHash(txHash)) {
     return {
       success: false,
@@ -128,39 +119,27 @@ async function verifyByHash(
   }
 
   try {
-    const result = await verifyPaymentOnStellar(txHash, "");
+    const transaction = await getTransactionByHash(txHash);
 
-    if (result.verified) {
-      // If expectedHash provided, verify it matches the memo
-      if (expectedHash && result.memoHash && result.memoHash !== expectedHash) {
-        return {
-          success: true,
-          verified: false,
-          error: "Transaction found but memo hash does not match expected hash",
-          txHash: result.txHash,
-          network: result.network,
-          explorerUrl: `${EXPLORER_URL}/${result.txHash}`,
-        };
-      }
-
+    if (!transaction) {
       return {
         success: true,
-        verified: true,
-        timestamp: result.timestamp,
-        network: result.network,
-        txHash: result.txHash,
-        explorerUrl: `${EXPLORER_URL}/${result.txHash}`,
-        memoHash: result.memoHash,
-        details: {
-          verifiedAt: new Date().toISOString(),
-        },
+        verified: false,
+        error: "Transaction not found on blockchain",
       };
     }
 
     return {
       success: true,
-      verified: false,
-      error: result.error || "Transaction not found or not verified",
+      verified: transaction.successful,
+      timestamp: transaction.createdAt,
+      network: STELLAR_NETWORK,
+      txHash: transaction.hash,
+      explorerUrl: `${EXPLORER_URL}/${transaction.hash}`,
+      memoHash: transaction.memoValue,
+      details: {
+        verifiedAt: new Date().toISOString(),
+      },
     };
   } catch (error) {
     console.error("[Verify API] Error verifying by hash:", error);
@@ -174,27 +153,16 @@ async function verifyByHash(
 
 /**
  * Verify a payment by receipt number
- * This reconstructs the expected hash and searches for matching anchors
  */
 async function verifyByReceipt(
   receiptNumber: string,
-  schoolId: string,
   amount?: number,
-  studentId?: string,
 ): Promise<VerifyResponse> {
   if (!validateReceiptNumber(receiptNumber)) {
     return {
       success: false,
       verified: false,
       error: "Invalid receipt number format",
-    };
-  }
-
-  if (!schoolId || schoolId.length < 3) {
-    return {
-      success: false,
-      verified: false,
-      error: "School ID is required",
     };
   }
 
@@ -205,51 +173,18 @@ async function verifyByReceipt(
 
     const result = await verifyByReceiptNumber(
       sanitizeInput(receiptNumber),
-      sanitizeInput(schoolId),
+      amount,
     );
 
-    if (result.verified && result.anchor) {
-      // If amount provided, verify it matches
-      if (amount !== undefined) {
-        // We need to recalculate the hash with the provided data
-        // to ensure the amount matches what was anchored
-        const proofString = JSON.stringify({
-          receiptNumber: sanitizeInput(receiptNumber),
-          schoolId: sanitizeInput(schoolId),
-          amount,
-          studentId: studentId ? sanitizeInput(studentId) : undefined,
-        });
-
-        const calculatedHash = CryptoJS.SHA256(proofString).toString();
-
-        // The calculated hash should be a prefix of the stored hash
-        // (since stored hash includes more data)
-        if (
-          !result.anchor.paymentHash.includes(calculatedHash.substring(0, 8))
-        ) {
-          return {
-            success: true,
-            verified: false,
-            error: "Receipt found but amount verification failed",
-            txHash: result.anchor.txHash || undefined,
-            network: result.anchor.network,
-          };
-        }
-      }
-
+    if (result.isVerified) {
       return {
         success: true,
         verified: true,
-        timestamp: result.anchor.anchoredAt || result.anchor.createdAt,
-        network: result.anchor.network,
-        txHash: result.anchor.txHash || undefined,
-        explorerUrl: result.anchor.txHash
-          ? `${EXPLORER_URL}/${result.anchor.txHash}`
-          : undefined,
-        memoHash: result.anchor.paymentHash,
+        timestamp: result.anchoredAt,
+        network: STELLAR_NETWORK,
+        explorerUrl: result.explorerUrl,
         details: {
           receiptNumber,
-          schoolId,
           amount,
           verifiedAt: new Date().toISOString(),
         },
@@ -259,7 +194,7 @@ async function verifyByReceipt(
     return {
       success: true,
       verified: false,
-      error: "No blockchain anchor found for this receipt",
+      error: result.message || "No blockchain anchor found for this receipt",
     };
   } catch (error) {
     console.error("[Verify API] Error verifying by receipt:", error);
@@ -277,7 +212,7 @@ async function verifyByReceipt(
 
 /**
  * GET /api/verify?type=hash&txHash=xxx
- * GET /api/verify?type=receipt&receiptNumber=xxx&schoolId=xxx
+ * GET /api/verify?type=receipt&receiptNumber=xxx&amount=xxx
  *
  * Public endpoint for verifying payments
  */
@@ -303,7 +238,6 @@ export async function GET(
 
   if (type === "hash") {
     const txHash = searchParams.get("txHash");
-    const expectedHash = searchParams.get("expectedHash");
 
     if (!txHash) {
       return NextResponse.json(
@@ -316,25 +250,20 @@ export async function GET(
       );
     }
 
-    const result = await verifyByHash(
-      sanitizeInput(txHash),
-      expectedHash || undefined,
-    );
+    const result = await verifyByHash(sanitizeInput(txHash));
     return NextResponse.json(result, { status: result.success ? 200 : 400 });
   }
 
   if (type === "receipt") {
     const receiptNumber = searchParams.get("receiptNumber");
-    const schoolId = searchParams.get("schoolId");
     const amount = searchParams.get("amount");
-    const studentId = searchParams.get("studentId");
 
-    if (!receiptNumber || !schoolId) {
+    if (!receiptNumber) {
       return NextResponse.json(
         {
           success: false,
           verified: false,
-          error: "receiptNumber and schoolId parameters are required",
+          error: "receiptNumber parameter is required",
         },
         { status: 400 },
       );
@@ -342,9 +271,7 @@ export async function GET(
 
     const result = await verifyByReceipt(
       sanitizeInput(receiptNumber),
-      sanitizeInput(schoolId),
       amount ? parseFloat(amount) : undefined,
-      studentId || undefined,
     );
     return NextResponse.json(result, { status: result.success ? 200 : 400 });
   }
@@ -396,20 +323,17 @@ export async function POST(
         );
       }
 
-      const result = await verifyByHash(
-        sanitizeInput(body.txHash),
-        body.expectedHash,
-      );
+      const result = await verifyByHash(sanitizeInput(body.txHash));
       return NextResponse.json(result, { status: result.success ? 200 : 400 });
     }
 
     if (body.type === "receipt") {
-      if (!body.receiptNumber || !body.schoolId) {
+      if (!body.receiptNumber) {
         return NextResponse.json(
           {
             success: false,
             verified: false,
-            error: "receiptNumber and schoolId are required",
+            error: "receiptNumber is required",
           },
           { status: 400 },
         );
@@ -417,9 +341,7 @@ export async function POST(
 
       const result = await verifyByReceipt(
         sanitizeInput(body.receiptNumber),
-        sanitizeInput(body.schoolId),
         body.amount,
-        body.studentId,
       );
       return NextResponse.json(result, { status: result.success ? 200 : 400 });
     }
@@ -455,7 +377,6 @@ export async function OPTIONS(): Promise<NextResponse> {
       status: health.isConnected ? "healthy" : "degraded",
       network: health.network,
       horizon: health.isConnected,
-      lastChecked: health.lastCheckedAt,
     },
     {
       status: 200,
