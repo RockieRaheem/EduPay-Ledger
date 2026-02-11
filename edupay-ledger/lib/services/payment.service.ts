@@ -22,8 +22,14 @@ import { Student, InstallmentProgress } from "@/types/student";
 import {
   anchorPaymentToStellar,
   queueForRetry,
-  PaymentProof,
+  createPaymentHash,
+  isStellarConfigured,
+  type PaymentProof,
 } from "@/lib/stellar";
+import {
+  anchorPayment as anchorPaymentWithDB,
+  type AnchorPriority,
+} from "@/lib/services/stellar.service";
 import { generateReceiptNumber, generatePaymentId } from "@/lib/utils";
 import {
   sendPaymentReceiptSMS,
@@ -39,6 +45,7 @@ export interface PaymentRecordResult {
     url?: string;
   };
   stellarTxHash?: string;
+  stellarAnchorId?: string;
   error?: string;
 }
 
@@ -172,32 +179,53 @@ export async function recordPayment(
 
     // 8. Post-transaction operations (non-critical)
 
-    // 8a. Anchor to Stellar blockchain
-    const proof: PaymentProof = {
-      paymentId: result.payment.id,
-      studentId: result.student.id,
-      schoolId,
-      amount: result.payment.amount,
-      currency: "UGX",
-      timestamp: new Date().toISOString(),
-      transactionRef: result.payment.transactionRef,
-      receiptNumber: result.payment.receiptNumber,
-    };
+    // 8a. Anchor to Stellar blockchain (with persistent tracking)
+    let stellarAnchorId: string | undefined;
 
-    const stellarResult = await anchorPaymentToStellar(proof);
+    if (isStellarConfigured()) {
+      const proof: PaymentProof = {
+        paymentId: result.payment.id,
+        studentId: result.student.id,
+        schoolId,
+        amount: result.payment.amount,
+        currency: "UGX",
+        timestamp: new Date().toISOString(),
+        transactionRef: result.payment.transactionRef,
+        receiptNumber: result.payment.receiptNumber,
+      };
 
-    if (stellarResult.success && stellarResult.txHash) {
-      // Update payment with Stellar hash
-      await updateDoc(doc(db, COLLECTIONS.PAYMENTS, result.payment.id), {
-        stellarTxHash: stellarResult.txHash,
-        stellarTimestamp: Timestamp.now(),
-        stellarAnchored: true,
-      });
-      result.payment.stellarTxHash = stellarResult.txHash;
-      result.payment.stellarAnchored = true;
-    } else {
-      // Queue for retry
-      queueForRetry(proof);
+      try {
+        // Use the enhanced database-backed anchoring service
+        // This creates a persistent record and handles retries automatically
+        const anchorResult = await anchorPaymentWithDB(proof, {
+          priority: AnchorPriority.HIGH,
+          syncToFirebase: true,
+        });
+
+        stellarAnchorId = anchorResult.anchorId;
+
+        if (anchorResult.success && anchorResult.txHash) {
+          // Update payment with Stellar hash
+          await updateDoc(doc(db, COLLECTIONS.PAYMENTS, result.payment.id), {
+            stellarTxHash: anchorResult.txHash,
+            stellarTimestamp: Timestamp.now(),
+            stellarAnchored: true,
+            stellarAnchorId: anchorResult.anchorId,
+          });
+          result.payment.stellarTxHash = anchorResult.txHash;
+          result.payment.stellarAnchored = true;
+        } else {
+          // Record is already queued for retry via anchorPaymentWithDB
+          // Just store the anchor ID reference
+          await updateDoc(doc(db, COLLECTIONS.PAYMENTS, result.payment.id), {
+            stellarAnchorId: anchorResult.anchorId,
+            stellarAnchored: false,
+          });
+        }
+      } catch (stellarError) {
+        // Non-critical: log but don't fail the payment
+        console.error("[Payment] Stellar anchoring error:", stellarError);
+      }
     }
 
     // 8b. Generate receipt
@@ -237,6 +265,7 @@ export async function recordPayment(
         url: receiptUrl,
       },
       stellarTxHash: result.payment.stellarTxHash,
+      stellarAnchorId,
     };
   } catch (error: any) {
     console.error("Payment recording failed:", error);

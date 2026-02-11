@@ -195,8 +195,8 @@ export async function processAnchor(
 
   // Get proof data if not provided
   if (!proof) {
-    proof = await getStoredProofData(anchor.id);
-    if (!proof) {
+    const storedProof = await getStoredProofData(anchor.id);
+    if (!storedProof) {
       const errorResult: StellarAnchorResult = {
         success: false,
         error: "Proof data not found",
@@ -208,6 +208,7 @@ export async function processAnchor(
       });
       return errorResult;
     }
+    proof = storedProof;
   }
 
   // Update status to processing
