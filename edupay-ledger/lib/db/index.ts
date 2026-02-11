@@ -143,6 +143,33 @@ export interface DBSyncQueue {
   createdAt: string;
 }
 
+/**
+ * Stellar Anchor Record
+ * Stores blockchain anchoring status for payments
+ */
+export interface DBStellarAnchor {
+  id: string;
+  paymentId: string;
+  receiptNumber: string;
+  schoolId: string;
+  proofHash: string;
+  status: "pending" | "processing" | "anchored" | "failed" | "verified";
+  priority: "low" | "normal" | "high" | "critical";
+  txHash?: string;
+  ledgerNumber?: number;
+  network: "TESTNET" | "MAINNET";
+  attempts: number;
+  maxAttempts: number;
+  lastAttemptAt?: string;
+  nextRetryAt?: string;
+  lastError?: string;
+  lastErrorCode?: string;
+  createdAt: string;
+  anchoredAt?: string;
+  verifiedAt?: string;
+  syncStatus: "synced" | "pending" | "conflict";
+}
+
 // Database class
 class EBursarDatabase extends Dexie {
   students!: Table<DBStudent>;
@@ -153,11 +180,28 @@ class EBursarDatabase extends Dexie {
   users!: Table<DBUser>;
   auditLogs!: Table<DBAuditLog>;
   syncQueue!: Table<DBSyncQueue>;
+  stellarAnchors!: Table<DBStellarAnchor>;
 
   constructor() {
     super("eBursar");
 
-    // Define database schema
+    // Define database schema - Version 2 adds Stellar anchors
+    this.version(2).stores({
+      students:
+        "id, studentId, className, status, syncStatus, guardianPhone, [className+status]",
+      payments:
+        "id, receiptNumber, studentId, paymentDate, termId, syncStatus, [studentId+termId]",
+      feeStructures:
+        "id, className, termId, academicYear, syncStatus, [className+termId+academicYear]",
+      installmentRules: "id, termId, academicYear, isActive, syncStatus",
+      schools: "id, code, syncStatus",
+      users: "id, email, role, schoolId, syncStatus",
+      auditLogs: "id, action, entity, entityId, userId, timestamp, syncStatus",
+      syncQueue: "id, table, recordId, createdAt",
+      stellarAnchors: "id, paymentId, receiptNumber, schoolId, status, priority, txHash, network, createdAt, anchoredAt, syncStatus, [status+priority], [schoolId+status]",
+    });
+
+    // Maintain backwards compatibility with version 1
     this.version(1).stores({
       students:
         "id, studentId, className, status, syncStatus, guardianPhone, [className+status]",
@@ -173,6 +217,7 @@ class EBursarDatabase extends Dexie {
     });
   }
 }
+
 
 // Create database instance
 export const db = new EBursarDatabase();

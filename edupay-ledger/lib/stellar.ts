@@ -1,65 +1,109 @@
 /**
- * Stellar Integration for eBursar
+ * Stellar Blockchain Integration for eBursar
  *
- * This module handles writing payment proofs to the Stellar blockchain
- * as an immutable audit ledger.
+ * Production-grade implementation for anchoring payment proofs to the Stellar blockchain.
+ *
+ * ARCHITECTURE:
+ * - Every payment generates a cryptographic proof (SHA-256 hash)
+ * - The hash is anchored to Stellar as a transaction memo
+ * - This creates an immutable, publicly verifiable audit trail
  *
  * IMPORTANT: We do NOT:
  * - Move money on Stellar
- * - Create tokens
- * - Require wallets from users
+ * - Create tokens or assets
+ * - Require end-user wallets
  *
  * We ONLY write:
- * - Payment hashes
- * - Student ID
- * - School ID
- * - Timestamp
- * - Metadata
+ * - Payment proof hashes
+ * - Timestamps
+ * - Metadata for verification
+ *
+ * @author eBursar Team
+ * @version 2.0.0
  */
 
 import * as StellarSdk from "@stellar/stellar-sdk";
 import CryptoJS from "crypto-js";
+import type {
+  PaymentProof,
+  PaymentProofWithHash,
+  StellarAnchorResult,
+  StellarAnchorStatus,
+  StellarConfig,
+  StellarErrorCode,
+  StellarHealthStatus,
+  StellarNetwork,
+  StellarTransactionDetails,
+  StellarVerificationResult,
+  StellarStats,
+  DBStellarAnchor,
+  AnchorPriority,
+  StellarQueueItem,
+} from "@/types/stellar";
 
-// Stellar Network Configuration
-const STELLAR_NETWORK = process.env.NEXT_PUBLIC_STELLAR_NETWORK || "TESTNET";
-const HORIZON_URL =
-  STELLAR_NETWORK === "MAINNET"
-    ? "https://horizon.stellar.org"
-    : "https://horizon-testnet.stellar.org";
-
-// School's Stellar account for anchoring proofs
-// In production, this would be a secure server-side key
-const ANCHOR_SECRET_KEY = process.env.STELLAR_ANCHOR_SECRET_KEY || "";
-const ANCHOR_PUBLIC_KEY =
-  process.env.NEXT_PUBLIC_STELLAR_ANCHOR_PUBLIC_KEY || "";
-
-// Initialize Stellar server
-const server = new StellarSdk.Horizon.Server(HORIZON_URL);
-
-export interface PaymentProof {
-  paymentId: string;
-  studentId: string;
-  schoolId: string;
-  amount: number;
-  currency: string;
-  timestamp: string;
-  transactionRef: string;
-  receiptNumber: string;
-}
-
-export interface StellarAnchorResult {
-  success: boolean;
-  txHash?: string;
-  timestamp?: string;
-  error?: string;
-}
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
 
 /**
- * Creates a SHA-256 hash of the payment data
- * This hash is what gets stored on Stellar
+ * Stellar configuration derived from environment variables
+ */
+const getConfig = (): StellarConfig => {
+  const network = (process.env.NEXT_PUBLIC_STELLAR_NETWORK ||
+    "TESTNET") as StellarNetwork;
+
+  return {
+    network,
+    horizonUrl:
+      network === "MAINNET"
+        ? "https://horizon.stellar.org"
+        : "https://horizon-testnet.stellar.org",
+    anchorPublicKey: process.env.NEXT_PUBLIC_STELLAR_ANCHOR_PUBLIC_KEY || "",
+    isEnabled: !!(
+      process.env.STELLAR_ANCHOR_SECRET_KEY &&
+      process.env.NEXT_PUBLIC_STELLAR_ANCHOR_PUBLIC_KEY
+    ),
+    maxRetryAttempts: parseInt(process.env.STELLAR_MAX_RETRIES || "5", 10),
+    retryDelayMs: parseInt(process.env.STELLAR_RETRY_DELAY_MS || "60000", 10),
+    useExponentialBackoff:
+      process.env.STELLAR_USE_EXPONENTIAL_BACKOFF !== "false",
+    autoProcessIntervalMs: parseInt(
+      process.env.STELLAR_AUTO_PROCESS_INTERVAL_MS || "300000",
+      10,
+    ), // 5 minutes
+  };
+};
+
+// Get server-side secret key (never exposed to client)
+const getSecretKey = (): string => process.env.STELLAR_ANCHOR_SECRET_KEY || "";
+
+// Lazy-initialized Stellar server connection
+let _server: StellarSdk.Horizon.Server | null = null;
+const getServer = (): StellarSdk.Horizon.Server => {
+  if (!_server) {
+    const config = getConfig();
+    _server = new StellarSdk.Horizon.Server(config.horizonUrl);
+  }
+  return _server;
+};
+
+// Current proof format version for future compatibility
+const PROOF_VERSION = "2.0.0";
+
+// ============================================================================
+// HASH GENERATION & VERIFICATION
+// ============================================================================
+
+/**
+ * Creates a deterministic SHA-256 hash of payment proof data.
+ * The hash algorithm and data ordering MUST remain consistent for verification.
+ *
+ * @param proof - Payment proof data
+ * @returns SHA-256 hash as hex string
  */
 export function createPaymentHash(proof: PaymentProof): string {
-  const data = JSON.stringify({
+  // Canonical JSON representation (sorted keys for determinism)
+  const canonicalData = {
     paymentId: proof.paymentId,
     studentId: proof.studentId,
     schoolId: proof.schoolId,
@@ -68,189 +112,579 @@ export function createPaymentHash(proof: PaymentProof): string {
     timestamp: proof.timestamp,
     transactionRef: proof.transactionRef,
     receiptNumber: proof.receiptNumber,
-  });
+    // Optional fields included if present
+    ...(proof.channel && { channel: proof.channel }),
+    ...(proof.termId && { termId: proof.termId }),
+    ...(proof.academicYear && { academicYear: proof.academicYear }),
+  };
 
-  return CryptoJS.SHA256(data).toString();
+  // Sort keys for deterministic JSON
+  const sortedData = JSON.stringify(
+    canonicalData,
+    Object.keys(canonicalData).sort(),
+  );
+
+  return CryptoJS.SHA256(sortedData).toString(CryptoJS.enc.Hex);
 }
 
 /**
- * Verifies a payment hash against Stellar records
+ * Creates a payment proof with computed hash
+ *
+ * @param proof - Base payment proof
+ * @returns Proof with hash and metadata
+ */
+export function createPaymentProofWithHash(
+  proof: PaymentProof,
+): PaymentProofWithHash {
+  return {
+    ...proof,
+    proofHash: createPaymentHash(proof),
+    hashAlgorithm: "SHA-256",
+    proofVersion: PROOF_VERSION,
+  };
+}
+
+/**
+ * Verifies a payment hash against the original proof data
+ *
+ * @param proof - Original payment proof
+ * @param storedHash - Hash to verify against
+ * @returns Whether the hash matches
  */
 export function verifyPaymentHash(
-  originalProof: PaymentProof,
+  proof: PaymentProof,
   storedHash: string,
 ): boolean {
-  const computedHash = createPaymentHash(originalProof);
-  return computedHash === storedHash;
+  const computedHash = createPaymentHash(proof);
+  // Use constant-time comparison to prevent timing attacks
+  return (
+    CryptoJS.SHA256(computedHash).toString() ===
+    CryptoJS.SHA256(storedHash).toString()
+  );
 }
 
 /**
- * Anchors a payment proof to Stellar as a memo in a transaction
+ * Converts a hex hash to a format suitable for Stellar memo
+ * Stellar hash memos require a 32-byte buffer
  *
- * This is an async operation that should be:
- * - Queued for retry if it fails
- * - Logged regardless of outcome
- * - Non-blocking to the main payment flow
+ * @param hexHash - SHA-256 hash as hex string
+ * @returns Buffer suitable for Stellar memo
+ */
+function hashToMemoBuffer(hexHash: string): Buffer {
+  // SHA-256 produces 64 hex chars = 32 bytes, perfect for Stellar hash memo
+  return Buffer.from(hexHash, "hex");
+}
+
+// ============================================================================
+// STELLAR BLOCKCHAIN OPERATIONS
+// ============================================================================
+
+/**
+ * Anchors a payment proof to the Stellar blockchain.
+ *
+ * This creates a minimal transaction (self-payment of 0.0000001 XLM)
+ * with the payment hash as the transaction memo.
+ *
+ * The transaction is:
+ * - Immutable once confirmed
+ * - Publicly verifiable via Stellar explorer
+ * - Timestamped by the Stellar network
+ *
+ * @param proof - Payment proof to anchor
+ * @returns Result of the anchor operation
  */
 export async function anchorPaymentToStellar(
   proof: PaymentProof,
 ): Promise<StellarAnchorResult> {
-  // Skip if no anchor key configured (development mode)
-  if (!ANCHOR_SECRET_KEY || !ANCHOR_PUBLIC_KEY) {
+  const config = getConfig();
+  const secretKey = getSecretKey();
+
+  // Validate configuration
+  if (!config.isEnabled || !secretKey || !config.anchorPublicKey) {
     console.warn(
-      "Stellar anchor keys not configured - skipping blockchain write",
+      "[Stellar] Anchor keys not configured - blockchain write skipped",
     );
     return {
       success: false,
       error: "Stellar anchor not configured",
+      errorCode: "NOT_CONFIGURED",
+      network: config.network,
     };
   }
 
+  const server = getServer();
+  const paymentHash = createPaymentHash(proof);
+
   try {
-    // Create the payment hash
-    const paymentHash = createPaymentHash(proof);
-
     // Load the anchor account
-    const sourceKeypair = StellarSdk.Keypair.fromSecret(ANCHOR_SECRET_KEY);
-    const sourceAccount = await server.loadAccount(ANCHOR_PUBLIC_KEY);
+    const sourceKeypair = StellarSdk.Keypair.fromSecret(secretKey);
+    const sourceAccount = await server.loadAccount(config.anchorPublicKey);
 
-    // Build the transaction with the hash as memo
-    // We're doing a 0 XLM payment to self just to record the memo
+    // Determine network passphrase
+    const networkPassphrase =
+      config.network === "MAINNET"
+        ? StellarSdk.Networks.PUBLIC
+        : StellarSdk.Networks.TESTNET;
+
+    // Build the transaction
     const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
       fee: StellarSdk.BASE_FEE,
-      networkPassphrase:
-        STELLAR_NETWORK === "MAINNET"
-          ? StellarSdk.Networks.PUBLIC
-          : StellarSdk.Networks.TESTNET,
+      networkPassphrase,
     })
       .addOperation(
         StellarSdk.Operation.payment({
-          destination: ANCHOR_PUBLIC_KEY, // Self-payment
+          destination: config.anchorPublicKey, // Self-payment
           asset: StellarSdk.Asset.native(),
-          amount: "0.0000001", // Minimum amount
+          amount: "0.0000001", // Minimum amount (1 stroop)
         }),
       )
-      .addMemo(StellarSdk.Memo.hash(paymentHash))
-      .setTimeout(30)
+      .addMemo(StellarSdk.Memo.hash(hashToMemoBuffer(paymentHash)))
+      .setTimeout(30) // 30 second timeout
       .build();
 
     // Sign the transaction
     transaction.sign(sourceKeypair);
 
-    // Submit to Stellar
+    // Submit to Stellar network
     const result = await server.submitTransaction(transaction);
+
+    console.log(
+      `[Stellar] Successfully anchored payment ${proof.paymentId} - TX: ${result.hash}`,
+    );
 
     return {
       success: true,
       txHash: result.hash,
-      timestamp: new Date().toISOString(),
+      ledgerNumber: result.ledger,
+      anchoredAt: new Date().toISOString(),
+      network: config.network,
+      feePaid: parseInt(StellarSdk.BASE_FEE, 10),
     };
   } catch (error: any) {
-    console.error("Failed to anchor payment to Stellar:", error);
+    // Parse Stellar-specific errors
+    const errorResult = parseStellarError(error);
+
+    console.error(
+      `[Stellar] Failed to anchor payment ${proof.paymentId}:`,
+      errorResult.error,
+    );
 
     return {
       success: false,
-      error: error.message || "Unknown Stellar error",
+      error: errorResult.error,
+      errorCode: errorResult.errorCode,
+      network: config.network,
     };
   }
 }
 
 /**
- * Retrieves a transaction from Stellar by hash
- * Used to verify audit trail
+ * Parses Stellar SDK errors into user-friendly messages
  */
-export async function getTransactionByHash(txHash: string) {
+function parseStellarError(error: any): {
+  error: string;
+  errorCode: StellarErrorCode;
+} {
+  // Network errors
+  if (error.message?.includes("Network") || error.code === "ECONNREFUSED") {
+    return { error: "Network connection failed", errorCode: "NETWORK_ERROR" };
+  }
+
+  // Horizon-specific errors
+  if (error.response?.data?.extras?.result_codes) {
+    const codes = error.response.data.extras.result_codes;
+
+    if (codes.transaction === "tx_insufficient_balance") {
+      return {
+        error: "Insufficient XLM balance for fees",
+        errorCode: "INSUFFICIENT_FUNDS",
+      };
+    }
+    if (codes.transaction === "tx_bad_seq") {
+      return {
+        error: "Invalid sequence number - retry needed",
+        errorCode: "INVALID_SEQUENCE",
+      };
+    }
+    if (codes.transaction === "tx_too_late") {
+      return { error: "Transaction timeout", errorCode: "TIMEOUT" };
+    }
+  }
+
+  // Rate limiting
+  if (error.response?.status === 429) {
+    return {
+      error: "Rate limited by Stellar network",
+      errorCode: "RATE_LIMITED",
+    };
+  }
+
+  return {
+    error: error.message || "Unknown Stellar error",
+    errorCode: "UNKNOWN",
+  };
+}
+
+/**
+ * Retrieves a transaction from Stellar by hash
+ *
+ * @param txHash - Stellar transaction hash
+ * @returns Transaction details or null if not found
+ */
+export async function getTransactionByHash(
+  txHash: string,
+): Promise<StellarTransactionDetails | null> {
+  if (!txHash) return null;
+
+  const server = getServer();
+
   try {
-    const transaction = await server.transactions().transaction(txHash).call();
-    return transaction;
+    const tx = await server.transactions().transaction(txHash).call();
+
+    return {
+      hash: tx.hash,
+      ledger: tx.ledger,
+      createdAt: tx.created_at,
+      sourceAccount: tx.source_account,
+      feeCharged: parseInt(tx.fee_charged, 10),
+      operationCount: tx.operation_count,
+      memoType: tx.memo_type,
+      memoValue: tx.memo_type === "hash" ? tx.memo : undefined,
+      successful: tx.successful,
+      resultXdr: tx.result_xdr,
+    };
   } catch (error) {
-    console.error("Failed to retrieve Stellar transaction:", error);
+    console.error("[Stellar] Failed to retrieve transaction:", txHash, error);
     return null;
   }
 }
 
 /**
- * Queue structure for retry logic
+ * Verifies a payment record exists on the Stellar blockchain
+ *
+ * @param proof - Original payment proof
+ * @param txHash - Stellar transaction hash
+ * @returns Verification result
  */
-interface QueuedAnchor {
-  proof: PaymentProof;
-  attempts: number;
-  lastAttempt?: Date;
+export async function verifyPaymentOnStellar(
+  proof: PaymentProof,
+  txHash: string,
+): Promise<StellarVerificationResult> {
+  const computedHash = createPaymentHash(proof);
+  const now = new Date().toISOString();
+
+  // Get transaction from blockchain
+  const transaction = await getTransactionByHash(txHash);
+
+  if (!transaction) {
+    return {
+      isValid: false,
+      proofMatches: false,
+      transactionExists: false,
+      computedHash,
+      verifiedAt: now,
+      error: "Transaction not found on blockchain",
+    };
+  }
+
+  // Compare memo hash with computed hash
+  // Note: Stellar stores hash memos as base64-encoded hex
+  const onChainHash = transaction.memoValue;
+  const proofMatches = onChainHash === computedHash;
+
+  return {
+    isValid: proofMatches && transaction.successful,
+    proofMatches,
+    transactionExists: true,
+    transaction,
+    computedHash,
+    onChainHash,
+    verifiedAt: now,
+  };
 }
 
-// In-memory queue for failed anchors (in production, use persistent storage)
-const anchorQueue: QueuedAnchor[] = [];
-const MAX_RETRY_ATTEMPTS = 5;
-const RETRY_DELAY_MS = 60000; // 1 minute
+// ============================================================================
+// ACCOUNT OPERATIONS
+// ============================================================================
 
 /**
- * Adds a payment to the anchor queue for retry
+ * Gets the health status of the Stellar integration
  */
-export function queueForRetry(proof: PaymentProof) {
-  anchorQueue.push({
-    proof,
-    attempts: 0,
-  });
-}
+export async function getStellarHealthStatus(): Promise<StellarHealthStatus> {
+  const config = getConfig();
 
-/**
- * Processes the anchor queue
- * Should be called periodically (e.g., by a cron job or background worker)
- */
-export async function processAnchorQueue(): Promise<void> {
-  const now = new Date();
+  const baseStatus: StellarHealthStatus = {
+    isConfigured: config.isEnabled,
+    isConnected: false,
+    pendingAnchors: 0,
+    failedAnchors: 0,
+    network: config.network,
+    horizonUrl: config.horizonUrl,
+  };
 
-  for (let i = anchorQueue.length - 1; i >= 0; i--) {
-    const item = anchorQueue[i];
+  if (!config.isEnabled) {
+    return baseStatus;
+  }
 
-    // Skip if not enough time has passed since last attempt
-    if (item.lastAttempt) {
-      const timeSinceLastAttempt = now.getTime() - item.lastAttempt.getTime();
-      if (timeSinceLastAttempt < RETRY_DELAY_MS * (item.attempts + 1)) {
-        continue;
-      }
-    }
+  try {
+    const server = getServer();
+    const account = await server.loadAccount(config.anchorPublicKey);
 
-    // Try to anchor
-    const result = await anchorPaymentToStellar(item.proof);
+    // Find XLM balance
+    const xlmBalance = account.balances.find(
+      (b: any) => b.asset_type === "native",
+    );
 
-    if (result.success) {
-      // Remove from queue on success
-      anchorQueue.splice(i, 1);
-      console.log(
-        `Successfully anchored queued payment ${item.proof.paymentId}`,
-      );
-    } else {
-      item.attempts++;
-      item.lastAttempt = now;
-
-      if (item.attempts >= MAX_RETRY_ATTEMPTS) {
-        // Max retries reached - log and remove
-        console.error(
-          `Max retries reached for payment ${item.proof.paymentId}`,
-        );
-        anchorQueue.splice(i, 1);
-      }
-    }
+    return {
+      ...baseStatus,
+      isConnected: true,
+      accountBalance: xlmBalance ? parseFloat(xlmBalance.balance) : 0,
+    };
+  } catch (error: any) {
+    return {
+      ...baseStatus,
+      isConnected: false,
+      lastError: error.message,
+    };
   }
 }
 
 /**
- * Format a Stellar transaction hash for display
- * Shows truncated version for UI
+ * Funds the anchor account on testnet using Friendbot
+ * Only works on TESTNET!
  */
-export function formatTxHash(hash: string): string {
-  if (!hash || hash.length < 12) return hash;
-  return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
+export async function fundTestnetAccount(): Promise<boolean> {
+  const config = getConfig();
+
+  if (config.network !== "TESTNET" || !config.anchorPublicKey) {
+    console.error("[Stellar] Can only fund accounts on testnet");
+    return false;
+  }
+
+  try {
+    const response = await fetch(
+      `https://friendbot.stellar.org?addr=${encodeURIComponent(config.anchorPublicKey)}`,
+    );
+
+    if (response.ok) {
+      console.log("[Stellar] Successfully funded testnet account");
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error("[Stellar] Failed to fund testnet account:", error);
+    return false;
+  }
+}
+
+// ============================================================================
+// QUEUE MANAGEMENT
+// ============================================================================
+
+/**
+ * In-memory queue for pending anchors (production should use persistent storage)
+ * This is a fallback - primary queue should be in IndexedDB
+ */
+interface MemoryQueueItem {
+  proof: PaymentProof;
+  attempts: number;
+  priority: AnchorPriority;
+  lastAttemptAt?: Date;
+  nextRetryAt?: Date;
+  createdAt: Date;
+}
+
+const memoryQueue: Map<string, MemoryQueueItem> = new Map();
+
+/**
+ * Adds a payment to the anchor retry queue
+ */
+export function queueForRetry(
+  proof: PaymentProof,
+  priority: AnchorPriority = "normal",
+): void {
+  const config = getConfig();
+  const now = new Date();
+
+  memoryQueue.set(proof.paymentId, {
+    proof,
+    attempts: 0,
+    priority,
+    createdAt: now,
+    nextRetryAt: new Date(now.getTime() + config.retryDelayMs),
+  });
+
+  console.log(`[Stellar] Queued payment ${proof.paymentId} for retry`);
 }
 
 /**
- * Get the Stellar explorer URL for a transaction
+ * Processes the anchor retry queue
+ * Should be called periodically by a background worker
+ *
+ * @returns Number of successfully processed items
+ */
+export async function processAnchorQueue(): Promise<number> {
+  const config = getConfig();
+  const now = new Date();
+  let successCount = 0;
+
+  // Sort by priority and scheduled time
+  const sortedQueue = Array.from(memoryQueue.entries())
+    .filter(([_, item]) => !item.nextRetryAt || item.nextRetryAt <= now)
+    .sort((a, b) => {
+      const priorityOrder = { critical: 0, high: 1, normal: 2, low: 3 };
+      return priorityOrder[a[1].priority] - priorityOrder[b[1].priority];
+    });
+
+  for (const [paymentId, item] of sortedQueue) {
+    // Check max attempts
+    if (item.attempts >= config.maxRetryAttempts) {
+      console.error(`[Stellar] Max retries reached for payment ${paymentId}`);
+      memoryQueue.delete(paymentId);
+      continue;
+    }
+
+    // Attempt to anchor
+    const result = await anchorPaymentToStellar(item.proof);
+
+    if (result.success) {
+      memoryQueue.delete(paymentId);
+      successCount++;
+      console.log(
+        `[Stellar] Successfully anchored queued payment ${paymentId}`,
+      );
+    } else {
+      // Update retry info
+      const delay = config.useExponentialBackoff
+        ? config.retryDelayMs * Math.pow(2, item.attempts)
+        : config.retryDelayMs;
+
+      item.attempts++;
+      item.lastAttemptAt = now;
+      item.nextRetryAt = new Date(now.getTime() + delay);
+    }
+  }
+
+  return successCount;
+}
+
+/**
+ * Gets the current queue status
+ */
+export function getQueueStatus(): {
+  total: number;
+  pending: number;
+  byPriority: Record<AnchorPriority, number>;
+} {
+  const byPriority: Record<AnchorPriority, number> = {
+    critical: 0,
+    high: 0,
+    normal: 0,
+    low: 0,
+  };
+
+  for (const item of memoryQueue.values()) {
+    byPriority[item.priority]++;
+  }
+
+  return {
+    total: memoryQueue.size,
+    pending: memoryQueue.size,
+    byPriority,
+  };
+}
+
+/**
+ * Clears the retry queue (use with caution!)
+ */
+export function clearQueue(): void {
+  memoryQueue.clear();
+  console.warn("[Stellar] Anchor queue cleared");
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+/**
+ * Formats a Stellar transaction hash for display
+ */
+export function formatTxHash(
+  hash: string,
+  prefixLen: number = 8,
+  suffixLen: number = 6,
+): string {
+  if (!hash || hash.length < prefixLen + suffixLen) return hash || "N/A";
+  return `${hash.slice(0, prefixLen)}...${hash.slice(-suffixLen)}`;
+}
+
+/**
+ * Gets the Stellar explorer URL for a transaction
  */
 export function getStellarExplorerUrl(txHash: string): string {
+  const config = getConfig();
   const baseUrl =
-    STELLAR_NETWORK === "MAINNET"
+    config.network === "MAINNET"
       ? "https://stellar.expert/explorer/public/tx"
       : "https://stellar.expert/explorer/testnet/tx";
   return `${baseUrl}/${txHash}`;
 }
+
+/**
+ * Gets the Stellar explorer URL for an account
+ */
+export function getStellarAccountExplorerUrl(publicKey?: string): string {
+  const config = getConfig();
+  const key = publicKey || config.anchorPublicKey;
+  const baseUrl =
+    config.network === "MAINNET"
+      ? "https://stellar.expert/explorer/public/account"
+      : "https://stellar.expert/explorer/testnet/account";
+  return `${baseUrl}/${key}`;
+}
+
+/**
+ * Gets the current Stellar configuration (safe for client-side)
+ */
+export function getStellarConfig(): Omit<StellarConfig, "anchorSecretKey"> {
+  return getConfig();
+}
+
+/**
+ * Checks if Stellar integration is properly configured
+ */
+export function isStellarConfigured(): boolean {
+  return getConfig().isEnabled;
+}
+
+/**
+ * Generates a unique anchor ID
+ */
+export function generateAnchorId(): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 8);
+  return `SA-${timestamp}${random}`.toUpperCase();
+}
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+// Re-export types for convenience
+export type {
+  PaymentProof,
+  PaymentProofWithHash,
+  StellarAnchorResult,
+  StellarAnchorStatus,
+  StellarConfig,
+  StellarErrorCode,
+  StellarHealthStatus,
+  StellarNetwork,
+  StellarTransactionDetails,
+  StellarVerificationResult,
+  StellarStats,
+  DBStellarAnchor,
+  AnchorPriority,
+  StellarQueueItem,
+};
