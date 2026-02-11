@@ -148,3 +148,18 @@ export {
   useClassPerformance,
   useTermReporting,
 } from "./useTermSummary";
+
+// Stellar Blockchain hooks
+export {
+  useStellar,
+  useStellarAnchor,
+  useStellarVerification,
+} from "./useStellar";
+export type {
+  UseStellarOptions,
+  UseStellarReturn,
+  UseStellarAnchorOptions,
+  UseStellarAnchorReturn,
+  UseStellarVerificationOptions,
+  UseStellarVerificationReturn,
+} from "./useStellar";
