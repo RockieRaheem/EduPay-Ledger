@@ -198,7 +198,8 @@ class EBursarDatabase extends Dexie {
       users: "id, email, role, schoolId, syncStatus",
       auditLogs: "id, action, entity, entityId, userId, timestamp, syncStatus",
       syncQueue: "id, table, recordId, createdAt",
-      stellarAnchors: "id, paymentId, receiptNumber, schoolId, status, priority, txHash, network, createdAt, anchoredAt, syncStatus, [status+priority], [schoolId+status]",
+      stellarAnchors:
+        "id, paymentId, receiptNumber, schoolId, status, priority, txHash, network, createdAt, anchoredAt, syncStatus, [status+priority], [schoolId+status]",
     });
 
     // Maintain backwards compatibility with version 1
@@ -217,7 +218,6 @@ class EBursarDatabase extends Dexie {
     });
   }
 }
-
 
 // Create database instance
 export const db = new EBursarDatabase();
