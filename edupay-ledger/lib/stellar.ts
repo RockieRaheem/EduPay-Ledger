@@ -341,9 +341,17 @@ export async function getTransactionByHash(
   try {
     const tx = await server.transactions().transaction(txHash).call();
 
+    // Parse ledger as number (Horizon returns it as number or ledger sequence)
+    const ledgerNum =
+      typeof tx.ledger === "number"
+        ? tx.ledger
+        : typeof tx.ledger_attr === "number"
+          ? tx.ledger_attr
+          : parseInt(String(tx.ledger), 10) || 0;
+
     return {
       hash: tx.hash,
-      ledger: tx.ledger,
+      ledger: ledgerNum,
       createdAt: tx.created_at,
       sourceAccount: tx.source_account,
       feeCharged: parseInt(tx.fee_charged, 10),
@@ -584,9 +592,10 @@ export function getQueueStatus(): {
     low: 0,
   };
 
-  for (const item of memoryQueue.values()) {
+  // Use Array.from to avoid downlevelIteration requirement
+  Array.from(memoryQueue.values()).forEach((item) => {
     byPriority[item.priority]++;
-  }
+  });
 
   return {
     total: memoryQueue.size,

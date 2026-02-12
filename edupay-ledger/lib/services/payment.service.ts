@@ -26,10 +26,7 @@ import {
   isStellarConfigured,
   type PaymentProof,
 } from "@/lib/stellar";
-import {
-  anchorPayment as anchorPaymentWithDB,
-  type AnchorPriority,
-} from "@/lib/services/stellar.service";
+import { anchorPayment as anchorPaymentWithDB } from "@/lib/services/stellar.service";
 import { generateReceiptNumber, generatePaymentId } from "@/lib/utils";
 import {
   sendPaymentReceiptSMS,
@@ -197,12 +194,12 @@ export async function recordPayment(
       try {
         // Use the enhanced database-backed anchoring service
         // This creates a persistent record and handles retries automatically
-        const anchorResult = await anchorPaymentWithDB(proof, {
-          priority: AnchorPriority.HIGH,
-          syncToFirebase: true,
-        });
+        const { anchor, result: anchorResult } = await anchorPaymentWithDB(
+          proof,
+          "high",
+        );
 
-        stellarAnchorId = anchorResult.anchorId;
+        stellarAnchorId = anchor.id;
 
         if (anchorResult.success && anchorResult.txHash) {
           // Update payment with Stellar hash
@@ -210,7 +207,7 @@ export async function recordPayment(
             stellarTxHash: anchorResult.txHash,
             stellarTimestamp: Timestamp.now(),
             stellarAnchored: true,
-            stellarAnchorId: anchorResult.anchorId,
+            stellarAnchorId: anchor.id,
           });
           result.payment.stellarTxHash = anchorResult.txHash;
           result.payment.stellarAnchored = true;
@@ -218,7 +215,7 @@ export async function recordPayment(
           // Record is already queued for retry via anchorPaymentWithDB
           // Just store the anchor ID reference
           await updateDoc(doc(db, COLLECTIONS.PAYMENTS, result.payment.id), {
-            stellarAnchorId: anchorResult.anchorId,
+            stellarAnchorId: anchor.id,
             stellarAnchored: false,
           });
         }
