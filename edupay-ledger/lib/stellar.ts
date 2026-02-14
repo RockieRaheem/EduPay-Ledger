@@ -354,7 +354,10 @@ export async function getTransactionByHash(
       ledger: ledgerNum,
       createdAt: tx.created_at,
       sourceAccount: tx.source_account,
-      feeCharged: parseInt(tx.fee_charged, 10),
+      feeCharged:
+        typeof tx.fee_charged === "number"
+          ? tx.fee_charged
+          : parseInt(String(tx.fee_charged), 10),
       operationCount: tx.operation_count,
       memoType: tx.memo_type,
       memoValue: tx.memo_type === "hash" ? tx.memo : undefined,

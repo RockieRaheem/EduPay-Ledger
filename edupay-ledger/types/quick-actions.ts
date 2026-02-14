@@ -11,6 +11,7 @@ export type QuickActionType =
   | "generate_report"
   | "add_student"
   | "view_arrears"
+  | "view_overdue"
   | "make_promise"
   | "send_statement"
   | "reconcile_payment"

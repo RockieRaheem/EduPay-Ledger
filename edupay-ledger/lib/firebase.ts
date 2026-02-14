@@ -151,18 +151,27 @@ let functions: Functions;
 let storage: FirebaseStorage;
 let analytics: Analytics | null = null;
 
+// Type for Firebase services bundle
+interface FirebaseServices {
+  app: FirebaseApp;
+  auth: Auth;
+  db: Firestore;
+  functions: Functions;
+  storage: FirebaseStorage;
+  analytics: Analytics | null;
+}
+
 /**
  * Initialize all Firebase services
  * Handles SSR (server-side rendering) and CSR (client-side rendering) appropriately
  */
-export function initializeFirebase() {
+export function initializeFirebase(): FirebaseServices {
   // Skip initialization if API key is not configured
   if (!firebaseConfig.apiKey) {
-    console.warn(
-      "Firebase API key not configured. Running in offline/mock mode.\n" +
+    throw new Error(
+      "Firebase API key not configured. " +
         "To enable Firebase, add NEXT_PUBLIC_FIREBASE_API_KEY to your .env.local file.",
     );
-    return;
   }
 
   if (getApps().length === 0) {
