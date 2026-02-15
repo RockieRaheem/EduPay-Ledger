@@ -233,3 +233,22 @@ export {
   getAttemptTypeDisplay,
   getOutcomeDisplay,
 } from "./useBadDebt";
+
+// Payment Promise Escalation hooks
+export {
+  useEscalationDashboard,
+  useEscalationPromises,
+  usePromiseEscalation,
+  useSMSActions,
+  useEscalationActions,
+  useEscalationPolicy,
+  useSMSTemplates,
+  useEscalationBatch,
+  useGuardianCommunication,
+  useOverduePromises as useEscalationOverduePromises,
+  useUrgentPromises as useEscalationUrgentPromises,
+  getStageInfo,
+  getTemplateDescription,
+  calculateDaysOverdue,
+  formatUgandaPhone,
+} from "./useEscalation";

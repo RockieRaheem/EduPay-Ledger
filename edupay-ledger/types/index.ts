@@ -8,3 +8,4 @@ export * from "./carry-forward";
 export * from "./daily-reports";
 export * from "./term-comparison";
 export * from "./bad-debt";
+export * from "./escalation";
