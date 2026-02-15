@@ -252,3 +252,23 @@ export {
   calculateDaysOverdue,
   formatUgandaPhone,
 } from "./useEscalation";
+
+// WhatsApp Integration hooks
+export {
+  useWhatsAppConfig,
+  useWhatsAppDashboard,
+  useWhatsAppSender,
+  useWhatsAppTemplates,
+  useWhatsAppAnalytics,
+  useScheduledMessages,
+  useWhatsAppSession,
+  useCommandPreview,
+  usePhoneValidation,
+  useBulkRecipients,
+  parseCommand,
+  formatPhoneForWhatsApp,
+  isValidUgandaPhone,
+  getMessageStatusDisplay,
+  generateHelpMessage,
+  COMMAND_DEFINITIONS,
+} from "./useWhatsApp";
