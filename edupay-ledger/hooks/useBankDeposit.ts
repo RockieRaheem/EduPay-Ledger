@@ -9,7 +9,7 @@
  * - Reconciliation
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   BankDepositSlip,
   CashDenominations,
@@ -31,7 +31,7 @@ import {
   getBankInfo,
   getDepositStatusInfo,
   generateSlipNumber,
-} from '@/types/bank-deposit';
+} from "@/types/bank-deposit";
 import {
   getBankAccounts,
   getDefaultBankAccount,
@@ -56,7 +56,7 @@ import {
   getDailyCashCollection,
   startReconciliation,
   getMockDepositDashboard,
-} from '@/lib/services/bank-deposit.service';
+} from "@/lib/services/bank-deposit.service";
 
 // Re-export helper functions
 export {
@@ -77,21 +77,23 @@ export {
  * Hook for deposit dashboard summary
  */
 export function useDepositDashboard(schoolId: string) {
-  const [dashboard, setDashboard] = useState<ReturnType<typeof getMockDepositDashboard> | null>(null);
+  const [dashboard, setDashboard] = useState<ReturnType<
+    typeof getMockDepositDashboard
+  > | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboard = useCallback(async () => {
     if (!schoolId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = getMockDepositDashboard();
       setDashboard(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+      setError(err instanceof Error ? err.message : "Failed to load dashboard");
     } finally {
       setLoading(false);
     }
@@ -123,15 +125,17 @@ export function useBankAccounts(schoolId: string) {
 
   const fetchAccounts = useCallback(async () => {
     if (!schoolId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await getBankAccounts(schoolId);
       setAccounts(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load bank accounts');
+      setError(
+        err instanceof Error ? err.message : "Failed to load bank accounts",
+      );
     } finally {
       setLoading(false);
     }
@@ -143,51 +147,66 @@ export function useBankAccounts(schoolId: string) {
 
   // Get default account
   const defaultAccount = useMemo(() => {
-    return accounts.find(a => a.isDefault && a.isActive) || accounts[0];
+    return accounts.find((a) => a.isDefault && a.isActive) || accounts[0];
   }, [accounts]);
 
   // Group by bank
   const byBank = useMemo(() => {
-    const grouped: Record<UgandaBank, SchoolBankAccount[]> = {} as Record<UgandaBank, SchoolBankAccount[]>;
-    
+    const grouped: Record<UgandaBank, SchoolBankAccount[]> = {} as Record<
+      UgandaBank,
+      SchoolBankAccount[]
+    >;
+
     for (const account of accounts) {
       if (!grouped[account.bank]) {
         grouped[account.bank] = [];
       }
       grouped[account.bank].push(account);
     }
-    
+
     return grouped;
   }, [accounts]);
 
   // Create account
-  const create = useCallback(async (
-    account: Omit<SchoolBankAccount, 'id' | 'createdAt' | 'updatedAt'>
-  ): Promise<SchoolBankAccount | null> => {
-    try {
-      const newAccount = await createBankAccount(account);
-      setAccounts(prev => [...prev, newAccount]);
-      return newAccount;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create account');
-      return null;
-    }
-  }, []);
+  const create = useCallback(
+    async (
+      account: Omit<SchoolBankAccount, "id" | "createdAt" | "updatedAt">,
+    ): Promise<SchoolBankAccount | null> => {
+      try {
+        const newAccount = await createBankAccount(account);
+        setAccounts((prev) => [...prev, newAccount]);
+        return newAccount;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to create account",
+        );
+        return null;
+      }
+    },
+    [],
+  );
 
   // Update account
-  const update = useCallback(async (
-    accountId: string,
-    updates: Partial<SchoolBankAccount>
-  ): Promise<boolean> => {
-    try {
-      const updated = await updateBankAccount(accountId, updates);
-      setAccounts(prev => prev.map(a => a.id === accountId ? updated : a));
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update account');
-      return false;
-    }
-  }, []);
+  const update = useCallback(
+    async (
+      accountId: string,
+      updates: Partial<SchoolBankAccount>,
+    ): Promise<boolean> => {
+      try {
+        const updated = await updateBankAccount(accountId, updates);
+        setAccounts((prev) =>
+          prev.map((a) => (a.id === accountId ? updated : a)),
+        );
+        return true;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to update account",
+        );
+        return false;
+      }
+    },
+    [],
+  );
 
   return {
     accounts,
@@ -216,12 +235,14 @@ export function useDepositSlips(query: DepositSlipQuery) {
   const fetchSlips = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await queryDepositSlips(query);
       setSlips(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load deposit slips');
+      setError(
+        err instanceof Error ? err.message : "Failed to load deposit slips",
+      );
     } finally {
       setLoading(false);
     }
@@ -242,21 +263,26 @@ export function useDepositSlips(query: DepositSlipQuery) {
       discrepancy: [],
       cancelled: [],
     };
-    
+
     for (const slip of slips) {
       grouped[slip.status].push(slip);
     }
-    
+
     return grouped;
   }, [slips]);
 
   // Totals
-  const totals = useMemo(() => ({
-    count: slips.length,
-    amount: slips.reduce((sum, s) => sum + s.depositAmount, 0),
-    pending: slips.filter(s => s.status === 'pending').reduce((sum, s) => sum + s.depositAmount, 0),
-    discrepancies: slips.filter(s => s.hasDiscrepancy).length,
-  }), [slips]);
+  const totals = useMemo(
+    () => ({
+      count: slips.length,
+      amount: slips.reduce((sum, s) => sum + s.depositAmount, 0),
+      pending: slips
+        .filter((s) => s.status === "pending")
+        .reduce((sum, s) => sum + s.depositAmount, 0),
+      discrepancies: slips.filter((s) => s.hasDiscrepancy).length,
+    }),
+    [slips],
+  );
 
   return {
     slips,
@@ -282,15 +308,17 @@ export function useDepositSlip(slipId: string) {
 
   const fetchSlip = useCallback(async () => {
     if (!slipId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await getDepositSlip(slipId);
       setSlip(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load deposit slip');
+      setError(
+        err instanceof Error ? err.message : "Failed to load deposit slip",
+      );
     } finally {
       setLoading(false);
     }
@@ -308,7 +336,7 @@ export function useDepositSlip(slipId: string) {
 
   // Validation
   const validation = useMemo(() => {
-    if (!slip) return { valid: false, errors: ['No slip loaded'] };
+    if (!slip) return { valid: false, errors: ["No slip loaded"] };
     return validateSlipForDeposit(slip);
   }, [slip]);
 
@@ -340,47 +368,52 @@ export function useDepositSlipCreation(schoolId: string) {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPayments, setSelectedPayments] = useState<string[]>([]);
-  const [selectedBank, setSelectedBank] = useState<string>('');
+  const [selectedBank, setSelectedBank] = useState<string>("");
 
   // Create slip
-  const create = useCallback(async (
-    depositDate: Date,
-    paymentIds: string[],
-    depositorId: string,
-    depositorName: string,
-    bankAccountId: string,
-    notes?: string
-  ): Promise<BankDepositSlip | null> => {
-    setCreating(true);
-    setError(null);
-    
-    try {
-      const slip = await createDepositSlip({
-        schoolId,
-        bankAccountId,
-        depositDate,
-        paymentIds,
-        depositorId,
-        depositorName,
-        notes,
-      });
-      
-      setSelectedPayments([]);
-      return slip;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create deposit slip');
-      return null;
-    } finally {
-      setCreating(false);
-    }
-  }, [schoolId]);
+  const create = useCallback(
+    async (
+      depositDate: Date,
+      paymentIds: string[],
+      depositorId: string,
+      depositorName: string,
+      bankAccountId: string,
+      notes?: string,
+    ): Promise<BankDepositSlip | null> => {
+      setCreating(true);
+      setError(null);
+
+      try {
+        const slip = await createDepositSlip({
+          schoolId,
+          bankAccountId,
+          depositDate,
+          paymentIds,
+          depositorId,
+          depositorName,
+          notes,
+        });
+
+        setSelectedPayments([]);
+        return slip;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to create deposit slip",
+        );
+        return null;
+      } finally {
+        setCreating(false);
+      }
+    },
+    [schoolId],
+  );
 
   // Toggle payment selection
   const togglePayment = useCallback((paymentId: string) => {
-    setSelectedPayments(prev => 
+    setSelectedPayments((prev) =>
       prev.includes(paymentId)
-        ? prev.filter(id => id !== paymentId)
-        : [...prev, paymentId]
+        ? prev.filter((id) => id !== paymentId)
+        : [...prev, paymentId],
     );
   }, []);
 
@@ -404,9 +437,11 @@ export function useDepositSlipCreation(schoolId: string) {
 /**
  * Hook for cash denomination calculator
  */
-export function useDenominationCalculator(initialDenominations?: CashDenominations) {
+export function useDenominationCalculator(
+  initialDenominations?: CashDenominations,
+) {
   const [denominations, setDenominations] = useState<CashDenominations>(
-    initialDenominations || getEmptyDenominations()
+    initialDenominations || getEmptyDenominations(),
   );
 
   // Calculate total
@@ -420,15 +455,15 @@ export function useDenominationCalculator(initialDenominations?: CashDenominatio
   }, [denominations]);
 
   // Update single denomination
-  const updateDenomination = useCallback((
-    key: keyof CashDenominations,
-    value: number
-  ) => {
-    setDenominations(prev => ({
-      ...prev,
-      [key]: Math.max(0, value),
-    }));
-  }, []);
+  const updateDenomination = useCallback(
+    (key: keyof CashDenominations, value: number) => {
+      setDenominations((prev) => ({
+        ...prev,
+        [key]: Math.max(0, value),
+      }));
+    },
+    [],
+  );
 
   // Reset all
   const reset = useCallback(() => {
@@ -439,27 +474,27 @@ export function useDenominationCalculator(initialDenominations?: CashDenominatio
   const fillToTarget = useCallback((targetAmount: number) => {
     let remaining = targetAmount;
     const newDenom: CashDenominations = getEmptyDenominations();
-    
+
     // Fill from largest to smallest
     const denomValues: [keyof CashDenominations, number][] = [
-      ['notes_50000', 50000],
-      ['notes_20000', 20000],
-      ['notes_10000', 10000],
-      ['notes_5000', 5000],
-      ['notes_2000', 2000],
-      ['notes_1000', 1000],
-      ['coins_500', 500],
-      ['coins_200', 200],
-      ['coins_100', 100],
-      ['coins_50', 50],
+      ["notes_50000", 50000],
+      ["notes_20000", 20000],
+      ["notes_10000", 10000],
+      ["notes_5000", 5000],
+      ["notes_2000", 2000],
+      ["notes_1000", 1000],
+      ["coins_500", 500],
+      ["coins_200", 200],
+      ["coins_100", 100],
+      ["coins_50", 50],
     ];
-    
+
     for (const [key, value] of denomValues) {
       const count = Math.floor(remaining / value);
       newDenom[key] = count;
       remaining -= count * value;
     }
-    
+
     setDenominations(newDenom);
     return remaining; // Returns any remainder that couldn't be filled
   }, []);
@@ -488,56 +523,61 @@ export function useDepositSlipActions() {
   const [lastAction, setLastAction] = useState<string | null>(null);
 
   // Update denominations
-  const saveDenominations = useCallback(async (
-    slipId: string,
-    denominations: CashDenominations
-  ): Promise<boolean> => {
-    setProcessing(true);
-    setError(null);
-    
-    try {
-      await updateDenominations(slipId, denominations);
-      setLastAction('Denominations saved');
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save denominations');
-      return false;
-    } finally {
-      setProcessing(false);
-    }
-  }, []);
+  const saveDenominations = useCallback(
+    async (
+      slipId: string,
+      denominations: CashDenominations,
+    ): Promise<boolean> => {
+      setProcessing(true);
+      setError(null);
+
+      try {
+        await updateDenominations(slipId, denominations);
+        setLastAction("Denominations saved");
+        return true;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to save denominations",
+        );
+        return false;
+      } finally {
+        setProcessing(false);
+      }
+    },
+    [],
+  );
 
   // Add cheques
-  const saveCheques = useCallback(async (
-    slipId: string,
-    cheques: ChequeDetail[]
-  ): Promise<boolean> => {
-    setProcessing(true);
-    setError(null);
-    
-    try {
-      await addCheques(slipId, cheques);
-      setLastAction('Cheques added');
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add cheques');
-      return false;
-    } finally {
-      setProcessing(false);
-    }
-  }, []);
+  const saveCheques = useCallback(
+    async (slipId: string, cheques: ChequeDetail[]): Promise<boolean> => {
+      setProcessing(true);
+      setError(null);
+
+      try {
+        await addCheques(slipId, cheques);
+        setLastAction("Cheques added");
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to add cheques");
+        return false;
+      } finally {
+        setProcessing(false);
+      }
+    },
+    [],
+  );
 
   // Mark ready for deposit
   const markReady = useCallback(async (slipId: string): Promise<boolean> => {
     setProcessing(true);
     setError(null);
-    
+
     try {
       await markReadyForDeposit(slipId);
-      setLastAction('Slip marked ready for deposit');
+      setLastAction("Slip marked ready for deposit");
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Validation failed');
+      setError(err instanceof Error ? err.message : "Validation failed");
       return false;
     } finally {
       setProcessing(false);
@@ -545,86 +585,94 @@ export function useDepositSlipActions() {
   }, []);
 
   // Mark deposited
-  const deposit = useCallback(async (
-    slipId: string,
-    bankReference?: string
-  ): Promise<boolean> => {
-    setProcessing(true);
-    setError(null);
-    
-    try {
-      await markDeposited(slipId, bankReference);
-      setLastAction('Deposit recorded');
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to record deposit');
-      return false;
-    } finally {
-      setProcessing(false);
-    }
-  }, []);
+  const deposit = useCallback(
+    async (slipId: string, bankReference?: string): Promise<boolean> => {
+      setProcessing(true);
+      setError(null);
+
+      try {
+        await markDeposited(slipId, bankReference);
+        setLastAction("Deposit recorded");
+        return true;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to record deposit",
+        );
+        return false;
+      } finally {
+        setProcessing(false);
+      }
+    },
+    [],
+  );
 
   // Confirm receipt
-  const confirm = useCallback(async (
-    slipId: string,
-    confirmedAmount: number,
-    bankReference: string
-  ): Promise<boolean> => {
-    setProcessing(true);
-    setError(null);
-    
-    try {
-      await confirmBankReceipt(slipId, confirmedAmount, bankReference);
-      setLastAction('Bank confirmation recorded');
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to confirm');
-      return false;
-    } finally {
-      setProcessing(false);
-    }
-  }, []);
+  const confirm = useCallback(
+    async (
+      slipId: string,
+      confirmedAmount: number,
+      bankReference: string,
+    ): Promise<boolean> => {
+      setProcessing(true);
+      setError(null);
+
+      try {
+        await confirmBankReceipt(slipId, confirmedAmount, bankReference);
+        setLastAction("Bank confirmation recorded");
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to confirm");
+        return false;
+      } finally {
+        setProcessing(false);
+      }
+    },
+    [],
+  );
 
   // Resolve discrepancy
-  const resolve = useCallback(async (
-    slipId: string,
-    reason: string,
-    userId: string
-  ): Promise<boolean> => {
-    setProcessing(true);
-    setError(null);
-    
-    try {
-      await resolveDiscrepancy(slipId, reason, userId);
-      setLastAction('Discrepancy resolved');
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to resolve');
-      return false;
-    } finally {
-      setProcessing(false);
-    }
-  }, []);
+  const resolve = useCallback(
+    async (
+      slipId: string,
+      reason: string,
+      userId: string,
+    ): Promise<boolean> => {
+      setProcessing(true);
+      setError(null);
+
+      try {
+        await resolveDiscrepancy(slipId, reason, userId);
+        setLastAction("Discrepancy resolved");
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to resolve");
+        return false;
+      } finally {
+        setProcessing(false);
+      }
+    },
+    [],
+  );
 
   // Cancel slip
-  const cancel = useCallback(async (
-    slipId: string,
-    reason: string
-  ): Promise<boolean> => {
-    setProcessing(true);
-    setError(null);
-    
-    try {
-      await cancelDepositSlip(slipId, reason);
-      setLastAction('Deposit slip cancelled');
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to cancel');
-      return false;
-    } finally {
-      setProcessing(false);
-    }
-  }, []);
+  const cancel = useCallback(
+    async (slipId: string, reason: string): Promise<boolean> => {
+      setProcessing(true);
+      setError(null);
+
+      try {
+        await cancelDepositSlip(slipId, reason);
+        setLastAction("Deposit slip cancelled");
+        return true;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to cancel");
+        return false;
+      } finally {
+        setProcessing(false);
+      }
+    },
+    [],
+  );
 
   return {
     processing,
@@ -654,24 +702,29 @@ export function useDepositSlipPrint() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const preparePrint = useCallback(async (
-    slipId: string,
-    printedBy: string
-  ): Promise<DepositSlipPrintData | null> => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const data = await generatePrintData(slipId, printedBy);
-      setPrintData(data);
-      return data;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to prepare print');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const preparePrint = useCallback(
+    async (
+      slipId: string,
+      printedBy: string,
+    ): Promise<DepositSlipPrintData | null> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const data = await generatePrintData(slipId, printedBy);
+        setPrintData(data);
+        return data;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to prepare print",
+        );
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   const print = useCallback(() => {
     if (!printData) return;
@@ -703,15 +756,15 @@ export function useSlipSettings(schoolId: string) {
 
   const fetchSettings = useCallback(async () => {
     if (!schoolId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await getSlipSettings(schoolId);
       setSettings(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load settings');
+      setError(err instanceof Error ? err.message : "Failed to load settings");
     } finally {
       setLoading(false);
     }
@@ -722,25 +775,28 @@ export function useSlipSettings(schoolId: string) {
   }, [fetchSettings]);
 
   // Update settings
-  const update = useCallback(async (
-    updates: Partial<SlipSettings>
-  ): Promise<boolean> => {
-    if (!schoolId) return false;
-    
-    setSaving(true);
-    setError(null);
-    
-    try {
-      const updated = await updateSlipSettings(schoolId, updates);
-      setSettings(updated);
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update settings');
-      return false;
-    } finally {
-      setSaving(false);
-    }
-  }, [schoolId]);
+  const update = useCallback(
+    async (updates: Partial<SlipSettings>): Promise<boolean> => {
+      if (!schoolId) return false;
+
+      setSaving(true);
+      setError(null);
+
+      try {
+        const updated = await updateSlipSettings(schoolId, updates);
+        setSettings(updated);
+        return true;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to update settings",
+        );
+        return false;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [schoolId],
+  );
 
   return {
     settings,
@@ -761,7 +817,7 @@ export function useSlipSettings(schoolId: string) {
  */
 export function useDepositSummary(
   schoolId: string,
-  period: 'daily' | 'weekly' | 'monthly' = 'daily'
+  period: "daily" | "weekly" | "monthly" = "daily",
 ) {
   const [summary, setSummary] = useState<DepositSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -770,15 +826,19 @@ export function useDepositSummary(
 
   const fetchSummary = useCallback(async () => {
     if (!schoolId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
-      const data = await getDepositSummary(schoolId, selectedPeriod, new Date());
+      const data = await getDepositSummary(
+        schoolId,
+        selectedPeriod,
+        new Date(),
+      );
       setSummary(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load summary');
+      setError(err instanceof Error ? err.message : "Failed to load summary");
     } finally {
       setLoading(false);
     }
@@ -791,9 +851,9 @@ export function useDepositSummary(
   // Chart data
   const chartData = useMemo(() => {
     if (!summary) return null;
-    
+
     return {
-      byBank: summary.byBank.map(b => ({
+      byBank: summary.byBank.map((b) => ({
         name: getBankInfo(b.bank).shortName,
         amount: b.amount,
         count: b.count,
@@ -827,21 +887,25 @@ export function useDepositSummary(
  * Hook for daily cash collection status
  */
 export function useDailyCash(schoolId: string, date: Date = new Date()) {
-  const [collection, setCollection] = useState<DailyCashCollection | null>(null);
+  const [collection, setCollection] = useState<DailyCashCollection | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchCollection = useCallback(async () => {
     if (!schoolId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await getDailyCashCollection(schoolId, date);
       setCollection(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load collection');
+      setError(
+        err instanceof Error ? err.message : "Failed to load collection",
+      );
     } finally {
       setLoading(false);
     }
@@ -879,25 +943,33 @@ export function useDepositBatch(schoolId: string) {
   const [error, setError] = useState<string | null>(null);
 
   // Create batch
-  const createBatch = useCallback(async (
-    batchDate: Date,
-    userId: string,
-    userName: string
-  ): Promise<DepositBatch | null> => {
-    setCreating(true);
-    setError(null);
-    
-    try {
-      const newBatch = await createDepositBatch(schoolId, batchDate, userId, userName);
-      setBatch(newBatch);
-      return newBatch;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create batch');
-      return null;
-    } finally {
-      setCreating(false);
-    }
-  }, [schoolId]);
+  const createBatch = useCallback(
+    async (
+      batchDate: Date,
+      userId: string,
+      userName: string,
+    ): Promise<DepositBatch | null> => {
+      setCreating(true);
+      setError(null);
+
+      try {
+        const newBatch = await createDepositBatch(
+          schoolId,
+          batchDate,
+          userId,
+          userName,
+        );
+        setBatch(newBatch);
+        return newBatch;
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to create batch");
+        return null;
+      } finally {
+        setCreating(false);
+      }
+    },
+    [schoolId],
+  );
 
   return {
     batch,
@@ -916,47 +988,62 @@ export function useDepositBatch(schoolId: string) {
  * Hook for deposit reconciliation
  */
 export function useDepositReconciliation(schoolId: string) {
-  const [reconciliation, setReconciliation] = useState<DepositReconciliation | null>(null);
+  const [reconciliation, setReconciliation] =
+    useState<DepositReconciliation | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Start reconciliation
-  const start = useCallback(async (
-    periodStart: Date,
-    periodEnd: Date,
-    userId: string,
-    userName: string
-  ): Promise<DepositReconciliation | null> => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const recon = await startReconciliation(schoolId, periodStart, periodEnd, userId, userName);
-      setReconciliation(recon);
-      return recon;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start reconciliation');
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [schoolId]);
+  const start = useCallback(
+    async (
+      periodStart: Date,
+      periodEnd: Date,
+      userId: string,
+      userName: string,
+    ): Promise<DepositReconciliation | null> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const recon = await startReconciliation(
+          schoolId,
+          periodStart,
+          periodEnd,
+          userId,
+          userName,
+        );
+        setReconciliation(recon);
+        return recon;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to start reconciliation",
+        );
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [schoolId],
+  );
 
   // Summary stats
   const stats = useMemo(() => {
     if (!reconciliation) return null;
-    
+
     return {
-      matchRate: reconciliation.totalSlips > 0
-        ? (reconciliation.reconciledSlips / reconciliation.totalSlips) * 100
-        : 0,
-      discrepancyRate: reconciliation.totalSlips > 0
-        ? (reconciliation.discrepancySlips / reconciliation.totalSlips) * 100
-        : 0,
+      matchRate:
+        reconciliation.totalSlips > 0
+          ? (reconciliation.reconciledSlips / reconciliation.totalSlips) * 100
+          : 0,
+      discrepancyRate:
+        reconciliation.totalSlips > 0
+          ? (reconciliation.discrepancySlips / reconciliation.totalSlips) * 100
+          : 0,
       variance: reconciliation.difference,
-      variancePercent: reconciliation.expectedDeposits > 0
-        ? (reconciliation.difference / reconciliation.expectedDeposits) * 100
-        : 0,
+      variancePercent:
+        reconciliation.expectedDeposits > 0
+          ? (reconciliation.difference / reconciliation.expectedDeposits) * 100
+          : 0,
     };
   }, [reconciliation]);
 

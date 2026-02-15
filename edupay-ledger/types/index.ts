@@ -10,3 +10,4 @@ export * from "./term-comparison";
 export * from "./bad-debt";
 export * from "./escalation";
 export * from "./whatsapp";
+export * from "./bank-deposit";

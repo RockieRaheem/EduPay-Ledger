@@ -272,3 +272,27 @@ export {
   generateHelpMessage,
   COMMAND_DEFINITIONS,
 } from "./useWhatsApp";
+
+// Bank Deposit Slip hooks
+export {
+  useDepositDashboard,
+  useBankAccounts,
+  useDepositSlips,
+  useDepositSlip,
+  useDepositSlipCreation,
+  useDenominationCalculator,
+  useDepositSlipActions,
+  useDepositSlipPrint,
+  useSlipSettings,
+  useDepositSummary,
+  useDailyCash,
+  useDepositBatch,
+  useDepositReconciliation,
+  calculateDenominationTotal,
+  formatDenominationBreakdown,
+  getEmptyDenominations,
+  validateSlipForDeposit,
+  getBankInfo,
+  getDepositStatusInfo,
+  generateSlipNumber,
+} from "./useBankDeposit";
