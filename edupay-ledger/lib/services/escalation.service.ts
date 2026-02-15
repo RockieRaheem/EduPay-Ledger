@@ -9,7 +9,7 @@
  * - Exam clearance blocking
  */
 
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from "firebase/firestore";
 import {
   PromiseWithEscalation,
   EscalationNotification,
@@ -31,7 +31,7 @@ import {
   getDefaultSMSTemplate,
   formatUgandaPhone,
   PromiseNote,
-} from '@/types/escalation';
+} from "@/types/escalation";
 
 // ============================================================================
 // ESCALATION POLICY MANAGEMENT
@@ -40,7 +40,9 @@ import {
 /**
  * Get escalation policy for school
  */
-export async function getEscalationPolicy(schoolId: string): Promise<EscalationPolicy> {
+export async function getEscalationPolicy(
+  schoolId: string,
+): Promise<EscalationPolicy> {
   // Mock implementation - would fetch from Firestore
   return getMockPolicy(schoolId);
 }
@@ -51,20 +53,20 @@ export async function getEscalationPolicy(schoolId: string): Promise<EscalationP
 export async function updateEscalationPolicy(
   schoolId: string,
   updates: Partial<EscalationPolicy>,
-  userId: string
+  userId: string,
 ): Promise<EscalationPolicy> {
   const current = await getEscalationPolicy(schoolId);
-  
+
   const updated: EscalationPolicy = {
     ...current,
     ...updates,
     updatedAt: Timestamp.now(),
     updatedBy: userId,
   };
-  
+
   // Would save to Firestore
-  console.log('Updated escalation policy:', updated);
-  
+  console.log("Updated escalation policy:", updated);
+
   return updated;
 }
 
@@ -75,26 +77,28 @@ export async function updateEscalationPolicy(
 /**
  * Get SMS templates for school
  */
-export async function getSMSTemplates(schoolId: string): Promise<SMSTemplate[]> {
+export async function getSMSTemplates(
+  schoolId: string,
+): Promise<SMSTemplate[]> {
   const templateTypes: SMSTemplateType[] = [
-    'promise_reminder',
-    'promise_due_today',
-    'promise_overdue_1',
-    'promise_overdue_7',
-    'promise_final_warning',
-    'promise_escalated',
-    'promise_defaulted',
-    'exam_clearance_blocked',
+    "promise_reminder",
+    "promise_due_today",
+    "promise_overdue_1",
+    "promise_overdue_7",
+    "promise_final_warning",
+    "promise_escalated",
+    "promise_defaulted",
+    "exam_clearance_blocked",
   ];
-  
+
   return templateTypes.map((type, index) => ({
     id: `template-${index + 1}`,
     schoolId,
     templateType: type,
-    templateText: getDefaultSMSTemplate(type, 'School Name'),
+    templateText: getDefaultSMSTemplate(type, "School Name"),
     isActive: true,
     lastModified: Timestamp.now(),
-    modifiedBy: 'system',
+    modifiedBy: "system",
   }));
 }
 
@@ -104,22 +108,22 @@ export async function getSMSTemplates(schoolId: string): Promise<SMSTemplate[]> 
 export async function updateSMSTemplate(
   templateId: string,
   templateText: string,
-  userId: string
+  userId: string,
 ): Promise<SMSTemplate> {
-  const templates = await getSMSTemplates('mock-school');
-  const template = templates.find(t => t.id === templateId);
-  
+  const templates = await getSMSTemplates("mock-school");
+  const template = templates.find((t) => t.id === templateId);
+
   if (!template) {
-    throw new Error('Template not found');
+    throw new Error("Template not found");
   }
-  
+
   const updated: SMSTemplate = {
     ...template,
     templateText,
     lastModified: Timestamp.now(),
     modifiedBy: userId,
   };
-  
+
   return updated;
 }
 
@@ -131,48 +135,50 @@ export async function updateSMSTemplate(
  * Get promises with escalation status
  */
 export async function getPromisesWithEscalation(
-  query: PromiseEscalationQuery
+  query: PromiseEscalationQuery,
 ): Promise<PromiseWithEscalation[]> {
   // Mock implementation
   let promises = getMockPromises(query.schoolId);
-  
+
   if (query.stage) {
-    promises = promises.filter(p => p.currentStage === query.stage);
+    promises = promises.filter((p) => p.currentStage === query.stage);
   }
-  
+
   if (query.overdueOnly) {
-    promises = promises.filter(p => p.daysOverdue > 0);
+    promises = promises.filter((p) => p.daysOverdue > 0);
   }
-  
+
   if (query.examBlockedOnly) {
-    promises = promises.filter(p => p.examClearanceBlocked);
+    promises = promises.filter((p) => p.examClearanceBlocked);
   }
-  
+
   if (query.needsAction) {
     const policy = await getEscalationPolicy(query.schoolId);
-    promises = promises.filter(p => {
+    promises = promises.filter((p) => {
       const next = getNextAction(p, policy);
       return next.daysUntil === 0;
     });
   }
-  
+
   if (query.classId) {
-    promises = promises.filter(p => p.className === query.classId);
+    promises = promises.filter((p) => p.className === query.classId);
   }
-  
+
   if (query.limit) {
     promises = promises.slice(0, query.limit);
   }
-  
+
   return promises;
 }
 
 /**
  * Get single promise with escalation details
  */
-export async function getPromiseEscalation(promiseId: string): Promise<PromiseWithEscalation | null> {
-  const promises = getMockPromises('mock-school');
-  return promises.find(p => p.id === promiseId) || null;
+export async function getPromiseEscalation(
+  promiseId: string,
+): Promise<PromiseWithEscalation | null> {
+  const promises = getMockPromises("mock-school");
+  return promises.find((p) => p.id === promiseId) || null;
 }
 
 // ============================================================================
@@ -182,72 +188,80 @@ export async function getPromiseEscalation(promiseId: string): Promise<PromiseWi
 /**
  * Send SMS for a promise
  */
-export async function sendPromiseSMS(input: SendSMSInput): Promise<EscalationNotification> {
+export async function sendPromiseSMS(
+  input: SendSMSInput,
+): Promise<EscalationNotification> {
   const promise = await getPromiseEscalation(input.promiseId);
   if (!promise) {
-    throw new Error('Promise not found');
+    throw new Error("Promise not found");
   }
-  
+
   const policy = await getEscalationPolicy(promise.schoolId);
-  
+
   // Check SMS limits
   if (promise.totalSMSSent >= policy.maxSMSPerPromise) {
-    throw new Error(`SMS limit reached (${policy.maxSMSPerPromise} per promise)`);
+    throw new Error(
+      `SMS limit reached (${policy.maxSMSPerPromise} per promise)`,
+    );
   }
-  
+
   // Check time constraints
   const now = new Date();
   const hour = now.getHours();
   if (hour < policy.smsStartHour || hour >= policy.smsEndHour) {
-    throw new Error(`SMS can only be sent between ${policy.smsStartHour}:00 and ${policy.smsEndHour}:00`);
+    throw new Error(
+      `SMS can only be sent between ${policy.smsStartHour}:00 and ${policy.smsEndHour}:00`,
+    );
   }
-  
+
   if (!policy.sendOnWeekends && (now.getDay() === 0 || now.getDay() === 6)) {
-    throw new Error('SMS sending is disabled on weekends');
+    throw new Error("SMS sending is disabled on weekends");
   }
-  
+
   // Get template
   const templates = await getSMSTemplates(promise.schoolId);
-  const template = templates.find(t => t.templateType === input.templateType);
-  
+  const template = templates.find((t) => t.templateType === input.templateType);
+
   if (!template) {
-    throw new Error('SMS template not found');
+    throw new Error("SMS template not found");
   }
-  
+
   // Parse template
-  const message = input.customMessage || parseSMSTemplate(template.templateText, {
-    studentName: promise.studentName,
-    guardianName: promise.guardianName,
-    amount: promise.promiseAmount,
-    promiseDate: promise.promiseDate,
-    daysOverdue: promise.daysOverdue,
-    schoolName: 'The School',
-    balance: promise.promiseAmount - promise.paidAmount,
-  });
-  
+  const message =
+    input.customMessage ||
+    parseSMSTemplate(template.templateText, {
+      studentName: promise.studentName,
+      guardianName: promise.guardianName,
+      amount: promise.promiseAmount,
+      promiseDate: promise.promiseDate,
+      daysOverdue: promise.daysOverdue,
+      schoolName: "The School",
+      balance: promise.promiseAmount - promise.paidAmount,
+    });
+
   // Format phone
   const phone = formatUgandaPhone(promise.guardianPhone);
-  
+
   // Create notification record
   const notification: EscalationNotification = {
     id: `notif-${Date.now()}`,
-    type: 'sms',
+    type: "sms",
     templateType: input.templateType,
     recipient: phone,
-    recipientType: 'guardian',
+    recipientType: "guardian",
     message,
     sentAt: Timestamp.now(),
     sentBy: input.senderId,
-    deliveryStatus: 'pending',
+    deliveryStatus: "pending",
     hasResponse: false,
   };
-  
+
   // Would integrate with SMS gateway here (Africa's Talking, etc.)
-  console.log('Sending SMS:', { to: phone, message });
-  
+  console.log("Sending SMS:", { to: phone, message });
+
   // Simulate sending (would be async in real implementation)
-  notification.deliveryStatus = 'sent';
-  
+  notification.deliveryStatus = "sent";
+
   return notification;
 }
 
@@ -257,10 +271,10 @@ export async function sendPromiseSMS(input: SendSMSInput): Promise<EscalationNot
 export async function sendBulkSMS(
   promiseIds: string[],
   templateType: SMSTemplateType,
-  senderId: string
+  senderId: string,
 ): Promise<{ sent: number; failed: number; errors: string[] }> {
   const results = { sent: 0, failed: 0, errors: [] as string[] };
-  
+
   for (const promiseId of promiseIds) {
     try {
       await sendPromiseSMS({
@@ -271,10 +285,12 @@ export async function sendBulkSMS(
       results.sent++;
     } catch (error) {
       results.failed++;
-      results.errors.push(`${promiseId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      results.errors.push(
+        `${promiseId}: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
-  
+
   return results;
 }
 
@@ -285,38 +301,40 @@ export async function sendBulkSMS(
 /**
  * Escalate a promise to next stage
  */
-export async function escalatePromise(input: EscalatePromiseInput): Promise<PromiseWithEscalation> {
+export async function escalatePromise(
+  input: EscalatePromiseInput,
+): Promise<PromiseWithEscalation> {
   const promise = await getPromiseEscalation(input.promiseId);
   if (!promise) {
-    throw new Error('Promise not found');
+    throw new Error("Promise not found");
   }
-  
+
   const previousStage = promise.currentStage;
-  
+
   // Update promise
   const updated: PromiseWithEscalation = {
     ...promise,
     currentStage: input.newStage,
     updatedAt: Timestamp.now(),
   };
-  
+
   // Update escalation flags
-  if (input.newStage === 'escalated_dos') {
+  if (input.newStage === "escalated_dos") {
     updated.hasBeenEscalatedToDOS = true;
     updated.dosEscalatedAt = Timestamp.now();
   }
-  
-  if (input.newStage === 'escalated_head') {
+
+  if (input.newStage === "escalated_head") {
     updated.hasBeenEscalatedToHead = true;
     updated.headEscalatedAt = Timestamp.now();
   }
-  
-  if (input.newStage === 'exam_blocked') {
+
+  if (input.newStage === "exam_blocked") {
     updated.examClearanceBlocked = true;
     updated.examBlockedAt = Timestamp.now();
     updated.examBlockedReason = input.reason;
   }
-  
+
   // Add note
   const note: PromiseNote = {
     id: `note-${Date.now()}`,
@@ -324,27 +342,30 @@ export async function escalatePromise(input: EscalatePromiseInput): Promise<Prom
     addedBy: input.escalatedBy,
     addedByName: input.escalatedByName,
     addedAt: Timestamp.now(),
-    noteType: 'escalation',
+    noteType: "escalation",
   };
   updated.notes = [...updated.notes, note];
-  
+
   // Send notification
-  if (input.newStage === 'escalated_dos' || input.newStage === 'escalated_head') {
+  if (
+    input.newStage === "escalated_dos" ||
+    input.newStage === "escalated_head"
+  ) {
     const internalNotif: EscalationNotification = {
       id: `notif-${Date.now()}`,
-      type: 'internal',
-      templateType: 'promise_escalated',
-      recipient: input.newStage === 'escalated_dos' ? 'DOS' : 'Headteacher',
-      recipientType: input.newStage === 'escalated_dos' ? 'dos' : 'headteacher',
+      type: "internal",
+      templateType: "promise_escalated",
+      recipient: input.newStage === "escalated_dos" ? "DOS" : "Headteacher",
+      recipientType: input.newStage === "escalated_dos" ? "dos" : "headteacher",
       message: `Payment promise for ${promise.studentName} (UGX ${promise.promiseAmount.toLocaleString()}) requires attention. ${promise.daysOverdue} days overdue.`,
       sentAt: Timestamp.now(),
-      sentBy: 'system',
-      deliveryStatus: 'delivered',
+      sentBy: "system",
+      deliveryStatus: "delivered",
       hasResponse: false,
     };
     updated.notifications = [...updated.notifications, internalNotif];
   }
-  
+
   return updated;
 }
 
@@ -354,14 +375,14 @@ export async function escalatePromise(input: EscalatePromiseInput): Promise<Prom
 export async function blockExamClearance(
   promiseId: string,
   reason: string,
-  blockedBy: string
+  blockedBy: string,
 ): Promise<PromiseWithEscalation> {
   return escalatePromise({
     promiseId,
-    newStage: 'exam_blocked',
+    newStage: "exam_blocked",
     reason,
     escalatedBy: blockedBy,
-    escalatedByName: 'System',
+    escalatedByName: "System",
   });
 }
 
@@ -371,30 +392,30 @@ export async function blockExamClearance(
 export async function unblockExamClearance(
   promiseId: string,
   reason: string,
-  unblockedBy: string
+  unblockedBy: string,
 ): Promise<PromiseWithEscalation> {
   const promise = await getPromiseEscalation(promiseId);
   if (!promise) {
-    throw new Error('Promise not found');
+    throw new Error("Promise not found");
   }
-  
+
   const updated: PromiseWithEscalation = {
     ...promise,
     examClearanceBlocked: false,
     updatedAt: Timestamp.now(),
   };
-  
+
   // Add note
   const note: PromiseNote = {
     id: `note-${Date.now()}`,
     note: `Exam clearance unblocked: ${reason}`,
     addedBy: unblockedBy,
-    addedByName: 'User',
+    addedByName: "User",
     addedAt: Timestamp.now(),
-    noteType: 'general',
+    noteType: "general",
   };
   updated.notes = [...updated.notes, note];
-  
+
   return updated;
 }
 
@@ -406,13 +427,13 @@ export async function addFollowUpNote(
   note: string,
   addedBy: string,
   addedByName: string,
-  noteType: 'general' | 'followup' | 'response' = 'followup'
+  noteType: "general" | "followup" | "response" = "followup",
 ): Promise<PromiseWithEscalation> {
   const promise = await getPromiseEscalation(promiseId);
   if (!promise) {
-    throw new Error('Promise not found');
+    throw new Error("Promise not found");
   }
-  
+
   const newNote: PromiseNote = {
     id: `note-${Date.now()}`,
     note,
@@ -421,7 +442,7 @@ export async function addFollowUpNote(
     addedAt: Timestamp.now(),
     noteType,
   };
-  
+
   return {
     ...promise,
     notes: [...promise.notes, newNote],
@@ -439,11 +460,14 @@ export async function addFollowUpNote(
  */
 export async function runEscalationBatch(
   schoolId: string,
-  dryRun: boolean = false
+  dryRun: boolean = false,
 ): Promise<EscalationBatch> {
   const policy = await getEscalationPolicy(schoolId);
-  const promises = await getPromisesWithEscalation({ schoolId, overdueOnly: true });
-  
+  const promises = await getPromisesWithEscalation({
+    schoolId,
+    overdueOnly: true,
+  });
+
   const batch: EscalationBatch = {
     id: `batch-${Date.now()}`,
     schoolId,
@@ -456,17 +480,17 @@ export async function runEscalationBatch(
     escalationsTriggered: 0,
     examsBlocked: 0,
     actions: [],
-    status: 'running',
+    status: "running",
   };
-  
+
   for (const promise of promises) {
     if (promise.isPaid) continue;
-    
+
     batch.promisesProcessed++;
-    
+
     const nextAction = getNextAction(promise, policy);
     if (nextAction.daysUntil > 0) continue;
-    
+
     const action: EscalationBatchAction = {
       promiseId: promise.id,
       studentName: promise.studentName,
@@ -476,71 +500,71 @@ export async function runEscalationBatch(
       success: true,
       timestamp: Timestamp.now(),
     };
-    
+
     if (!dryRun) {
       try {
         switch (nextAction.action) {
-          case 'send_sms':
+          case "send_sms":
             batch.smsScheduled++;
             const templateType = getTemplateForStage(promise.currentStage);
             await sendPromiseSMS({
               promiseId: promise.id,
               templateType,
-              senderId: 'system',
+              senderId: "system",
             });
             batch.smsSent++;
             break;
-            
-          case 'notify_dos':
+
+          case "notify_dos":
             const newStage = determineStage(promise.daysOverdue, policy);
             await escalatePromise({
               promiseId: promise.id,
-              newStage: 'escalated_dos',
-              reason: 'Auto-escalated due to overdue promise',
-              escalatedBy: 'system',
-              escalatedByName: 'Auto-escalation',
+              newStage: "escalated_dos",
+              reason: "Auto-escalated due to overdue promise",
+              escalatedBy: "system",
+              escalatedByName: "Auto-escalation",
             });
-            action.newStage = 'escalated_dos';
+            action.newStage = "escalated_dos";
             batch.escalationsTriggered++;
             break;
-            
-          case 'notify_head':
+
+          case "notify_head":
             await escalatePromise({
               promiseId: promise.id,
-              newStage: 'escalated_head',
-              reason: 'Auto-escalated due to extended overdue',
-              escalatedBy: 'system',
-              escalatedByName: 'Auto-escalation',
+              newStage: "escalated_head",
+              reason: "Auto-escalated due to extended overdue",
+              escalatedBy: "system",
+              escalatedByName: "Auto-escalation",
             });
-            action.newStage = 'escalated_head';
+            action.newStage = "escalated_head";
             batch.escalationsTriggered++;
             break;
-            
-          case 'block_exams':
+
+          case "block_exams":
             await blockExamClearance(
               promise.id,
-              'Auto-blocked due to unpaid fees',
-              'system'
+              "Auto-blocked due to unpaid fees",
+              "system",
             );
-            action.newStage = 'exam_blocked';
+            action.newStage = "exam_blocked";
             batch.examsBlocked++;
             break;
         }
       } catch (error) {
         action.success = false;
-        action.error = error instanceof Error ? error.message : 'Unknown error';
-        if (nextAction.action === 'send_sms') {
+        action.error = error instanceof Error ? error.message : "Unknown error";
+        if (nextAction.action === "send_sms") {
           batch.smsFailed++;
         }
       }
     }
-    
+
     batch.actions.push(action);
   }
-  
-  batch.status = 'completed';
+
+  batch.status = "completed";
   batch.completedAt = Timestamp.now();
-  
+
   return batch;
 }
 
@@ -549,16 +573,16 @@ export async function runEscalationBatch(
  */
 function getTemplateForStage(stage: EscalationStage): SMSTemplateType {
   const mapping: Record<EscalationStage, SMSTemplateType> = {
-    none: 'promise_reminder',
-    reminder: 'promise_reminder',
-    due_today: 'promise_due_today',
-    overdue_1: 'promise_overdue_1',
-    overdue_7: 'promise_overdue_7',
-    overdue_14: 'promise_final_warning',
-    escalated_dos: 'promise_escalated',
-    escalated_head: 'promise_escalated',
-    exam_blocked: 'exam_clearance_blocked',
-    defaulted: 'promise_defaulted',
+    none: "promise_reminder",
+    reminder: "promise_reminder",
+    due_today: "promise_due_today",
+    overdue_1: "promise_overdue_1",
+    overdue_7: "promise_overdue_7",
+    overdue_14: "promise_final_warning",
+    escalated_dos: "promise_escalated",
+    escalated_head: "promise_escalated",
+    exam_blocked: "exam_clearance_blocked",
+    defaulted: "promise_defaulted",
   };
   return mapping[stage];
 }
@@ -570,11 +594,13 @@ function getTemplateForStage(stage: EscalationStage): SMSTemplateType {
 /**
  * Get escalation dashboard
  */
-export async function getEscalationDashboard(schoolId: string): Promise<EscalationDashboard> {
+export async function getEscalationDashboard(
+  schoolId: string,
+): Promise<EscalationDashboard> {
   const promises = await getPromisesWithEscalation({ schoolId });
-  const activePromises = promises.filter(p => !p.isPaid);
-  const overduePromises = activePromises.filter(p => p.daysOverdue > 0);
-  
+  const activePromises = promises.filter((p) => !p.isPaid);
+  const overduePromises = activePromises.filter((p) => p.daysOverdue > 0);
+
   const byStage: Record<EscalationStage, number> = {
     none: 0,
     reminder: 0,
@@ -587,63 +613,69 @@ export async function getEscalationDashboard(schoolId: string): Promise<Escalati
     exam_blocked: 0,
     defaulted: 0,
   };
-  
+
   for (const promise of activePromises) {
     byStage[promise.currentStage]++;
   }
-  
+
   // Calculate SMS stats
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const weekAgo = new Date(today);
   weekAgo.setDate(weekAgo.getDate() - 7);
-  
+
   let smsSentToday = 0;
   let smsSentThisWeek = 0;
-  
+
   for (const promise of promises) {
     for (const notif of promise.notifications) {
-      if (notif.type === 'sms') {
+      if (notif.type === "sms") {
         const sentDate = notif.sentAt.toDate();
         if (sentDate >= today) smsSentToday++;
         if (sentDate >= weekAgo) smsSentThisWeek++;
       }
     }
   }
-  
+
   // Get urgent follow-ups (needs action today)
   const policy = await getEscalationPolicy(schoolId);
   const urgentFollowUps = activePromises
-    .filter(p => {
+    .filter((p) => {
       const next = getNextAction(p, policy);
       return next.daysUntil === 0;
     })
     .slice(0, 10);
-  
+
   return {
     schoolId,
     asOfDate: new Date(),
     byStage,
     totalActivePromises: activePromises.length,
     totalOverdue: overduePromises.length,
-    overdueAmount: overduePromises.reduce((sum, p) => sum + (p.promiseAmount - p.paidAmount), 0),
+    overdueAmount: overduePromises.reduce(
+      (sum, p) => sum + (p.promiseAmount - p.paidAmount),
+      0,
+    ),
     smsSentToday,
     smsSentThisWeek,
     smsRemaining: 500 - smsSentThisWeek, // Example weekly limit
-    escalatedToDOS: activePromises.filter(p => p.hasBeenEscalatedToDOS).length,
-    escalatedToHead: activePromises.filter(p => p.hasBeenEscalatedToHead).length,
-    examBlocked: activePromises.filter(p => p.examClearanceBlocked).length,
-    promisesFulfilledThisWeek: promises.filter(p => {
+    escalatedToDOS: activePromises.filter((p) => p.hasBeenEscalatedToDOS)
+      .length,
+    escalatedToHead: activePromises.filter((p) => p.hasBeenEscalatedToHead)
+      .length,
+    examBlocked: activePromises.filter((p) => p.examClearanceBlocked).length,
+    promisesFulfilledThisWeek: promises.filter((p) => {
       if (!p.isPaid || !p.paidAt) return false;
       return p.paidAt.toDate() >= weekAgo;
     }).length,
-    promisesDefaultedThisWeek: promises.filter(p => {
-      if (p.currentStage !== 'defaulted') return false;
+    promisesDefaultedThisWeek: promises.filter((p) => {
+      if (p.currentStage !== "defaulted") return false;
       return true; // Would check date
     }).length,
-    fulfillmentRate: promises.length > 0 
-      ? (promises.filter(p => p.isPaid).length / promises.length) * 100 
-      : 0,
+    fulfillmentRate:
+      promises.length > 0
+        ? (promises.filter((p) => p.isPaid).length / promises.length) * 100
+        : 0,
     urgentFollowUps,
   };
 }
@@ -653,46 +685,51 @@ export async function getEscalationDashboard(schoolId: string): Promise<Escalati
  */
 export async function getGuardianCommunicationSummary(
   schoolId: string,
-  guardianPhone: string
+  guardianPhone: string,
 ): Promise<GuardianCommunicationSummary> {
   const promises = await getPromisesWithEscalation({ schoolId });
   const guardianPromises = promises.filter(
-    p => formatUgandaPhone(p.guardianPhone) === formatUgandaPhone(guardianPhone)
+    (p) =>
+      formatUgandaPhone(p.guardianPhone) === formatUgandaPhone(guardianPhone),
   );
-  
+
   if (guardianPromises.length === 0) {
-    throw new Error('No promises found for this guardian');
+    throw new Error("No promises found for this guardian");
   }
-  
+
   const firstPromise = guardianPromises[0];
-  const totalAmount = guardianPromises.reduce((sum, p) => sum + p.promiseAmount, 0);
+  const totalAmount = guardianPromises.reduce(
+    (sum, p) => sum + p.promiseAmount,
+    0,
+  );
   const overdueAmount = guardianPromises
-    .filter(p => p.daysOverdue > 0 && !p.isPaid)
+    .filter((p) => p.daysOverdue > 0 && !p.isPaid)
     .reduce((sum, p) => sum + (p.promiseAmount - p.paidAmount), 0);
-  
-  const smsCount = guardianPromises.reduce((sum, p) => 
-    sum + p.notifications.filter(n => n.type === 'sms').length, 0
+
+  const smsCount = guardianPromises.reduce(
+    (sum, p) => sum + p.notifications.filter((n) => n.type === "sms").length,
+    0,
   );
-  
+
   const lastSMS = guardianPromises
-    .flatMap(p => p.notifications.filter(n => n.type === 'sms'))
+    .flatMap((p) => p.notifications.filter((n) => n.type === "sms"))
     .sort((a, b) => b.sentAt.toMillis() - a.sentAt.toMillis())[0];
-  
-  const hasResponse = guardianPromises.some(p => 
-    p.notifications.some(n => n.hasResponse)
+
+  const hasResponse = guardianPromises.some((p) =>
+    p.notifications.some((n) => n.hasResponse),
   );
-  
+
   // Risk level
-  const maxOverdue = Math.max(...guardianPromises.map(p => p.daysOverdue));
-  let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
-  if (maxOverdue > 21) riskLevel = 'critical';
-  else if (maxOverdue > 14) riskLevel = 'high';
-  else if (maxOverdue > 7) riskLevel = 'medium';
-  
+  const maxOverdue = Math.max(...guardianPromises.map((p) => p.daysOverdue));
+  let riskLevel: "low" | "medium" | "high" | "critical" = "low";
+  if (maxOverdue > 21) riskLevel = "critical";
+  else if (maxOverdue > 14) riskLevel = "high";
+  else if (maxOverdue > 7) riskLevel = "medium";
+
   return {
     guardianPhone: formatUgandaPhone(guardianPhone),
     guardianName: firstPromise.guardianName,
-    children: guardianPromises.map(p => ({
+    children: guardianPromises.map((p) => ({
       studentId: p.studentId,
       studentName: p.studentName,
       promiseAmount: p.promiseAmount,
@@ -733,32 +770,32 @@ function getMockPolicy(schoolId: string): EscalationPolicy {
     autoBlockExams: true,
     autoNotifyDOS: true,
     autoNotifyHead: true,
-    preferredContactMethod: 'sms',
+    preferredContactMethod: "sms",
     updatedAt: Timestamp.now(),
-    updatedBy: 'system',
+    updatedBy: "system",
   };
 }
 
 function getMockPromises(schoolId: string): PromiseWithEscalation[] {
   const baseDate = new Date();
-  
+
   return [
     {
-      id: 'promise-1',
+      id: "promise-1",
       schoolId,
-      studentId: 'STU001',
-      studentName: 'David Mugisha',
-      className: 'S4 Science',
-      guardianName: 'John Mugisha',
-      guardianPhone: '0772123456',
-      guardianEmail: 'john.mugisha@email.com',
+      studentId: "STU001",
+      studentName: "David Mugisha",
+      className: "S4 Science",
+      guardianName: "John Mugisha",
+      guardianPhone: "0772123456",
+      guardianEmail: "john.mugisha@email.com",
       promiseAmount: 850000,
       promiseDate: new Date(baseDate.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
       createdAt: Timestamp.now(),
-      createdBy: 'bursar-1',
+      createdBy: "bursar-1",
       isPaid: false,
       paidAmount: 0,
-      currentStage: 'overdue_1',
+      currentStage: "overdue_1",
       daysOverdue: 5,
       notifications: [],
       totalSMSSent: 1,
@@ -767,36 +804,36 @@ function getMockPromises(schoolId: string): PromiseWithEscalation[] {
       examClearanceBlocked: false,
       notes: [],
       nextActionDate: new Date(),
-      nextActionType: 'send_sms',
+      nextActionType: "send_sms",
       updatedAt: Timestamp.now(),
     },
     {
-      id: 'promise-2',
+      id: "promise-2",
       schoolId,
-      studentId: 'STU002',
-      studentName: 'Grace Nakato',
-      className: 'S3 Arts',
-      guardianName: 'Mary Nakato',
-      guardianPhone: '0701987654',
+      studentId: "STU002",
+      studentName: "Grace Nakato",
+      className: "S3 Arts",
+      guardianName: "Mary Nakato",
+      guardianPhone: "0701987654",
       promiseAmount: 650000,
       promiseDate: new Date(baseDate.getTime() - 18 * 24 * 60 * 60 * 1000), // 18 days ago
       createdAt: Timestamp.now(),
-      createdBy: 'bursar-1',
+      createdBy: "bursar-1",
       isPaid: false,
       paidAmount: 200000,
-      currentStage: 'escalated_dos',
+      currentStage: "escalated_dos",
       daysOverdue: 18,
       notifications: [
         {
-          id: 'n1',
-          type: 'sms',
-          templateType: 'promise_overdue_7',
-          recipient: '+256701987654',
-          recipientType: 'guardian',
-          message: 'Payment overdue...',
+          id: "n1",
+          type: "sms",
+          templateType: "promise_overdue_7",
+          recipient: "+256701987654",
+          recipientType: "guardian",
+          message: "Payment overdue...",
           sentAt: Timestamp.now(),
-          sentBy: 'system',
-          deliveryStatus: 'delivered',
+          sentBy: "system",
+          deliveryStatus: "delivered",
           hasResponse: false,
         },
       ],
@@ -807,24 +844,24 @@ function getMockPromises(schoolId: string): PromiseWithEscalation[] {
       examClearanceBlocked: false,
       notes: [],
       nextActionDate: new Date(),
-      nextActionType: 'notify_head',
+      nextActionType: "notify_head",
       updatedAt: Timestamp.now(),
     },
     {
-      id: 'promise-3',
+      id: "promise-3",
       schoolId,
-      studentId: 'STU003',
-      studentName: 'Peter Ochen',
-      className: 'S6 Science',
-      guardianName: 'James Ochen',
-      guardianPhone: '0782555444',
+      studentId: "STU003",
+      studentName: "Peter Ochen",
+      className: "S6 Science",
+      guardianName: "James Ochen",
+      guardianPhone: "0782555444",
       promiseAmount: 1200000,
       promiseDate: new Date(baseDate.getTime() - 25 * 24 * 60 * 60 * 1000), // 25 days ago
       createdAt: Timestamp.now(),
-      createdBy: 'bursar-1',
+      createdBy: "bursar-1",
       isPaid: false,
       paidAmount: 0,
-      currentStage: 'exam_blocked',
+      currentStage: "exam_blocked",
       daysOverdue: 25,
       notifications: [],
       totalSMSSent: 5,
@@ -834,27 +871,27 @@ function getMockPromises(schoolId: string): PromiseWithEscalation[] {
       headEscalatedAt: Timestamp.now(),
       examClearanceBlocked: true,
       examBlockedAt: Timestamp.now(),
-      examBlockedReason: 'Auto-blocked: 21+ days overdue',
+      examBlockedReason: "Auto-blocked: 21+ days overdue",
       notes: [],
       nextActionDate: new Date(),
-      nextActionType: 'refer_writeoff',
+      nextActionType: "refer_writeoff",
       updatedAt: Timestamp.now(),
     },
     {
-      id: 'promise-4',
+      id: "promise-4",
       schoolId,
-      studentId: 'STU004',
-      studentName: 'Sarah Achieng',
-      className: 'S2 Science',
-      guardianName: 'Patrick Achieng',
-      guardianPhone: '0753111222',
+      studentId: "STU004",
+      studentName: "Sarah Achieng",
+      className: "S2 Science",
+      guardianName: "Patrick Achieng",
+      guardianPhone: "0753111222",
       promiseAmount: 450000,
       promiseDate: new Date(baseDate.getTime() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
       createdAt: Timestamp.now(),
-      createdBy: 'bursar-1',
+      createdBy: "bursar-1",
       isPaid: false,
       paidAmount: 0,
-      currentStage: 'none',
+      currentStage: "none",
       daysOverdue: 0,
       notifications: [],
       totalSMSSent: 0,
@@ -863,39 +900,39 @@ function getMockPromises(schoolId: string): PromiseWithEscalation[] {
       examClearanceBlocked: false,
       notes: [],
       nextActionDate: new Date(),
-      nextActionType: 'send_sms',
+      nextActionType: "send_sms",
       updatedAt: Timestamp.now(),
     },
     {
-      id: 'promise-5',
+      id: "promise-5",
       schoolId,
-      studentId: 'STU005',
-      studentName: 'Michael Ssemakula',
-      className: 'S1 Arts',
-      guardianName: 'Charles Ssemakula',
-      guardianPhone: '0774888999',
+      studentId: "STU005",
+      studentName: "Michael Ssemakula",
+      className: "S1 Arts",
+      guardianName: "Charles Ssemakula",
+      guardianPhone: "0774888999",
       promiseAmount: 380000,
       promiseDate: new Date(baseDate.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
       createdAt: Timestamp.now(),
-      createdBy: 'bursar-1',
+      createdBy: "bursar-1",
       isPaid: true,
       paidAmount: 380000,
       paidAt: Timestamp.now(),
-      currentStage: 'none',
+      currentStage: "none",
       daysOverdue: 0,
       notifications: [
         {
-          id: 'n2',
-          type: 'sms',
-          templateType: 'promise_reminder',
-          recipient: '+256774888999',
-          recipientType: 'guardian',
-          message: 'Reminder: Payment due...',
+          id: "n2",
+          type: "sms",
+          templateType: "promise_reminder",
+          recipient: "+256774888999",
+          recipientType: "guardian",
+          message: "Reminder: Payment due...",
           sentAt: Timestamp.now(),
-          sentBy: 'system',
-          deliveryStatus: 'delivered',
+          sentBy: "system",
+          deliveryStatus: "delivered",
           hasResponse: true,
-          responseReceived: 'Will pay today',
+          responseReceived: "Will pay today",
           responseAt: Timestamp.now(),
         },
       ],
@@ -905,7 +942,7 @@ function getMockPromises(schoolId: string): PromiseWithEscalation[] {
       examClearanceBlocked: false,
       notes: [],
       nextActionDate: new Date(),
-      nextActionType: 'create_followup',
+      nextActionType: "create_followup",
       updatedAt: Timestamp.now(),
     },
   ];
@@ -913,7 +950,7 @@ function getMockPromises(schoolId: string): PromiseWithEscalation[] {
 
 export function getMockEscalationDashboard(): EscalationDashboard {
   return {
-    schoolId: 'mock-school',
+    schoolId: "mock-school",
     asOfDate: new Date(),
     byStage: {
       none: 45,
