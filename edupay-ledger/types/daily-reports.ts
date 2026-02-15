@@ -433,3 +433,39 @@ export function getDailySummaryStatusInfo(status: DailySummaryStatus): {
   };
   return statuses[status];
 }
+
+// Alias for convenience
+export const getStatusInfo = getDailySummaryStatusInfo;
+
+// ============================================================================
+// RISK LEVEL TYPE
+// ============================================================================
+
+export type RiskLevel = "low" | "medium" | "high" | "critical";
+
+// ============================================================================
+// CURRENCY FORMATTING
+// ============================================================================
+
+/**
+ * Format amount in Ugandan Shillings
+ */
+export function formatUGX(amount: number): string {
+  return `UGX ${amount.toLocaleString("en-UG")}`;
+}
+
+/**
+ * Format amount with abbreviated suffix for large numbers
+ */
+export function formatUGXShort(amount: number): string {
+  if (amount >= 1000000000) {
+    return `UGX ${(amount / 1000000000).toFixed(1)}B`;
+  }
+  if (amount >= 1000000) {
+    return `UGX ${(amount / 1000000).toFixed(1)}M`;
+  }
+  if (amount >= 1000) {
+    return `UGX ${(amount / 1000).toFixed(0)}K`;
+  }
+  return `UGX ${amount}`;
+}
