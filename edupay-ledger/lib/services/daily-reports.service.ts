@@ -32,7 +32,7 @@ import {
   CollectionVsBudgetReport,
   CategoryBudgetActual,
   ClassBudgetActual,
-  TermComparison,
+  PreviousTermSummary,
   formatDailySummaryDate,
   calculateRiskLevel,
   calculateTrend,

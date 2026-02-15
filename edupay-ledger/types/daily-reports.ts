@@ -264,7 +264,7 @@ export interface CollectionVsBudgetReport {
   requiredDailyCollection: number;
 
   // Historical comparison
-  previousTerms: TermComparison[];
+  previousTerms: PreviousTermSummary[];
 
   // Prepared for BOG
   preparedFor: string;
@@ -313,9 +313,9 @@ export interface VarianceItem {
 }
 
 /**
- * Term-over-term comparison
+ * Previous term summary for historical comparison
  */
-export interface TermComparison {
+export interface PreviousTermSummary {
   termId: string;
   term: number;
   year: string;
