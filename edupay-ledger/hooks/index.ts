@@ -175,3 +175,17 @@ export {
   formatReceiptNumber,
   getReceiptBookStatusInfo,
 } from "./useReceiptBook";
+
+// Carry-Forward Balance hooks
+export {
+  useTermTransitions,
+  useStudentBalances,
+  useCarryForwardProcessing,
+  useStudentCarryForwardHistory,
+  useRefundRequest,
+  getCarryForwardStatusInfo,
+  formatCarryForward,
+  formatTerm,
+  getNextTerm,
+  getCarryForwardType,
+} from "./useCarryForward";
