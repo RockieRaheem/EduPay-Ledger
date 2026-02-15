@@ -198,3 +198,19 @@ export {
   useDailyReportsDashboard,
   useReportExport as useDailyReportExport,
 } from "./useDailyReports";
+
+// Term Comparison hooks
+export {
+  useTermAnalysis,
+  useTermComparison,
+  useTermProjection,
+  useTermChartData,
+  useCategoryComparison,
+  useClassComparison as useTermClassComparison,
+  useYearOverYear,
+  formatTermPeriod,
+  getTrendDisplayInfo,
+  getInsightTypeInfo,
+  formatDelta,
+  getComparisonColor,
+} from "./useTermComparison";
